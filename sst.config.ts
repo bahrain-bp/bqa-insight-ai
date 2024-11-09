@@ -2,6 +2,8 @@ import { SSTConfig } from "sst";
 import { FrontendStack } from "./stacks/FrontendStack";
 import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
+import { FileMetadataStack } from "./stacks/FileMetadataStack";
+import { FileStorageStack } from "./stacks/FileStorageStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 
@@ -27,6 +29,8 @@ export default {
     else {
       app.stack(DBStack)
       .stack(ApiStack)
+      .stack(FileMetadataStack)
+      .stack(FileStorageStack)
       .stack(FrontendStack);
     }
   }
