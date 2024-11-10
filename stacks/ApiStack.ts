@@ -26,6 +26,13 @@ export function ApiStack({ stack }: StackContext) {
                     timeout: "60 seconds",
                 }
             },
+            "POST /textract": {
+                function: {
+                    handler: "packages/functions/src/textract.extractTextFromPDF",
+                    permissions: ["textract", "s3"],
+                    timeout: "60 seconds",                    
+                }
+            }
         }
     });
 

@@ -20,5 +20,8 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@aws-sdk/client-textract": "^3.687.0"
+  }
 }
