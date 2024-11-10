@@ -6,10 +6,10 @@ export function FileMetadataStack({ stack }: StackContext) {
     fields: {
       fileKey: "string",
       bucketName: "string",
-      fileName: "string",    
       size: "number",
-      contentType: "string",
+      fileExtension: "string", 
       uploadedAt: "string",
+      userIdentity: "string",  
     },
     primaryIndex: { partitionKey: "fileKey" },
   });

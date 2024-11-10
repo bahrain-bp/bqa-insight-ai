@@ -1,22 +1,30 @@
 import { StackContext, Bucket, Function, use } from "sst/constructs";
-import { FileMetadataStack } from "./FileMetadataStack"; // Import the stack where the DynamoDB table is defined
+import { FileMetadataStack } from "./FileMetadataStack";
 
 export function FileStorageStack({ stack }: StackContext) {
   // Reference the DynamoDB table from FileMetadataStack
   const { fileMetadataTable } = use(FileMetadataStack);
 
-  // Define the Lambda function and bind the DynamoDB table
   const insertMetadataFunction = new Function(stack, "InsertFileMetadataFunction", {
     handler: "packages/functions/src/insertFileMetadata.main",
-    bind: [fileMetadataTable], // Bind the table to the function
+    bind: [fileMetadataTable], 
   });
 
-  // Set up the S3 bucket and add notifications if needed (optional)
+  const deleteMetadataFunction = new Function(stack, "DeleteFileMetadataFunction", {
+    handler: "packages/functions/src/deleteFileMetadata.main",
+    bind: [fileMetadataTable], 
+  });
+
+  // Set up the S3 bucket and add notifications for both insert and delete events
   const testBucket = new Bucket(stack, "TestBucket", {
     notifications: {
-      myNotification: {
+      uploadNotification: {
         function: insertMetadataFunction,
-        events: ["object_created"],
+        events: ["object_created"], 
+      },
+      deleteNotification: {
+        function: deleteMetadataFunction,
+        events: ["object_removed"], 
       },
     },
   });
