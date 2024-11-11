@@ -20,5 +20,8 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "json2csv": "^6.0.0-alpha.2"
+  }
 }

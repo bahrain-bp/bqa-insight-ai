@@ -26,6 +26,13 @@ export function ApiStack({ stack }: StackContext) {
                     timeout: "60 seconds",
                 }
             },
+            "POST /invokeSagemaker": {
+                function: {
+                    handler: "packages/functions/src/sageMaker_lambda/invoke_sagemaker.lambdaHandler",
+                    timeout: "60 seconds",
+                    permissions: ["sagemaker"],
+                }
+            }
         }
     });
 

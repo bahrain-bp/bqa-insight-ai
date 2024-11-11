@@ -1,6 +1,8 @@
 import { DynamoDB } from "aws-sdk";
 import { Table } from "sst/node/table";
 
+
+
 const dynamoDb = new DynamoDB.DocumentClient();
 
 export async function main() {
@@ -32,8 +34,20 @@ export async function main() {
   };
   await dynamoDb.update(putParams).promise();
 
+
+
+
+
+
+  
+
+
+
   return {
     statusCode: 200,
     body: count,
   };
+
 }
+
+
