@@ -1,10 +1,17 @@
 import React, { useState } from "react";
-import dataJSON from '../../public/data.json';
+//import dataJSON from '../../public/data.json';
 
 
+interface ModalProps {
+  closeModal: () => void;
+  onSubmit: (formState: any) => void;  // Define the type of formState appropriately
+  defaultValue: any;  // Replace 'any' with the actual type
+  dataJSON: any;  // Assuming dataJSON should be passed as a prop, replace 'any' with its actual type
+}
 
-export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
-  const fields=Object.keys(Object.values(dataJSON)[0]).filter((item:any)=>!(item.startsWith("delta_")));
+
+export const Modal: React.FC<ModalProps> = ({ closeModal, onSubmit, defaultValue, dataJSON }) => {
+  const fields = Object.keys(Object.values(dataJSON)[0] ?? {}).filter((item: string) => !item.startsWith("delta_"));
   
   const [formState, setFormState] = useState(
     defaultValue || {
@@ -30,13 +37,13 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
         if (!value) {
           errorFields.push(key=="id"?"Bond ID":key);
         }
-        else{
-        if (key=='id'){
-          if (!(Object.keys(dataJSON).includes(value)||value=="ALL")){
-            errorFields.push("INVALID_ID_"+value)
+        else {
+          if (key === 'id') {
+            if (!(Object.keys(dataJSON).includes(value.toString()) || value === "ALL")) {
+              errorFields.push("INVALID_ID_" + value);
+            }
           }
         }
-      }
       }
       console.log(errorFields);
       setErrors(errorFields);
@@ -44,7 +51,7 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     }
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e:any) => {
     console.log(formState.criterion);
     console.log(e.target.name);
     console.log(e.target.name=="para"&&e.target.value=='rating');
@@ -57,7 +64,7 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     setFormState({ ...formState, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e:any) => {
     e.preventDefault();
 
     if (!validateForm()) return;
@@ -71,7 +78,9 @@ export const Modal = ({ closeModal, onSubmit, defaultValue }) => {
     <div
       className="modal-container fixed z-50 flex top-25 bottom-5 "
       onClick={(e) => {
-        if (e.target.className === "modal-container") closeModal();
+        const target = e.target as HTMLDivElement;
+
+        if (target.className === "modal-container") closeModal();
       }}
     >
     
