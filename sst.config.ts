@@ -4,6 +4,7 @@ import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
+import {S3Stack} from "./stacks/S3Stack";
 
 export default {
   config(_input) {
@@ -17,7 +18,7 @@ export default {
     if (app.stage !== "prod") {
       app.setDefaultRemovalPolicy("destroy");
     }
-    
+
     if (app.stage == 'devops-coca') {
       app.stack(ImageBuilderForCodeCatalyst)
     }
@@ -27,7 +28,8 @@ export default {
     else {
       app.stack(DBStack)
       .stack(ApiStack)
-      .stack(FrontendStack);
+      .stack(FrontendStack)
+      .stack(S3Stack);
     }
   }
 } satisfies SSTConfig;
