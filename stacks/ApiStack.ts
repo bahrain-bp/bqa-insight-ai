@@ -17,7 +17,7 @@ export function ApiStack({ stack }: StackContext) {
         },
         routes: {
             // Sample TypeScript lambda function
-            "POST /": "packages/functions/src/lambda.main",
+            // "POST /": "packages/functions/src/lambda.main",
             // Sample Pyhton lambda function
             "GET /": {
                 function: {
