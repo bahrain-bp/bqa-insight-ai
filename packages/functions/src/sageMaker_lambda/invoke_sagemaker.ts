@@ -1,43 +1,45 @@
-import { SageMakerRuntimeClient, InvokeEndpointCommand } from "@aws-sdk/client-sagemaker-runtime";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
+import {SageMakerRuntime } from "@aws-sdk/client-sagemaker-runtime";
+import { APIGatewayEvent } from "aws-lambda";
 
-const sagemakerClient = new SageMakerRuntimeClient({});
-const SAGEMAKER_ENDPOINT_NAME = "jumpstart-dft-meta-textgeneration-l-20241111-101603";
+const sagemakerClient = new SageMakerRuntime({region: "us-east-1"});
+const SAGEMAKER_ENDPOINT_NAME = "jumpstart-dft-meta-textgeneration-l-20241112-090312";
 
-export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+export const lambdaHandler = async (event: APIGatewayEvent) => {
     try {
         if (!event.body) {
             throw new Error("No input provided");
         }
 
-        const { input } = JSON.parse(event.body);
-        const payload = JSON.stringify({ input });
+        const requestBody = JSON.parse(event.body || "{}");
 
-        // Prepare and send the command to invoke the SageMaker endpoint
-        const command = new InvokeEndpointCommand({
+        const payload = {
+            inputs: requestBody.input,
+            parameters: {
+                max_new_tokens: 64,
+                top_p: 0.9,
+                temperature: 0.6
+            }
+        };
+
+        const params = {
             EndpointName: SAGEMAKER_ENDPOINT_NAME,
-            Body: Buffer.from(payload), 
-            ContentType: "application/json",
-        });
+            Body: JSON.stringify(payload),
+            ContentType: 'application/json',
+            Accept: 'application/json'
+          };
 
-        const response = await sagemakerClient.send(command);
+        const response = await sagemakerClient.invokeEndpoint(params);
 
-        // Convert the response body buffer to string and parse as JSON
-        const responseBody = JSON.parse(new TextDecoder("utf-8").decode(response.Body));
-        const generatedText = responseBody.generated_text;
+        const textRespone = (Buffer.from(response.Body)).toString();
+        const parsedResponse = JSON.parse(textRespone);
 
-        // Format and return the output as required
         return {
             statusCode: 200,
-            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                body: {
-                    generated_text: generatedText,
-                },
-                contentType: response.ContentType,
-                invokedProductionVariant: response.InvokedProductionVariant,
-            }),
-        };
+                output: parsedResponse.generated_text
+              })
+        }
+        
 
     } catch (error) {
         console.error("Error invoking SageMaker endpoint:", error);
