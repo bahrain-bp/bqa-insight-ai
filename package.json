@@ -22,6 +22,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "@aws-sdk/client-sagemaker-runtime": "^3.687.0",
     "json2csv": "^6.0.0-alpha.2"
   }
 }
