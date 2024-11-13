@@ -6,6 +6,8 @@ import { FileMetadataStack } from "./stacks/FileMetadataStack";
 import { FileStorageStack } from "./stacks/FileStorageStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
+import { AuthStack } from "./stacks/AuthStack";
+import {S3Stack} from "./stacks/S3Stack";
 
 export default {
   config(_input) {
@@ -28,10 +30,12 @@ export default {
     }
     else {
       app.stack(DBStack)
+      .stack(S3Stack)
       .stack(ApiStack)
       .stack(FileMetadataStack)
-      .stack(FileStorageStack)
-      .stack(FrontendStack);
+      .stack(FrontendStack)
+      .stack(AuthStack)
+      ;
     }
   }
 } satisfies SSTConfig;

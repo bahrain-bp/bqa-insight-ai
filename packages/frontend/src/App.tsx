@@ -3,8 +3,9 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 
 import Loader from './Loader';
 import PageTitle from './components/PageTitle';
-import SignIn from './pages/Authentication/SignIn';
+import SignIning from './pages/Authentication/SignIn';
 import SignUp from './pages/Authentication/SignUp';
+import PasswordResetPage from './pages/Authentication/ForgotPassword';
 import Calendar from './pages/Calendar';
 import Chart from './pages/Chart';
 import ECommerce from './pages/Dashboard/ECommerce';
@@ -16,10 +17,13 @@ import Tables from './pages/Tables';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
+import ModifyPassword from './pages/Authentication/ChangePassword';
+import ReportUpload from "./pages/ReportUpload.tsx";
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
   const { pathname } = useLocation();
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -124,15 +128,8 @@ function App() {
             </>
           }
         />
-        <Route
-          path="/auth/signin"
-          element={
-            <>
-              <PageTitle title="Signin | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <SignIn />
-            </>
-          }
-        />
+        <Route path="Auth/SignIn" element={<SignIning setUser={setUser} user={user}/>} />
+
         <Route
           path="/auth/signup"
           element={
@@ -140,8 +137,37 @@ function App() {
               <PageTitle title="Signup | TailAdmin - Tailwind CSS Admin Dashboard Template" />
               <SignUp />
             </>
+
+          }
+
+        />
+        <Route
+          path="/auth/ForgotPassword"
+          element={
+            <>
+              <PageTitle title="Reset your password | EduScribe" />
+              <PasswordResetPage/>
+            </>
           }
         />
+        <Route
+          path="/auth/ChangePassword"
+          element={
+            <>
+              <PageTitle title="Change Password | EduScribe" />
+              <ModifyPassword />
+            </>
+          }
+        />
+          <Route
+            path="/report/upload"
+            element={
+                <>
+                    <PageTitle title="Report Upload" />
+                    <ReportUpload />
+                </>
+                }
+            />
       </Routes>
     </DefaultLayout>
   );
