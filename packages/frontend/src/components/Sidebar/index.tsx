@@ -381,7 +381,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       </clipPath>
                     </defs>
                   </svg>
-                  Upload
+                  Settings
                 </NavLink>
               </li>
               {/* <!-- Menu Item Settings --> */}
