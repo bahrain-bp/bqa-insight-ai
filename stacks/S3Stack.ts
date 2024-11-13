@@ -20,25 +20,11 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
-    // API to get pre-signed URL
-    const api = new Api(stack, "UploadReportApi", {
-        routes: {
-            "POST /generate-upload-url": {
-                function: {
-                    handler: "src/lambda/generateUploadUrl.handler",
-                    environment: {
-                        BUCKET_NAME: bucket.bucketName,
-                    },
-                    permissions: [bucket],
-                },
-            },
-        },
-    });
+
 
     stack.addOutputs({
-        S3Endpoint: api.url,
         BucketName: bucket.bucketName,
     });
 
-    return { bucket, api };
+    return { bucket };
 }
