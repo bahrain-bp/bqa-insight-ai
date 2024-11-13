@@ -41,7 +41,7 @@ function App() {
           index
           element={
             <>
-              <PageTitle title="eCommerce Dashboard | TailAdmin - Tailwind CSS Admin Dashboard Template" />
+              <PageTitle title="InsightAI" />
               <ECommerce />
             </>
           }
