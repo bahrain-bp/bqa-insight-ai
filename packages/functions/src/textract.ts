@@ -1,6 +1,6 @@
 import { APIGatewayEvent, Context } from "aws-lambda";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
-import { TextractClient, StartDocumentTextDetectionCommand, GetDocumentTextDetectionCommand } from "@aws-sdk/client-textract";
+import { TextractClient, StartDocumentTextDetectionCommand, GetDocumentTextDetectionCommand, AnalyzeDocumentCommand, StartDocumentAnalysisCommand, GetDocumentAnalysisCommand } from "@aws-sdk/client-textract";
 
 // type for the request
 interface TextractRequest {
@@ -11,10 +11,24 @@ interface TextractRequest {
 // type for processing the blocks
 interface Block {
   BlockType?: string;
+    Text?: string;
+    Relationships?: Array<{
+        Type: string;
+        Ids: string[];
+    }>;
+    Id: string;
+    Cells?: Cell[];
+}
+
+// type for processing the cells
+interface Cell {
+  RowIndex: number;
+  ColumnIndex: number;
   Text?: string;
 }
 
 // function to proccess the response from textract
+// (tables processing might need to be changed for vertical text)
 const processBlocks = (blocks: Block[]): string => {
     if (!blocks || blocks.length === 0) {
         return "";
@@ -27,10 +41,44 @@ const processBlocks = (blocks: Block[]): string => {
         })
         .filter((text) => text.length > 0);
 
-    return lineBlocks.join(' ');
+
+        const tableBlocks = blocks
+        .filter((block) => block.BlockType === "TABLE")
+        .map((table) => {
+            if (!table.Cells || table.Cells.length === 0) {
+                return "";
+            }
+
+            // Group cells by row
+            const rows = table.Cells.reduce((acc: { [key: number]: Cell[] }, cell) => {
+                const rowIndex = cell.RowIndex;
+                if (!acc[rowIndex]) {
+                    acc[rowIndex] = [];
+                }
+                acc[rowIndex].push(cell);
+                return acc;
+            }, {});
+
+            // Convert rows to text
+            const tableText = Object.values(rows)
+                .map(row => 
+                    row
+                        .sort((a, b) => a.ColumnIndex - b.ColumnIndex)
+                        .map(cell => cell.Text?.trim() || "")
+                        .filter(text => text.length > 0)
+                        .join(" | ")
+                )
+                .filter(row => row.length > 0)
+                .join("\n");
+
+            return tableText;
+        })
+        .filter((text) => text.length > 0);
+
+        return [...lineBlocks, ...tableBlocks].join('\n\n');
 }
 
-const s3Client = new S3Client({ region: "us-east-1" });
+// const s3Client = new S3Client({ region: "us-east-1" });
 const textractClient = new TextractClient({ region: "us-east-1" });
 
 export const extractTextFromPDF = async (event: APIGatewayEvent, context: Context) => {
@@ -40,18 +88,6 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
 
     const bucketName = requestBody.bucketName;
     const objectKey = requestBody.objectKey;
-
-    // Download the PDF from S3
-    // const getObjectCommand = new GetObjectCommand({
-    //   Bucket: bucketName,
-    //   Key: objectKey,
-    // });
-
-    // const pdfData = await s3Client.send(getObjectCommand);
-
-    // if (!pdfData.Body) {
-    //     throw new Error('Document body is empty');
-    // }
 
     // Use Textract to start document text detection
     const startDocumentTextDetectionCommand = new StartDocumentTextDetectionCommand({
@@ -63,12 +99,36 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
       },
     });
 
+    const startDocumentAnalysisCommand = new StartDocumentAnalysisCommand({
+      DocumentLocation: {
+        S3Object: {
+          Bucket: bucketName,
+          Name: objectKey,
+        },
+      },
+      FeatureTypes: ["TABLES"],
+    });
+
     const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
+
+    const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
 
     // Check if the text detection job started successfully
     if (!startTextDetectionResponse.JobId) {
       throw new Error("Failed to start document text detection job.");
     }
+
+    if (!startDocumentAnalysisResponse.JobId) {
+      throw new Error("Failed to start document text detection job.");
+    }
+    
+    const documentAnalysisJobId = startDocumentAnalysisResponse.JobId;
+
+    const getDocumentAnalysisCommand = new GetDocumentAnalysisCommand({
+      JobId: documentAnalysisJobId
+    })
+
+    const analysisResult = await tryTextract(getDocumentAnalysisCommand);
 
     const textRactJobId = startTextDetectionResponse.JobId;
     const getDocumentTextDetectionCommand = new GetDocumentTextDetectionCommand({
@@ -80,7 +140,6 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
     if (textDetectionResult.Blocks) {
         extractedText = processBlocks(textDetectionResult.Blocks)
     }
-    console.log("Extracted Text:", extractedText);
 
     return {
       statusCode: 200,
