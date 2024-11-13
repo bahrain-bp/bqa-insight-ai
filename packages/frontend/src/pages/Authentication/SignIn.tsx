@@ -1,10 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import LogoDark from '../../images/logo/logo-dark.svg';
 import Logo from '../../images/logo/logo.svg';
+import { useNavigate } from 'react-router-dom';
+import { signIn } from 'aws-amplify/auth';
 
-const SignIn: React.FC = () => {
+
+
+type SetStateType<T> = React.Dispatch<React.SetStateAction<T>>;
+
+const SignIning = ({
+  setUser,
+}: {
+  setUser: SetStateType<any>;
+  user: any;
+}) => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const navigate = useNavigate();
+    
+  const handleSignIn = async (email: string, password: string) => {
+    try {
+      const user = await signIn({ username: email, password });
+      console.log('Sign-in attempt:', { email, password });
+      setUser(user);
+      navigate('/Dashboard'); 
+    } catch (error: any) {
+      console.error('Error signing in', error);
+      
+    }
+  };
+  
   return (
     <>
       <Breadcrumb pageName="Sign In" />
@@ -155,6 +182,14 @@ const SignIn: React.FC = () => {
                 Sign In to TailAdmin
               </h2>
 
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSignIn(email, password);
+                }}
+              >
+
+              </form>
               <form>
                 <div className="mb-4">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
@@ -165,7 +200,9 @@ const SignIn: React.FC = () => {
                       type="email"
                       placeholder="Enter your email"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      onChange={(e) => setEmail(e.target.value)} 
                     />
+
 
                     <span className="absolute right-4 top-4">
                       <svg
@@ -186,7 +223,7 @@ const SignIn: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
+                    
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Re-type Password
@@ -196,6 +233,7 @@ const SignIn: React.FC = () => {
                       type="password"
                       placeholder="6+ Characters, 1 Capital letter"
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                      onChange={(e) => setPassword(e.target.value)}
                     />
 
                     <span className="absolute right-4 top-4">
@@ -226,6 +264,10 @@ const SignIn: React.FC = () => {
                   <input
                     type="submit"
                     value="Sign In"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleSignIn(email, password);
+                    }}
                     className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
                   />
                 </div>
@@ -270,8 +312,8 @@ const SignIn: React.FC = () => {
                 <div className="mt-6 text-center">
                   <p>
                     Don’t have any account?{' '}
-                    <Link to="/auth/signup" className="text-primary">
-                      Sign Up
+                    <Link to="/auth/ForgotPassword" className="text-primary">
+                      Forgot Password
                     </Link>
                   </p>
                 </div>
@@ -284,4 +326,5 @@ const SignIn: React.FC = () => {
   );
 };
 
-export default SignIn;
+
+export default SignIning;
