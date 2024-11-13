@@ -18,6 +18,7 @@ import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
+import ReportUpload from "./pages/ReportUpload.tsx";
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -136,9 +137,9 @@ function App() {
               <PageTitle title="Signup | TailAdmin - Tailwind CSS Admin Dashboard Template" />
               <SignUp />
             </>
-            
+
           }
-          
+
         />
         <Route
           path="/auth/ForgotPassword"
@@ -158,6 +159,15 @@ function App() {
             </>
           }
         />
+          <Route
+            path="/report/upload"
+            element={
+                <>
+                    <PageTitle title="Report Upload" />
+                    <ReportUpload />
+                </>
+                }
+            />
       </Routes>
     </DefaultLayout>
   );
