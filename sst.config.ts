@@ -26,10 +26,11 @@ export default {
       app.stack(OIDCForGitHubCI)
     }
     else {
-      app.stack(DBStack)
-      .stack(ApiStack)
-      .stack(FrontendStack)
-      .stack(S3Stack);
+      app
+          .stack(DBStack)
+          .stack(S3Stack)
+          .stack(ApiStack)
+          .stack(FrontendStack);
     }
   }
 } satisfies SSTConfig;

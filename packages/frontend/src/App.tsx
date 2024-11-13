@@ -16,6 +16,7 @@ import Tables from './pages/Tables';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
 import DefaultLayout from './layout/DefaultLayout';
+import ReportUpload from "./pages/ReportUpload.tsx";
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -142,6 +143,15 @@ function App() {
             </>
           }
         />
+          <Route
+            path="/report/upload"
+            element={
+                <>
+                    <PageTitle title="Report Upload" />
+                    <ReportUpload />
+                </>
+                }
+            />
       </Routes>
     </DefaultLayout>
   );
