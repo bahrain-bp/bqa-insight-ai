@@ -139,12 +139,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   Dashbaord
                 </NavLink>
               </li>
-              {/* <!-- Menu Item Calendar --> */}
+              {/* <!-- Menu Item Chatbot --> */}
               <li>
                 <NavLink
-                  to="/calendar"
+                  to="/chat"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('calendar') &&
+                    pathname.includes('chat') &&
                     'bg-graydark dark:bg-meta-4'
                   }`}
                 >
@@ -161,10 +161,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       fill=""
                     />
                   </svg>
-                  Calendar
+                  Chatbot
                 </NavLink>
               </li>
-              {/* <!-- Menu Item Calendar --> */}
+              {/* <!-- Menu Item Chatbot --> */}
 
               {/* <!-- Menu Item Profile --> */}
               <li>
@@ -381,7 +381,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       </clipPath>
                     </defs>
                   </svg>
-                  Settings
+                  Upload
                 </NavLink>
               </li>
               {/* <!-- Menu Item Settings --> */}

@@ -6,13 +6,13 @@ import PageTitle from './components/PageTitle';
 import SignIning from './pages/Authentication/SignIn';
 import SignUp from './pages/Authentication/SignUp';
 import PasswordResetPage from './pages/Authentication/ForgotPassword';
-import Calendar from './pages/Calendar';
+import ChatBot from './pages/Chat';
 import Chart from './pages/Chart';
 import ECommerce from './pages/Dashboard/ECommerce';
 import FormElements from './pages/Form/FormElements';
 import FormLayout from './pages/Form/FormLayout';
 import Profile from './pages/Profile';
-import Settings from './pages/Settings';
+import Settings from './pages/Setting';
 import Tables from './pages/Tables';
 import Alerts from './pages/UiElements/Alerts';
 import Buttons from './pages/UiElements/Buttons';
@@ -47,11 +47,11 @@ function App() {
           }
         />
         <Route
-          path="/calendar"
+          path="/chat"
           element={
             <>
-              <PageTitle title="Calendar | TailAdmin - Tailwind CSS Admin Dashboard Template" />
-              <Calendar />
+              <PageTitle title="Chat " />
+              <ChatBot />
             </>
           }
         />
