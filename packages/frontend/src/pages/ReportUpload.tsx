@@ -10,45 +10,55 @@ const ReportUpload: React.FC = () => {
     const [reports, setReports] = useState<Report[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-
     const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+        const files = Array.from(event.target.files || []);
+        if (files.length === 0) return;
+
         console.log("API URL:", import.meta.env.VITE_API_URL);
-        if (file) {
-            try {
-                // Request pre-signed URL from backend
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/generate-upload-url`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        fileName: file.name,
-                        fileType: file.type,
-                    }),
-                });
 
-                const data = await response.json();
-                const uploadURL = data.uploadURL;
+        try {
+            // Prepare file details for bulk request
+            const fileDetails = files.map(file => ({
+                fileName: file.name,
+                fileType: file.type,
+            }));
 
-                // Use the pre-signed URL to upload the file
-                await fetch(uploadURL, {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": file.type,
-                    },
-                    body: file,
-                });
+            // Request pre-signed URLs from backend
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/generate-upload-url`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ files: fileDetails }), // Send files as an array
+            });
 
-                // Add the file to the reports list
-                const newReport: Report = { name: file.name, date: new Date().toLocaleDateString() };
-                setReports([...reports, newReport]);
-            } catch (error) {
-                console.error("Upload failed:", error);
-            }
+            const data = await response.json();
+            const uploadURLs = data.uploadURLs;
+
+            // Upload each file using its corresponding pre-signed URL
+            await Promise.all(
+                files.map((file, index) =>
+                    fetch(uploadURLs[index].uploadURL, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": file.type,
+                        },
+                        body: file,
+                    })
+                )
+            );
+
+            // Add the files to the reports list
+            const newReports = files.map(file => ({
+                name: file.name,
+                date: new Date().toLocaleDateString(),
+            }));
+            setReports([...reports, ...newReports]);
+
+        } catch (error) {
+            console.error("Upload failed:", error);
         }
     };
-
 
     const filteredReports = reports.filter(report =>
         report.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -70,8 +80,9 @@ const ReportUpload: React.FC = () => {
                             id="reportUpload"
                             className="sr-only"
                             onChange={handleUpload}
+                            multiple // Allow multiple files
                         />
-                        <span>Upload Report</span>
+                        <span>Upload Reports</span>
                     </label>
                 </div>
 
