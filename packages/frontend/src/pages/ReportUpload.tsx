@@ -13,16 +13,17 @@ const ReportUpload: React.FC = () => {
     const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(event.target.files || []);
         if (files.length === 0) return;
-
+    
         console.log("API URL:", import.meta.env.VITE_API_URL);
-
+    
         try {
-            // Prepare file details for bulk request
+            // Prepare file details for bulk request, including file size
             const fileDetails = files.map(file => ({
                 fileName: file.name,
                 fileType: file.type,
+                fileSize: file.size, 
             }));
-
+    
             // Request pre-signed URLs from backend
             const response = await fetch(`${import.meta.env.VITE_API_URL}/generate-upload-url`, {
                 method: "POST",
@@ -31,10 +32,10 @@ const ReportUpload: React.FC = () => {
                 },
                 body: JSON.stringify({ files: fileDetails }), // Send files as an array
             });
-
+    
             const data = await response.json();
             const uploadURLs = data.uploadURLs;
-
+    
             // Upload each file using its corresponding pre-signed URL
             await Promise.all(
                 files.map((file, index) =>
@@ -47,18 +48,19 @@ const ReportUpload: React.FC = () => {
                     })
                 )
             );
-
+    
             // Add the files to the reports list
             const newReports = files.map(file => ({
                 name: file.name,
                 date: new Date().toLocaleDateString(),
             }));
             setReports([...reports, ...newReports]);
-
+    
         } catch (error) {
             console.error("Upload failed:", error);
         }
     };
+    
 
     const filteredReports = reports.filter(report =>
         report.name.toLowerCase().includes(searchTerm.toLowerCase())
