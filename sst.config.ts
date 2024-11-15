@@ -2,6 +2,9 @@ import { SSTConfig } from "sst";
 import { FrontendStack } from "./stacks/FrontendStack";
 import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
+import { AmazonLexSolarMapFulfillment } from "./stacks/Lexstacks/AmazonLexSolarMapFulfillment";
+import { BQABot } from "./stacks/Lexstacks/BQABot";
+
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 
@@ -26,8 +29,11 @@ export default {
     }
     else {
       app.stack(DBStack)
-      .stack(ApiStack)
-      .stack(FrontendStack);
+        .stack(ApiStack)
+        .stack(FrontendStack)
+        .stack(AmazonLexSolarMapFulfillment)
+        .stack(BQABot);
     }
   }
 } satisfies SSTConfig;
+export { BQABot };

@@ -20,5 +20,10 @@
   },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+    "@amaabca/aws-lex-custom-resources": "^4.1.0",
+    "@aws-cdk/aws-lex": "^1.203.0",
+    "@aws-cdk/core": "^1.203.0"
+  }
 }
