@@ -41,6 +41,13 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["textract", "s3"],
                     timeout: "60 seconds",
                 }
+            },
+            "POST /comprehend": {
+                function: {
+                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
+                    permissions: ["comprehend"],
+                    timeout: "60 seconds"
+                }
             }
         },
     });

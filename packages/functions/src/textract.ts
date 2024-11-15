@@ -1,5 +1,4 @@
 import { APIGatewayEvent, Context } from "aws-lambda";
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { TextractClient, StartDocumentTextDetectionCommand, GetDocumentTextDetectionCommand, AnalyzeDocumentCommand, StartDocumentAnalysisCommand, GetDocumentAnalysisCommand } from "@aws-sdk/client-textract";
 
 // type for the request
@@ -78,7 +77,6 @@ const processBlocks = (blocks: Block[]): string => {
         return [...lineBlocks, ...tableBlocks].join('\n\n');
 }
 
-// const s3Client = new S3Client({ region: "us-east-1" });
 const textractClient = new TextractClient({ region: "us-east-1" });
 
 export const extractTextFromPDF = async (event: APIGatewayEvent, context: Context) => {
@@ -127,8 +125,6 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
     const getDocumentAnalysisCommand = new GetDocumentAnalysisCommand({
       JobId: documentAnalysisJobId
     })
-
-    const analysisResult = await tryTextract(getDocumentAnalysisCommand);
 
     const textRactJobId = startTextDetectionResponse.JobId;
     const getDocumentTextDetectionCommand = new GetDocumentTextDetectionCommand({
