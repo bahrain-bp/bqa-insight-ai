@@ -9,11 +9,10 @@ export function FileMetadataStack({ stack }: StackContext) {
         fileURL: "string",
         fileSize: "number",
         fileType: "string", 
-        uploadedAt: "string",
-        isOriginal: "string",  
+        uploadedAt: "string", 
     },
     primaryIndex: { partitionKey: "fileKey" },
-});
+  });
 
   // Output the table name for reference
   stack.addOutputs({

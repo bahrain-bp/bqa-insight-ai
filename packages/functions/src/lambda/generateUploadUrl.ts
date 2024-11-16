@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 const s3 = new AWS.S3();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const sqs = new AWS.SQS();
 
 export async function handler(event: any) {
     const { files } = JSON.parse(event.body); // `files` should be an array of { fileName, fileType, fileSize }
@@ -20,7 +21,8 @@ export async function handler(event: any) {
 
     for (const file of files) {
         const { fileName, fileType, fileSize } = file;
-        const fileKey = `Files/${uuidv4()}`;
+        const uniqueId = uuidv4(); 
+        const fileKey = `Files/${uniqueId}`;
 
         const params = {
             Bucket: bucketName,
@@ -34,6 +36,11 @@ export async function handler(event: any) {
             uploadURLs.push({ fileName, fileKey, uploadURL });
 
             await insertFileMetadata({ fileKey, fileName, fileType, fileSize });
+
+            if (fileType === "application/pdf") {
+                await sendMessageToQueue(fileKey, uniqueId); 
+            } 
+
         } catch (error) {
             console.error("Error processing file:", fileName, error);
             return {
@@ -49,7 +56,8 @@ export async function handler(event: any) {
     };
 }
 
-async function insertFileMetadata(file: { fileKey: string; fileName: string; fileType: string, fileSize: number }) {
+// Insert file metadata into DynamoDB
+async function insertFileMetadata(file: { fileKey: string; fileName: string; fileType: string; fileSize: number }) {
     const params = {
         TableName: process.env.FILE_METADATA_TABLE_NAME as string,
         Item: {
@@ -59,8 +67,21 @@ async function insertFileMetadata(file: { fileKey: string; fileName: string; fil
             fileSize: file.fileSize,
             fileType: file.fileType,
             uploadedAt: new Date().toISOString(),
-            isOriginal: "true",
         },
     };
     return await dynamoDb.put(params).promise();
+}
+
+// Send a message to the SQS queue to process the PDF file
+async function sendMessageToQueue(fileKey: string, uniqueId: string) {
+    const params = {
+        QueueUrl: process.env.SQS_QUEUE_URL as string, 
+        MessageBody: JSON.stringify({
+            bucketName: process.env.BUCKET_NAME,
+            fileKey,
+            uniqueId, 
+        }),
+    };
+
+    await sqs.sendMessage(params).promise();
 }
