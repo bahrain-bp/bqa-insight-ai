@@ -20,7 +20,8 @@ export async function handler(event: any) {
 
     for (const file of files) {
         const { fileName, fileType, fileSize } = file;
-        const fileKey = `Files/${uuidv4()}`;
+        const uniqueId = uuidv4(); 
+        const fileKey = `Files/${uniqueId}`;
 
         const params = {
             Bucket: bucketName,
@@ -34,6 +35,7 @@ export async function handler(event: any) {
             uploadURLs.push({ fileName, fileKey, uploadURL });
 
             await insertFileMetadata({ fileKey, fileName, fileType, fileSize });
+
         } catch (error) {
             console.error("Error processing file:", fileName, error);
             return {
@@ -49,7 +51,8 @@ export async function handler(event: any) {
     };
 }
 
-async function insertFileMetadata(file: { fileKey: string; fileName: string; fileType: string, fileSize: number }) {
+// Insert file metadata into DynamoDB
+async function insertFileMetadata(file: { fileKey: string; fileName: string; fileType: string; fileSize: number }) {
     const params = {
         TableName: process.env.FILE_METADATA_TABLE_NAME as string,
         Item: {
@@ -59,8 +62,8 @@ async function insertFileMetadata(file: { fileKey: string; fileName: string; fil
             fileSize: file.fileSize,
             fileType: file.fileType,
             uploadedAt: new Date().toISOString(),
-            isOriginal: "true",
         },
     };
     return await dynamoDb.put(params).promise();
 }
+

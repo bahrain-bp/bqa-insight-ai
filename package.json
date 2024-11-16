@@ -24,6 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-comprehend": "^3.687.0",
     "@aws-sdk/client-textract": "^3.687.0",
+    "pdf-lib": "^1.17.1",
     "uuid": "^11.0.3"
   }
 }
