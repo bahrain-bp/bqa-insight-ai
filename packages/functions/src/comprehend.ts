@@ -1,7 +1,16 @@
 import { APIGatewayEvent } from 'aws-lambda';
+import { Bucket } from "sst/node/bucket";
 import { ComprehendClient, DetectKeyPhrasesCommand, DetectEntitiesCommand, EntityType } from '@aws-sdk/client-comprehend';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3"
 
-const client = new ComprehendClient({region: "us-east-1"});
+const s3Client = new S3Client({})
+const client = new ComprehendClient({ region: "us-east-1" });
+
+// type for the input
+interface ComprehendRequest {
+  text: string
+  objectKey?: string
+}
 
 // type for the output
 interface TextAnalysisResponse {
@@ -18,7 +27,7 @@ interface FilteredEntities {
 
 export async function sendTextToComprehend(event: APIGatewayEvent) {
   try {
-    const { text } = JSON.parse(event.body || "{}");
+    const { text, objectKey }: ComprehendRequest = JSON.parse(event.body || "{}");
 
     if (!text) {
       throw new Error('Text not provided');
@@ -60,6 +69,13 @@ export async function sendTextToComprehend(event: APIGatewayEvent) {
       entities: filteredEntities
     };
 
+    // upload response to S3 if object key is provided
+    if (objectKey) {
+      const split = objectKey.split('/')
+      const uuid = split[split.length - 1]
+      insertToS3(JSON.stringify(response), uuid)
+    }
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Text summarized successfully', response }),
@@ -70,5 +86,22 @@ export async function sendTextToComprehend(event: APIGatewayEvent) {
       statusCode: 500,
       body: JSON.stringify({ message: 'Failed to summarize text' }),
     };
+  }
+}
+
+async function insertToS3(fileContents: string, uuid: string) {
+  const bucket = Bucket.ComprehendBucket
+  const fileName = `comprehend-${uuid}.json`
+
+  try {
+    const command = new PutObjectCommand({
+      Body: fileContents,
+      Bucket: bucket.bucketName,
+      Key: fileName,
+    })
+    const response = await s3Client.send(command)
+    console.log("File uploaded", response)
+  } catch (error) {
+    console.error("Could not upload file", error)
   }
 }

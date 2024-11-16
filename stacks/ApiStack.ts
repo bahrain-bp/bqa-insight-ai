@@ -4,10 +4,12 @@ import {S3Stack} from "./S3Stack";
 import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
+import { ComprehendS3Stack } from "./ComprehendS3Stack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket} = use(S3Stack); 
+    const {bucket: comprehendBucket } = use(ComprehendS3Stack)
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -49,7 +51,8 @@ export function ApiStack({stack}: StackContext) {
                 function: {
                     handler: "packages/functions/src/comprehend.sendTextToComprehend",
                     permissions: ["comprehend"],
-                    timeout: "60 seconds"
+                    timeout: "60 seconds",
+                    bind: [comprehendBucket],
                 }
             }
         },

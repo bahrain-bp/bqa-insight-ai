@@ -7,6 +7,7 @@ import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCode
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
+import { ComprehendS3Stack } from "./stacks/ComprehendS3Stack";
 
 export default {
   config(_input) {
@@ -31,6 +32,7 @@ export default {
       app.stack(DBStack)
       .stack(FileMetadataStack)
       .stack(S3Stack)
+      .stack(ComprehendS3Stack)
       .stack(ApiStack)
       .stack(FrontendStack)
       .stack(AuthStack)
