@@ -2,12 +2,14 @@ import * as AWS from "aws-sdk";
 import { PDFDocument } from "pdf-lib";
 
 const s3 = new AWS.S3();
-const sqs = new AWS.SQS();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function handler(event: any) {
     for (const record of event.Records) {
-        const { bucketName, fileKey, uniqueId } = JSON.parse(record.body);
+        const bucketName = record.s3.bucket.name;
+        const fileKey = record.s3.object.key;
+
+        console.log(`Processing file from bucket: ${bucketName}, key: ${fileKey}`);
 
         try {
             // Get the file directly from S3
@@ -26,7 +28,7 @@ export async function handler(event: any) {
 
             // Upload split files back to S3
             for (let i = 0; i < pdfChunks.length; i++) {
-                const chunkKey = `SplitFiles/${uniqueId}/${i}`;
+                const chunkKey = `SplitFiles/${fileKey.split('/').pop()}/${i}`;
                 await s3.putObject({
                     Bucket: bucketName,
                     Key: chunkKey,
@@ -45,16 +47,6 @@ export async function handler(event: any) {
             await updateFileMetadata(fileKey, chunkURLs);
 
             console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
-
-            // Delete the message from the SQS queue after successful processing
-            await sqs
-                .deleteMessage({
-                    QueueUrl: process.env.SQS_QUEUE_URL as string,
-                    ReceiptHandle: record.receiptHandle,
-                })
-                .promise();
-
-            console.log(`Deleted message for file: ${fileKey}`);
         } catch (error) {
             console.error(`Error processing file ${fileKey}:`, error);
         }

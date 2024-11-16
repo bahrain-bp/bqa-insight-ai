@@ -7,7 +7,7 @@ import {Duration} from "aws-cdk-lib/core";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket, queue} = use(S3Stack); 
+    const {bucket} = use(S3Stack); 
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -34,9 +34,8 @@ export function ApiStack({stack}: StackContext) {
                     environment: {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
-                        SQS_QUEUE_URL: queue.queueUrl,
                     },
-                    permissions: [bucket, fileMetadataTable, queue],
+                    permissions: [bucket, fileMetadataTable],
                 },
             },
             "POST /textract": {

@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from "uuid";
 
 const s3 = new AWS.S3();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
-const sqs = new AWS.SQS();
 
 export async function handler(event: any) {
     const { files } = JSON.parse(event.body); // `files` should be an array of { fileName, fileType, fileSize }
@@ -37,10 +36,6 @@ export async function handler(event: any) {
 
             await insertFileMetadata({ fileKey, fileName, fileType, fileSize });
 
-            if (fileType === "application/pdf") {
-                await sendMessageToQueue(fileKey, uniqueId); 
-            } 
-
         } catch (error) {
             console.error("Error processing file:", fileName, error);
             return {
@@ -72,16 +67,3 @@ async function insertFileMetadata(file: { fileKey: string; fileName: string; fil
     return await dynamoDb.put(params).promise();
 }
 
-// Send a message to the SQS queue to process the PDF file
-async function sendMessageToQueue(fileKey: string, uniqueId: string) {
-    const params = {
-        QueueUrl: process.env.SQS_QUEUE_URL as string, 
-        MessageBody: JSON.stringify({
-            bucketName: process.env.BUCKET_NAME,
-            fileKey,
-            uniqueId, 
-        }),
-    };
-
-    await sqs.sendMessage(params).promise();
-}
