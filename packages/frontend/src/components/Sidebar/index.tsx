@@ -110,12 +110,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <NavLink
                   to="/"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('calendar') &&
+                    pathname == "/" &&
                     'bg-graydark dark:bg-meta-4'
                   }`}
                 >
                   <img src={Dashboard} alt="Dashboard" width="18" height="18" />
-                  Dashbaord
+                  Dashboard
                 </NavLink>
               </li>
               {/* <!-- Menu Item Chatbot --> */}
@@ -138,7 +138,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   <NavLink
                     to="/report/upload"
                     className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                      pathname.includes('chat') &&
+                      pathname.includes('report/upload') &&
                       'bg-graydark dark:bg-meta-4'
                     }`}
                   >
@@ -154,7 +154,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                             <NavLink
                               to="/auth/signin"
                               className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                                pathname.includes('Auth/SignIn') &&
+                                pathname.includes('auth/signin') &&
                                 'bg-graydark dark:bg-meta-4'
                               }`}
                             >
