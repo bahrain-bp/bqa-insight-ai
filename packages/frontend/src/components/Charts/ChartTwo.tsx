@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import ReactApexChart from 'react-apexcharts';
 
 const options: ApexOptions = {
-  colors: ['#3C50E0', '#80CAEE'],
+  colors: ['#014064', '#80CAEE'],
   chart: {
     fontFamily: 'Satoshi, sans-serif',
     type: 'bar',
@@ -44,7 +44,7 @@ const options: ApexOptions = {
   },
 
   xaxis: {
-    categories: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+    categories: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'],
   },
   legend: {
     position: 'top',
@@ -71,11 +71,11 @@ const ChartTwo: React.FC = () => {
   const [state, setState] = useState<ChartTwoState>({
     series: [
       {
-        name: 'Sales',
+        name: 'Girls Schools',
         data: [44, 55, 41, 67, 22, 43, 65],
       },
       {
-        name: 'Revenue',
+        name: 'Boys Schools',
         data: [13, 23, 20, 8, 13, 27, 15],
       },
     ],
@@ -93,7 +93,7 @@ const ChartTwo: React.FC = () => {
       <div className="mb-4 justify-between gap-4 sm:flex">
         <div>
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Profit this week
+            Government  Schools' Performance in English - 2023
           </h4>
         </div>
         <div>
@@ -103,8 +103,8 @@ const ChartTwo: React.FC = () => {
               id="#"
               className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
             >
-              <option value="" className='dark:bg-boxdark'>This Week</option>
-              <option value="" className='dark:bg-boxdark'>Last Week</option>
+              <option value="" className='dark:bg-boxdark'>This Year</option>
+              <option value="" className='dark:bg-boxdark'>Last Year</option>
             </select>
             <span className="absolute top-1/2 right-3 z-10 -translate-y-1/2">
               <svg
