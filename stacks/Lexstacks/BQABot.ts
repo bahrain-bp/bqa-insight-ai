@@ -75,7 +75,7 @@ export function BQABot({ stack }: StackContext) {
         intentName: 'BQAIntent',
         description: 'Intent to provide user with detailed comparision of educational institutes.',
         sampleUtterances: [
-            { utterance: 'Hello SolarMap' },
+            { utterance: 'Hello BQA' },
             { utterance: 'Hi SolarMap' },
             { utterance: 'About' },
             { utterance: 'Tell me more' },
