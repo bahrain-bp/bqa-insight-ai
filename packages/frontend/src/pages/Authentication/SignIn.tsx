@@ -34,10 +34,10 @@ const SignIning = ({
     <>
       <Breadcrumb pageName="Sign In" />
 
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex items-center justify-center h-screen"> {/* Added flex container with height */}
-          <div className="w-full max-w-md">
-            <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
+      <div className="">
+        <div className="flex justify-center "> {/* Added flex container with height */}
+          <div className="max-w-md">
+            <div className="p-4 sm:p-12.5 xl:p-17.5 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Login to InsightAI
               </h2>
@@ -114,18 +114,17 @@ const SignIning = ({
                     </span>
                   </div>
                 </div>
-
                 <div className="mb-5">
-                  <input
-                    type="submit"
-                    value="Sign In"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSignIn(email, password);
-                    }}
-                    className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
-                  />
-                </div>
+              <input
+                type="submit"
+                value="Sign In"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSignIn(email, password);
+                }}
+                className="w-full cursor-pointer rounded-lg border border-primary bg-[#014064] p-4 text-white transition hover:bg-opacity-90"
+              />
+            </div>
 
                 <div className="mt-6 text-center">
                   <p>
