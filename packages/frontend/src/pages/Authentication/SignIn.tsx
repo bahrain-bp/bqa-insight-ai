@@ -114,18 +114,17 @@ const SignIning = ({
                     </span>
                   </div>
                 </div>
-
                 <div className="mb-5">
-                  <input
-                    type="submit"
-                    value="Sign In"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleSignIn(email, password);
-                    }}
-                    className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
-                  />
-                </div>
+              <input
+                type="submit"
+                value="Sign In"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSignIn(email, password);
+                }}
+                className="w-full cursor-pointer rounded-lg border border-primary bg-[#014064] p-4 text-white transition hover:bg-opacity-90"
+              />
+            </div>
 
                 <div className="mt-6 text-center">
                   <p>
