@@ -4,7 +4,7 @@ import { TextractClient, StartDocumentTextDetectionCommand, GetDocumentTextDetec
 // type for the request
 interface TextractRequest {
   bucketName: string;
-  objectKey: string;
+  objectKeys: string[];
 }
 
 // type for processing the blocks
@@ -85,63 +85,65 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
     console.log("Request Body:", requestBody);
 
     const bucketName = requestBody.bucketName;
-    const objectKey = requestBody.objectKey;
+    let extractedText = [""];
 
-    // Use Textract to start document text detection
-    const startDocumentTextDetectionCommand = new StartDocumentTextDetectionCommand({
-      DocumentLocation: {
-        S3Object: {
-          Bucket: bucketName,
-          Name: objectKey,
+    await Promise.all(requestBody.objectKeys.map(async (objectKey: string, i: number) => {
+      // Use Textract to start document text detection
+      const startDocumentTextDetectionCommand = new StartDocumentTextDetectionCommand({
+        DocumentLocation: {
+          S3Object: {
+            Bucket: bucketName,
+            Name: objectKey,
+          },
         },
-      },
-    });
+      });
 
-    const startDocumentAnalysisCommand = new StartDocumentAnalysisCommand({
-      DocumentLocation: {
-        S3Object: {
-          Bucket: bucketName,
-          Name: objectKey,
+      const startDocumentAnalysisCommand = new StartDocumentAnalysisCommand({
+        DocumentLocation: {
+          S3Object: {
+            Bucket: bucketName,
+            Name: objectKey,
+          },
         },
-      },
-      FeatureTypes: ["TABLES"],
-    });
+        FeatureTypes: ["TABLES"],
+      });
 
-    const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
+      const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
 
-    const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
+      const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
 
-    // Check if the text detection job started successfully
-    if (!startTextDetectionResponse.JobId) {
-      throw new Error("Failed to start document text detection job.");
-    }
+      // Check if the text detection job started successfully
+      if (!startTextDetectionResponse.JobId) {
+        throw new Error("Failed to start document text detection job.");
+      }
 
-    if (!startDocumentAnalysisResponse.JobId) {
-      throw new Error("Failed to start document text detection job.");
-    }
-    
-    const documentAnalysisJobId = startDocumentAnalysisResponse.JobId;
+      if (!startDocumentAnalysisResponse.JobId) {
+        throw new Error("Failed to start document text detection job.");
+      }
+      
+      const documentAnalysisJobId = startDocumentAnalysisResponse.JobId;
 
-    const getDocumentAnalysisCommand = new GetDocumentAnalysisCommand({
-      JobId: documentAnalysisJobId
-    })
+      const getDocumentAnalysisCommand = new GetDocumentAnalysisCommand({
+        JobId: documentAnalysisJobId
+      })
 
-    const textRactJobId = startTextDetectionResponse.JobId;
-    const getDocumentTextDetectionCommand = new GetDocumentTextDetectionCommand({
-      JobId: textRactJobId,
-    });
-    const textDetectionResult = await tryTextract(getDocumentTextDetectionCommand);
+      const textRactJobId = startTextDetectionResponse.JobId;
+      const getDocumentTextDetectionCommand = new GetDocumentTextDetectionCommand({
+        JobId: textRactJobId,
+      });
+      const textDetectionResult = await tryTextract(getDocumentTextDetectionCommand);
 
-    let extractedText = "";
-    if (textDetectionResult.Blocks) {
-        extractedText = processBlocks(textDetectionResult.Blocks)
-    }
+      if (textDetectionResult.Blocks) {
+        // add text with index to preserve order
+        extractedText[i] = processBlocks(textDetectionResult.Blocks)
+      }
+    }))
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Text extracted successfully",
-        text: extractedText,
+        text: extractedText.join(),
       }),
     };
   } catch (error) {
