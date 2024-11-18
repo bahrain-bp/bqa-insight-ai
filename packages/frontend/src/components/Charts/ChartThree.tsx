@@ -11,8 +11,8 @@ const options: ApexOptions = {
     fontFamily: 'Satoshi, sans-serif',
     type: 'donut',
   },
-  colors: ['#3C50E0', '#6577F3', '#8FD0EF', '#0FADCF'],
-  labels: ['Desktop', 'Tablet', 'Mobile', 'Unknown'],
+  colors: ['#008B8B', '#FF7B04', '#C60000', '#AA00AA'],
+  labels: ['General Culture', 'Language', 'Physics', 'Biology'],
   legend: {
     show: false,
     position: 'bottom',
@@ -67,23 +67,12 @@ const ChartThree: React.FC = () => {
       <div className="mb-3 justify-between gap-4 sm:flex">
         <div>
           <h5 className="text-xl font-semibold text-black dark:text-white">
-            Visitors Analytics
+            Highest Ranked School in National Exams
           </h5>
         </div>
         <div>
           <div className="relative z-20 inline-block">
-            <select
-              name=""
-              id=""
-              className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
-            >
-              <option value="" className="dark:bg-boxdark">
-                Monthly
-              </option>
-              <option value="" className="dark:bg-boxdark">
-                Yearly
-              </option>
-            </select>
+          
             <span className="absolute right-3 top-1/2 z-10 -translate-y-1/2">
               <svg
                 width="10"
@@ -121,36 +110,36 @@ const ChartThree: React.FC = () => {
       <div className="-mx-8 flex flex-wrap items-center justify-center gap-y-3">
         <div className="sm:w-1/2 w-full px-8">
           <div className="flex w-full items-center">
-            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-primary"></span>
+            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#008b8b]"></span>
             <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-              <span> Desktop </span>
+              <span> General Culture </span>
               <span> 65% </span>
             </p>
           </div>
         </div>
         <div className="sm:w-1/2 w-full px-8">
           <div className="flex w-full items-center">
-            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#6577F3]"></span>
+            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#ff7b04]"></span>
             <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-              <span> Tablet </span>
+              <span> Language </span>
               <span> 34% </span>
             </p>
           </div>
         </div>
         <div className="sm:w-1/2 w-full px-8">
           <div className="flex w-full items-center">
-            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#8FD0EF]"></span>
+            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#c60000]"></span>
             <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-              <span> Mobile </span>
+              <span> Physics </span>
               <span> 45% </span>
             </p>
           </div>
         </div>
         <div className="sm:w-1/2 w-full px-8">
           <div className="flex w-full items-center">
-            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#0FADCF]"></span>
+            <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#aa00aa]"></span>
             <p className="flex w-full justify-between text-sm font-medium text-black dark:text-white">
-              <span> Unknown </span>
+              <span> Biology </span>
               <span> 12% </span>
             </p>
           </div>
