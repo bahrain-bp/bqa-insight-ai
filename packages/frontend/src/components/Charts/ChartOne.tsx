@@ -154,7 +154,7 @@ const ChartOne: React.FC = () => {
             </span>
             <div className="w-full">
               <p className="font-semibold text-primary">Private schools</p>
-              <p className="text-sm font-medium">2022 - 2023</p>
+              <p className="text-sm font-medium">2021 - 2023</p>
             </div>
           </div>
           <div className="flex min-w-47.5">
@@ -163,20 +163,20 @@ const ChartOne: React.FC = () => {
             </span>
             <div className="w-full">
               <p className="font-semibold text-secondary">Public schools</p>
-              <p className="text-sm font-medium">2022 - 2023</p>
+              <p className="text-sm font-medium">2021 - 2023</p>
             </div>
           </div>
         </div>
         <div className="flex w-full max-w-45 justify-end">
           <div className="inline-flex items-center rounded-md bg-whiter p-1.5 dark:bg-meta-4">
             <button className="rounded bg-white py-1 px-3 text-xs font-medium text-black shadow-card hover:bg-white hover:shadow-card dark:bg-boxdark dark:text-white dark:hover:bg-boxdark">
-              Day
+              2021
             </button>
             <button className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark">
-              Week
+              2022
             </button>
             <button className="rounded py-1 px-3 text-xs font-medium text-black hover:bg-white hover:shadow-card dark:text-white dark:hover:bg-boxdark">
-              Month
+              2023
             </button>
           </div>
         </div>
