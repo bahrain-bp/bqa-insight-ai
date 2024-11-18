@@ -17,5 +17,3 @@ node_modules
 # structurizr since we will use auto-layout
 workspace.json
 .structurizr
-credential.sh
-UpdateAWSCredentials.ps1
