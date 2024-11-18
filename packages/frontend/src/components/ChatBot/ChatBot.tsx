@@ -34,9 +34,7 @@ const ChatBot = () => {
                         <span>ChatBot</span>
                         <button onClick={toggleChat}>Close</button>
                     </div>
-                    <div id="chat">
                         <Chat/>
-                    </div>
                 </div>
             )}
         </div>
@@ -47,6 +45,7 @@ const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
+    const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
 
     const initialMessages: Message[] = [
         {author: "loading", body: "...", timeout: 0},
@@ -132,10 +131,18 @@ const Chat = () => {
         });
     }, []);
 
+    // Scroll to the bottom when messages change
+    useEffect(() => {
+        if (chatListRef.current) {
+            const chatList = chatListRef.current;
+            chatList.scrollTop = chatList.scrollHeight;
+        }
+    }, [messages]);
+
     return (
         <div className="c-chat">
             {/* Chat Message List */}
-            <ul className="c-chat__list">
+            <ul ref={chatListRef} className="c-chat__list">
                 {messages.map((message, index) => (
                     <li
                         key={index}

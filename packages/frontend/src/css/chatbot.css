@@ -10,8 +10,7 @@
     right: 20px;
     width: 90%;
     max-width: 400px;
-    height: fit-content;
-    max-height: 500px;
+    height: 500px;
     background: #1e1e2f;
     color: #fff;
     border-radius: 10px;
@@ -20,6 +19,7 @@
     flex-direction: column;
     overflow: hidden; /* Prevent content overflow */
     z-index: 1000;
+
 }
 
 /* Header for chat, e.g., title and close button */
