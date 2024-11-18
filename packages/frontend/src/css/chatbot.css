@@ -19,6 +19,21 @@
     flex-direction: column;
     overflow: hidden; /* Prevent content overflow */
     z-index: 1000;
+    opacity: 0;
+    transform: translateY(20px) scale(0.95); /* Starts below and scaled down */
+    transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
+}
+
+/* Animation for chat box opening */
+.b-chat--open {
+    opacity: 1; /* Make visible */
+    transform: translateY(0) scale(1); /* Move up and scale to normal size */
+}
+
+/* Animation for chat box closing */
+.b-chat--closed {
+    opacity: 0; /* Fade out */
+    transform: translateY(20px) scale(0.95); /* Slide down and shrink */
 
 }
 
@@ -108,7 +123,7 @@
     background: #00ac92;
     color: #fff;
     border-top-right-radius: 0;
-    border-top-left-radius:15px;
+    border-top-left-radius: 15px;
 }
 
 /* Input box styling */

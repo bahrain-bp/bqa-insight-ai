@@ -21,15 +21,17 @@ const ChatBot = () => {
             {!isChatOpen && (
                 <img
                     src={rebotIcon}
-                    className="fixed bottom-4 right-4 bg-blue-500 text-white p-3 rounded-full shadow-lg cursor-pointer"
+                    className="fixed bottom-4 right-4  text-white p-3  cursor-pointer"
                     alt="Open Chat"
                     onClick={toggleChat}
+                    width={150}
+                    height={150}
                 />
             )}
 
             {/* Chat UI */}
             {isChatOpen && (
-                <div className="b-chat">
+                <div className={`b-chat ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
                     <div className="b-chat__header">
                         <span>ChatBot</span>
                         <button onClick={toggleChat}>Close</button>
