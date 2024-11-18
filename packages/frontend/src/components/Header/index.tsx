@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import DropdownMessage from './DropdownMessage';
 import DropdownNotification from './DropdownNotification';
 import DropdownUser from './DropdownUser';
-import LogoIcon from '../../images/logo/logo-icon.svg';
+import LogoIcon from '../../images/icon.ico';
 import DarkModeSwitcher from './DarkModeSwitcher';
 
 const Header = (props: {
@@ -40,24 +40,13 @@ const Header = (props: {
                   }`}
                 ></span>
               </span>
-              <span className="absolute right-0 h-full w-full rotate-45">
-                <span
-                  className={`absolute left-2.5 top-0 block h-full w-0.5 rounded-sm bg-black delay-300 duration-200 ease-in-out dark:bg-white ${
-                    !props.sidebarOpen && '!h-0 !delay-[0]'
-                  }`}
-                ></span>
-                <span
-                  className={`delay-400 absolute left-0 top-2.5 block h-0.5 w-full rounded-sm bg-black duration-200 ease-in-out dark:bg-white ${
-                    !props.sidebarOpen && '!h-0 !delay-200'
-                  }`}
-                ></span>
-              </span>
+
             </span>
           </button>
           {/* <!-- Hamburger Toggle BTN --> */}
 
           <Link className="block flex-shrink-0 lg:hidden" to="/">
-            <img src={LogoIcon} alt="Logo" />
+            <img style={{maxWidth: "30%"}} src={LogoIcon} alt="Logo" />
           </Link>
         </div>
 
@@ -102,19 +91,7 @@ const Header = (props: {
             {/* <!-- Dark Mode Toggler --> */}
             <DarkModeSwitcher />
             {/* <!-- Dark Mode Toggler --> */}
-
-            {/* <!-- Notification Menu Area --> */}
-            <DropdownNotification />
-            {/* <!-- Notification Menu Area --> */}
-
-            {/* <!-- Chat Notification Area --> */}
-            <DropdownMessage />
-            {/* <!-- Chat Notification Area --> */}
           </ul>
-
-          {/* <!-- User Area --> */}
-          <DropdownUser />
-          {/* <!-- User Area --> */}
         </div>
       </div>
     </header>
