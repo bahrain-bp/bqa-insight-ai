@@ -14,7 +14,7 @@ export function AmazonLexSolarMapFulfillment({ stack }: StackContext) {
         memorySize: 512, 
         timeout: Duration.seconds(60),
         // code: lambda.Code.fromInline('print("Hello World")'),
-        code: lambda.Code.fromAsset('stacks/Lexstacks/'),
+        code: lambda.Code.fromAsset('packages/functions/LexBot/fulfillment/'),
     }); 
 
     // Grant permission for the Lambda function to interact with Amazon Lex

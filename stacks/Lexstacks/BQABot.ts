@@ -29,14 +29,14 @@ export function BQABot({ stack }: StackContext) {
     // The LexBotDefinition class is the main entry point to Lex bot creation.
     const botDefinition = new LexBotDefinition(
         stack,
-        'SolarMapBot',
+        'BQABot',
         provider.serviceToken(),
         {
             botName: stack.stackName + '-Lex',
             dataPrivacy: {
                 childDirected: false,
             },
-            description: 'A guide to solar energy in Bahrain',
+            description: 'A Bot for comparing educational institutes for BQA',
             idleSessionTTLInSeconds: 300,
             roleArn: provider.serviceLinkedRoleArn(),
         }
@@ -56,18 +56,14 @@ export function BQABot({ stack }: StackContext) {
     // Welcome Intent
 
     locale.addSlotType({
-        slotTypeName: 'SolarMapSlot',
-        description: 'Everything Solar Map',
+        slotTypeName: 'BQASlot',
+        description: 'This is compare Slot type',
         valueSelectionSetting: {
             resolutionStrategy: 'OriginalValue'
         },
         slotTypeValues: [
-            { sampleValue: { value: 'About' } },
-            { sampleValue: { value: 'Providers' } },
-            { sampleValue: { value: 'Calculation' } },
-            { sampleValue: { value: 'Process' } },
-            { sampleValue: { value: 'More' } },
-            { sampleValue: { value: 'Data & Privacy' } },
+            { sampleValue: { value: 'compare between Bahrain Polytechnic and UOB ' } },
+            { sampleValue: { value: 'analyze' } },
         ],
     });
 
@@ -76,23 +72,7 @@ export function BQABot({ stack }: StackContext) {
         description: 'Intent to provide user with detailed comparision of educational institutes.',
         sampleUtterances: [
             { utterance: 'Hello BQA' },
-            { utterance: 'Hi SolarMap' },
-            { utterance: 'About' },
-            { utterance: 'Tell me more' },
-            { utterance: 'What is this?' },
-            { utterance: 'Who are you?' },
-            { utterance: 'How can I get started?' },
-            { utterance: 'Good morning' },
-            { utterance: 'Good afternoon' },
-            { utterance: 'Explain'},
-            { utterance: 'Another'},
-            { utterance: 'Next'},
-            { utterance: 'Again'},
-            { utterance: 'Help'},
-            { utterance: 'Providers'},
-            { utterance: 'Calculation'},
-            { utterance: 'Data & Privacy'},
-            { utterance: 'Process'},
+            { utterance: 'compare' },
         ],
         fulfillmentCodeHook: {
             enabled: true,
@@ -103,7 +83,7 @@ export function BQABot({ stack }: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'Okay, your selected category is "{SolarMapSlot}", please type "Confirm".',
+                                value: 'Do you want to compare between Bahrain Polytechnic and UOB?',
                             },
                         },
                     },
@@ -115,54 +95,32 @@ export function BQABot({ stack }: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'Okay, please choose another category.'
+                                value: 'Can you explain more?',
                             },
                         },
                     },
                 ],
             },
         },
+
     });
 
     BQAIntent.addSlot({
-        slotName: 'SolarMapSlot',
-        slotTypeName: 'SolarMapSlot',
+        slotName: 'BQASlot',
+        slotTypeName: 'BQASlot',
         description: 'The type of category to learn about',
         valueElicitationSetting: {
             slotConstraint: 'Required',
             promptSpecification: {
                 messageGroups: [
-                    { 
-                        message: { 
-                           imageResponseCard: { 
-                              buttons: [ 
-                                 { 
-                                    text: "About",
-                                    value: "About"
-                                 },
-                                 { 
-                                    text: "Providers",
-                                    value: "Providers"
-                                 },
-                                 { 
-                                    text: "Calculation",
-                                    value: "Calculation"
-                                 },
-                                 { 
-                                    text: "Process",
-                                    value: "Process"
-                                 },
-                                 { 
-                                    text: "Data & Privacy",
-                                    value: "Data & Privacy"
-                                 },
-                              ],
-                              imageUrl: "https://ee-files.s3.amazonaws.com/files/110894/images/solar-panel-array-6_6092713d15247ca41d4ec08f9529c889-min_1440.jpg",
-                              subtitle: "Please pick a category to get started or say More for additional support",
-                              title: "Learn About Everything Solar Map"
-                           },
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'How can I help you?'
+                             },
                         },
-            }],
+                    },
+                ],
                 maxRetries: 2,
             },
         },
@@ -183,102 +141,6 @@ export function BQABot({ stack }: StackContext) {
             { sampleValue: { value: 'Medium' } },
             { sampleValue: { value: 'High' } },
             { sampleValue: { value: '300 kilowatt' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'RoofTypeSlot',
-        description: 'Types of rooftops materials',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'Flat' } },
-            { sampleValue: { value: 'Sloped' } },
-            { sampleValue: { value: 'Metal' } },
-            { sampleValue: { value: 'Tile' } },
-            { sampleValue: { value: 'Asphalt' } },
-            { sampleValue: { value: 'Something else' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'InstallationTimelineSlot',
-        description: 'Types of installation time periods',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'ASAP' } },
-            { sampleValue: { value: '3 months' } },
-            { sampleValue: { value: '6 months' } },
-            { sampleValue: { value: 'Flexible' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'ShadingSlot',
-        description: 'Types of shading levels',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'Low' } },
-            { sampleValue: { value: 'Medium' } },
-            { sampleValue: { value: 'High' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'PropertySizeSlot',
-        description: 'Types of property size categories',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'Small' } },
-            { sampleValue: { value: 'Medium' } },
-            { sampleValue: { value: 'Large' } },
-            { sampleValue: { value: '200 square meters' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'BudgetSlot',
-        description: 'Types of budget categories',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'Low' } },
-            { sampleValue: { value: 'Medium' } },
-            { sampleValue: { value: 'High' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'LocationSlot',
-        description: 'Types of location areas',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'City center' } },
-            { sampleValue: { value: 'Suburb' } },
-            { sampleValue: { value: 'Rural area' } },
-        ],
-    });
-
-    locale.addSlotType({
-        slotTypeName: 'RoofOrientationSlot',
-        description: 'Types of rooftop orientation angles',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            { sampleValue: { value: 'South' } },
-            { sampleValue: { value: 'East' } },
-            { sampleValue: { value: 'Multiple directions' } },
         ],
     });
 
