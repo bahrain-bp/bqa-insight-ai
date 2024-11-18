@@ -1,5 +1,5 @@
 import useColorMode from '../../hooks/useColorMode';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import Login from '../../images/logo/login.svg';
 
 const DarkModeSwitcher = () => {
