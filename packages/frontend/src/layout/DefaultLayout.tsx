@@ -1,10 +1,12 @@
 import React, { useState, ReactNode } from 'react';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
+import ChatButton from "../components/ChatBot/ChatBot.tsx";
 
 const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  /* <!-- ===== Main Content End ===== --> */
   return (
     <div className="dark:bg-boxdark-2 dark:text-bodydark">
       {/* <!-- ===== Page Wrapper Start ===== --> */}
@@ -25,7 +27,8 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
               {children}
             </div>
           </main>
-          {/* <!-- ===== Main Content End ===== --> */}
+          {}
+          <ChatButton />
         </div>
         {/* <!-- ===== Content Area End ===== --> */}
       </div>
