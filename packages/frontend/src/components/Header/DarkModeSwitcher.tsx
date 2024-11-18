@@ -11,7 +11,7 @@ const DarkModeSwitcher = () => {
         <tbody>
           <tr>
           <NavLink to="/auth/signin">
-            <td style={{paddingTop:8}}>
+            <td style={{paddingTop:9.5}}>
               Login
             </td>
              </NavLink>
