@@ -21,7 +21,7 @@ const SignIning = ({
       const user = await signIn({ username: email, password });
       console.log('Sign-in attempt:', { email, password });
       setUser(user);
-      navigate('/Dashboard'); 
+      navigate('/'); 
     } catch (error: any) {
       console.error('Error signing in', error);
       
@@ -48,7 +48,7 @@ const SignIning = ({
               >
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Username / Email 
+                    Email 
                   </label>
                   <div className="relative">
                     <input
