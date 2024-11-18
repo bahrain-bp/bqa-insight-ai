@@ -5,7 +5,7 @@ import Logo from '../../images/logo/logo.svg';
 import Dashboard from '../../images/logo/dashboard.svg';
 import Chat from '../../images/logo/chat.svg';
 import Upload from '../../images/logo/upload.svg';
-import Login from '../../images/logo/login.svg';
+
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -148,25 +148,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   </NavLink>
                 </li>
                 {/* <!-- Menu Item Upload --> */}
-         
-
-         
-                          <li>
-                            <NavLink
-                              to="/auth/signin"
-                              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                                pathname.includes('auth/signin') &&
-                                'bg-graydark dark:bg-meta-4'
-                              }`}
-                            >
-                       <img src={Login} alt="Login" width="18" height="18" />
-                              Sign In
-                            </NavLink>
-                          </li>
-                        
-                        
-          
-
             
             </ul>
           </div>
