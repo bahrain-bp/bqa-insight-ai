@@ -76,7 +76,7 @@ const ChartTwo: React.FC = () => {
       },
       {
         name: 'Boys Schools',
-        data: [20, 35, 40, 57, 68, 71, 87],
+        data: [20, 35, 40, 57, 68, 71, 60],
       },
     ],
   });
