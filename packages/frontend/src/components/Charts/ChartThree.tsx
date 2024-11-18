@@ -11,8 +11,8 @@ const options: ApexOptions = {
     fontFamily: 'Satoshi, sans-serif',
     type: 'donut',
   },
-  colors: ['#3C50E0', '#6577F3', '#8FD0EF', '#0FADCF'],
-  labels: ['Desktop', 'Tablet', 'Mobile', 'Unknown'],
+  colors: ['#008B8B', '#FF7B04', '#C60000', '#AA00AA'],
+  labels: ['General Culture', 'Language', 'Physics', 'Biology'],
   legend: {
     show: false,
     position: 'bottom',
@@ -72,18 +72,7 @@ const ChartThree: React.FC = () => {
         </div>
         <div>
           <div className="relative z-20 inline-block">
-            <select
-              name=""
-              id=""
-              className="relative z-20 inline-flex appearance-none bg-transparent py-1 pl-3 pr-8 text-sm font-medium outline-none"
-            >
-              <option value="" className="dark:bg-boxdark">
-                Monthly
-              </option>
-              <option value="" className="dark:bg-boxdark">
-                Yearly
-              </option>
-            </select>
+          
             <span className="absolute right-3 top-1/2 z-10 -translate-y-1/2">
               <svg
                 width="10"
