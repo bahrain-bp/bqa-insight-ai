@@ -4,10 +4,12 @@ import {S3Stack} from "./S3Stack";
 import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
+import { BedrockStack } from "./BedrockStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket} = use(S3Stack); 
+    const {bucket} = use(S3Stack);
+    const {cfnKnowledgeBase, cfnDataSource} = use(BedrockStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -50,6 +52,17 @@ export function ApiStack({stack}: StackContext) {
                     handler: "packages/functions/src/comprehend.sendTextToComprehend",
                     permissions: ["comprehend"],
                     timeout: "60 seconds"
+                }
+            },
+            "POST /sync": {
+                function: {
+                    handler: "packages/functions/src/bedrock/sync.syncKnowlegeBase",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    environment: {
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
                 }
             }
         },

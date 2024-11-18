@@ -55,6 +55,15 @@ const ReportUpload: React.FC = () => {
                 date: new Date().toLocaleDateString(),
             }));
             setReports([...reports, ...newReports]);
+
+            const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
+                method: "POST",                
+            });
+
+            const syncJobData = await syncJobResponse.json();
+            if (syncJobData.statusCode == 200) {
+                console.log("Job started successfully!")
+            }
     
         } catch (error) {
             console.error("Upload failed:", error);
