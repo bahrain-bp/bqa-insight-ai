@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.1",
+    "@types/mime-types": "^2.1.4",
     "aws-cdk-lib": "^2.164.1",
     "constructs": "10.3.0",
     "sst": "2.40.3",
@@ -23,7 +24,10 @@
   ],
   "dependencies": {
     "@aws-sdk/client-comprehend": "^3.687.0",
+    "@aws-sdk/client-dynamodb": "^3.693.0",
     "@aws-sdk/client-textract": "^3.687.0",
+    "date-fns": "^4.1.0",
+    "mime-types": "^2.1.35",
     "pdf-lib": "^1.17.1",
     "uuid": "^11.0.3"
   }
