@@ -1,8 +1,8 @@
-//import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signOut } from 'aws-amplify/auth';
 
-const SignOutPage = () => {
+const SignOutButton = () => {
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -15,24 +15,21 @@ const SignOutPage = () => {
   };
 
   return (
-    <div style={{ textAlign: 'center', marginTop: '50px' }}>
-      <h2>Are you sure you want to sign out?</h2>
-      <button
-        onClick={handleSignOut}
-        style={{
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#1e2434',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        Sign Out
-      </button>
-    </div>
+    <button
+      onClick={handleSignOut}
+      style={{
+        padding: '8px 16px', // Reduced padding
+        fontSize: '14px', // Smaller font size
+        backgroundColor: '#003366',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px', // Slightly reduced radius
+        cursor: 'pointer',
+      }}
+    >
+      Logout
+    </button>
   );
 };
 
-export default SignOutPage;
+export default SignOutButton;
