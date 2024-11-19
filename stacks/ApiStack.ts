@@ -9,7 +9,7 @@ import { BedrockStack } from "./BedrockStack";
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket} = use(S3Stack);
-    const {cfnKnowledgeBase, cfnDataSource} = use(BedrockStack);
+    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -62,6 +62,17 @@ export function ApiStack({stack}: StackContext) {
                     environment: {
                         KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
                         DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
+                }
+            },
+            "POST /invokeBedrock": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    environment: {
+                        AGENT_ID: cfnAgent?.attrAgentId || "",
+                        AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                     }
                 }
             }

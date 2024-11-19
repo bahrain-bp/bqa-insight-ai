@@ -129,7 +129,7 @@ export function BedrockStack({ stack, app }: StackContext) {
         // },
       });
       var cfnAgent = undefined
-      if (app.stage == "prod" || app.stage == "zainabghanem") {
+      if (app.stage == "prod" || app.stage == "hasan") {
           cfnAgent = new bedrock.CfnAgent(stack, "BQACfnAgent", {
             agentName: "BQAInsightAIModel",
             // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',
@@ -146,6 +146,11 @@ export function BedrockStack({ stack, app }: StackContext) {
         );
         stack.addOutputs({Agent: cfnAgent.agentName})
       }
+
+      const cfnAgentAlias = new bedrock.CfnAgentAlias(stack, 'BQACfnAgentAlias', {
+        agentAliasName: 'BQACfnAgentAlias',
+        agentId: cfnAgent?.attrAgentId || "",
+      });
           
 
     stack.addOutputs({
@@ -153,5 +158,5 @@ export function BedrockStack({ stack, app }: StackContext) {
         DataSource: cfnDataSource.name,
     });
 
-    return { cfnKnowledgeBase, cfnDataSource, cfnAgent };
+    return { cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias };
 }      
