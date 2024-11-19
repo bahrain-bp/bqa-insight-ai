@@ -4,11 +4,13 @@ import {S3Stack} from "./S3Stack";
 import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
+import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket} = use(S3Stack); 
+    const {bucket} = use(S3Stack);
+    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
@@ -84,6 +86,28 @@ export function ApiStack({stack}: StackContext) {
                     handler: "packages/functions/src/comprehend.sendTextToComprehend",
                     permissions: ["comprehend"],
                     timeout: "60 seconds"
+                }
+            },
+            "POST /sync": {
+                function: {
+                    handler: "packages/functions/src/bedrock/sync.syncKnowlegeBase",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    environment: {
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
+                }
+            },
+            "POST /invokeBedrock": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    environment: {
+                        AGENT_ID: cfnAgent?.attrAgentId || "",
+                        AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                    }
                 }
             }
         },

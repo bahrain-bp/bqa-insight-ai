@@ -10,6 +10,7 @@ import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCode
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
+import { BedrockStack } from "./stacks/BedrockStack";
 
 export default {
   config(_input) {
@@ -34,6 +35,7 @@ export default {
       app.stack(DBStack)
       .stack(FileMetadataStack)
       .stack(S3Stack)
+      .stack(BedrockStack)
       .stack(AmazonLexSolarMapFulfillment)
       .stack(BotStack)
       .stack(ApiStack) 
