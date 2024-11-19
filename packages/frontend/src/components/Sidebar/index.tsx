@@ -73,7 +73,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         <button
           ref={trigger}
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-controls="sidebar"
+           aria-controls="sidebar"
           aria-expanded={sidebarOpen}
           className="block lg:hidden"
         >
@@ -117,7 +117,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   Dashboard
                 </NavLink>
               </li>
-             
               {/* <!-- Menu Item Upload --> */}
                 <li>
                   <NavLink
