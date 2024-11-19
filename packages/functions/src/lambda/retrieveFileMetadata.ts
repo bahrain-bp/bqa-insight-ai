@@ -60,12 +60,14 @@ const formatTime = (date: string | undefined): string | null => {
   return format(new Date(date), "yyyy-MM-dd hh:mm a");
 };
 
-// Function to convert file size from bytes to megabytes
+// Function to convert file size from bytes to kilobytes and round to the nearest integer
 const formatFileSize = (bytes: number | undefined): string | null => {
   if (!bytes) return null;
-  const megabytes = bytes / (1024 * 1024); // Convert bytes to MB
-  return `${megabytes.toFixed(2)} MB`; // Format to 2 decimal places
+  const kilobytes = Math.round(bytes / 1024); // Convert bytes to KB and round to nearest integer
+  return `${kilobytes} KB`;
 };
+
+
 
 // Function to format file type using mime-types
 const formatFileType = (mimeType: string | undefined): string | null => {
