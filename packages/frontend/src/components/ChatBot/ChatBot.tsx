@@ -83,6 +83,11 @@ const Chat = () => {
         setMessages((prev) => [...prev, messageWithDefaults]);
     };
 
+    const replaceLastMessage = (item: Message) => {
+        const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
+        setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
+    };
+
     // const mockReply = () => {
     //     const response = responseTexts[responses];
     //     setResponses((prev) => prev + 1);
@@ -119,19 +124,36 @@ const Chat = () => {
         ) as HTMLInputElement;
         const message = input.value;
         addMessage({author: "human", body: message});
-        input.value = "";
-        
 
-        const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ prompt: message }),
-        });
-        const body = await bedrockResponse.json()
-        // addMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
-        addMessage({author: "bot", body: body.response})
+        const inputPlaceholder = input.placeholder
+
+        try {
+
+            input.value = "";
+            input.disabled = true;
+            input.placeholder = "Waiting for response..."
+
+            addMessage({author: "loading", body: "(Thinking...)"})
+
+            const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ prompt: message }),
+            });
+            const body = await bedrockResponse.json()
+            // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
+            replaceLastMessage({author: "bot", body: body.response})
+
+        } catch (error) {
+            console.error(error)
+            replaceLastMessage({author: "bot", body: "An error has occurred. Please try again."})
+        } finally {
+            input.disabled = false;
+            input.placeholder = inputPlaceholder
+            input.focus()
+        }
     };
 
     useEffect(() => {
@@ -162,9 +184,9 @@ const Chat = () => {
                             message.author === "human" ? "c-chat__item--human" : ""
                         }`}
                     >
-                        <div className="c-chat__message">
+                        <div className={`c-chat__message`}>
                             {typeof message.body === "string" ? (
-                                message.body
+                                <span className={message.author === "loading" ? "c-chat__item--loading" : ""}>{ message.body }</span>
                             ) : (
                                 message.body.map((link, idx) => (
                                     <a
