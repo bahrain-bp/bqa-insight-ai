@@ -51,6 +51,30 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["comprehend"],
                     timeout: "60 seconds"
                 }
+            },
+            "POST /lex/start_session": {
+                function: {
+                    handler: "packages/functions/src/startLexSession.handler",
+                    permissions: ["lex"],
+                    timeout: "60 seconds",
+                    environment: {
+                        BOT_ID: "",
+                        BOT_ALIAS_ID: "",
+                        LOCALE_ID: "",
+                    }
+                }
+            },
+            "POST /lex/message_lex": {
+                function: {
+                    handler: "packages/functions/src/messageLex.handler",
+                    permissions: ["lex"],
+                    timeout: "60 seconds",
+                    environment: {
+                        BOT_ID: "",
+                        BOT_ALIAS_ID: "",
+                        LOCALE_ID: "",
+                    }
+                }
             }
         },
     });
