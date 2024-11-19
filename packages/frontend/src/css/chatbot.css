@@ -107,6 +107,11 @@
     justify-content: flex-end;
 }
 
+@keyframes l1 {to{opacity: 0.2}}
+.c-chat__item--loading {
+  animation: l1 1s ease-in-out infinite alternate;
+}
+
 .c-chat__message {
     max-width: 70%;
     padding: 10px 15px;
