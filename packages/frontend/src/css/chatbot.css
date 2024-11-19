@@ -28,13 +28,14 @@
 .b-chat--open {
     opacity: 1; /* Make visible */
     transform: translateY(0) scale(1); /* Move up and scale to normal size */
+    display: flex;
 }
 
 /* Animation for chat box closing */
 .b-chat--closed {
     opacity: 0; /* Fade out */
     transform: translateY(20px) scale(0.95); /* Slide down and shrink */
-
+    display: none;
 }
 
 /* Header for chat, e.g., title and close button */
