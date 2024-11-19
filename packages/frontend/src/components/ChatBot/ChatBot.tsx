@@ -46,70 +46,70 @@ const Chat = () => {
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
 
-    const initialMessages: Message[] = [
-        {author: "loading", body: "...", timeout: 0},
-        {author: "bot", body: "Hello", timeout: 800},
-        {author: "bot", body: "Follow the white rabbit...", timeout: 1500},
-        {author: "bot", body: "Ach I'm kidding, it's me, Paul", timeout: 3000},
-        {author: "bot", body: "What's up?", timeout: 4000},
-        {
-            author: "bot",
-            body: [
-                {url: "/blog/", text: "Blog"},
-                {url: "https://codepen.io/onefastsnail", text: "Codepen"},
-                {url: "https://github.com/onefastsnail", text: "Github"},
-            ],
-            timeout: 5000,
-        },
-    ];
+    // const initialMessages: Message[] = [
+    //     {author: "loading", body: "...", timeout: 0},
+    //     {author: "bot", body: "Hello", timeout: 800},
+    //     {author: "bot", body: "Follow the white rabbit...", timeout: 1500},
+    //     {author: "bot", body: "Ach I'm kidding, it's me, Paul", timeout: 3000},
+    //     {author: "bot", body: "What's up?", timeout: 4000},
+    //     {
+    //         author: "bot",
+    //         body: [
+    //             {url: "/blog/", text: "Blog"},
+    //             {url: "https://codepen.io/onefastsnail", text: "Codepen"},
+    //             {url: "https://github.com/onefastsnail", text: "Github"},
+    //         ],
+    //         timeout: 5000,
+    //     },
+    // ];
 
-    const responseTexts = [
-        "This bot silly",
-        "No really, it's a gimmick, quickly made in my Codepen",
-        [
-            "Ok here is a joke...",
-            "When Alexander Graham Bell invented the telephone he had three missed calls from Chuck Norris",
-        ],
-        [
-            "Want another? Ok last one...",
-            "Chuck Norris can win a game of Connect 4 with 3 moves",
-        ],
-        "I'm out, goodbye.",
-    ];
+    // const responseTexts = [
+    //     "This bot silly",
+    //     "No really, it's a gimmick, quickly made in my Codepen",
+    //     [
+    //         "Ok here is a joke...",
+    //         "When Alexander Graham Bell invented the telephone he had three missed calls from Chuck Norris",
+    //     ],
+    //     [
+    //         "Want another? Ok last one...",
+    //         "Chuck Norris can win a game of Connect 4 with 3 moves",
+    //     ],
+    //     "I'm out, goodbye.",
+    // ];
 
     const addMessage = (item: Message) => {
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
         setMessages((prev) => [...prev, messageWithDefaults]);
     };
 
-    const mockReply = () => {
-        const response = responseTexts[responses];
-        setResponses((prev) => prev + 1);
+    // const mockReply = () => {
+    //     const response = responseTexts[responses];
+    //     setResponses((prev) => prev + 1);
 
-        if (response) {
-            if (Array.isArray(response)) {
-                response.forEach((item, index) =>
-                    setTimeout(
-                        () =>
-                            addMessage({
-                                author: "bot",
-                                body: item,
-                            }),
-                        600 + index * 500
-                    )
-                );
-            } else {
-                setTimeout(
-                    () =>
-                        addMessage({
-                            author: "bot",
-                            body: response,
-                        }),
-                    600
-                );
-            }
-        }
-    };
+    //     if (response) {
+    //         if (Array.isArray(response)) {
+    //             response.forEach((item, index) =>
+    //                 setTimeout(
+    //                     () =>
+    //                         addMessage({
+    //                             author: "bot",
+    //                             body: item,
+    //                         }),
+    //                     600 + index * 500
+    //                 )
+    //             );
+    //         } else {
+    //             setTimeout(
+    //                 () =>
+    //                     addMessage({
+    //                         author: "bot",
+    //                         body: response,
+    //                     }),
+    //                 600
+    //             );
+    //         }
+    //     }
+    // };
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -117,7 +117,7 @@ const Chat = () => {
             "input"
         ) as HTMLInputElement;
         addMessage({author: "human", body: input.value});
-        mockReply();
+        // mockReply();
         input.value = "";
     };
 
@@ -125,9 +125,9 @@ const Chat = () => {
         if (isInitialized.current) return;
         isInitialized.current = true;
 
-        initialMessages.forEach((msg) => {
-            setTimeout(() => addMessage(msg), msg.timeout || 0); // Use default timeout if undefined
-        });
+        // initialMessages.forEach((msg) => {
+        //     setTimeout(() => addMessage(msg), msg.timeout || 0); // Use default timeout if undefined
+        // });
     }, []);
 
     // Scroll to the bottom when messages change
