@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import Logo from '../../images/logo/logo.svg';
 import Dashboard from '../../images/logo/dashboard.svg';
 import Upload from '../../images/logo/upload.svg';
+import { getCurrentUser } from '@aws-amplify/auth';
 
 
 interface SidebarProps {
@@ -21,7 +22,29 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   const [sidebarExpanded] = useState(
     storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true'
   );
+  const [loggedIn, setLoggedIn] = useState(false);
 
+  const checkUserSignIn = async () => {
+      try {
+        const user = await getCurrentUser();
+        console.log("logged in user: ", user);
+        if(user){
+            setLoggedIn(true);
+        }else{
+            setLoggedIn(false);
+        }
+       
+ 
+        
+      } catch (error) {
+        console.log("User not signed in:", error);
+       setLoggedIn(false);
+      }
+    };
+  useEffect(  () => {
+  
+      checkUserSignIn();
+    }, [setLoggedIn, getCurrentUser, checkUserSignIn]);
   // close on click outside
   useEffect(() => {
     const clickHandler = ({ target }: MouseEvent) => {
@@ -119,6 +142,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               </li>
              
               {/* <!-- Menu Item Upload --> */}
+              {loggedIn && (
                 <li>
                   <NavLink
                     to="/report/upload"
@@ -131,7 +155,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                     Upload
                   </NavLink>
                 </li>
-                {/* <!-- Menu Item Upload --> */}
+               
+              )}
+                 {/* <!-- Menu Item Upload --> */}
             
             </ul>
           </div>

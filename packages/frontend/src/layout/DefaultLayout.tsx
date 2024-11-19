@@ -1,14 +1,20 @@
-import React, { useState, ReactNode } from 'react';
+import React, { useState, ReactNode, createContext } from 'react';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
 import ChatButton from "../components/ChatBot/ChatBot.tsx";
+
+type ChatContextType = {isChatOpen : boolean, setIsChatOpen : React.Dispatch<React.SetStateAction<boolean>>}
+export const ChatContext = createContext<ChatContextType>({isChatOpen : false, setIsChatOpen : () => {}});
 
 const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   /* <!-- ===== Main Content End ===== --> */
+  const [isChatOpen, setIsChatOpen] = useState(false);
+ 
   return (
-    <div className="dark:bg-boxdark-2 dark:text-bodydark">
+<ChatContext.Provider value={{isChatOpen, setIsChatOpen}}>
+<div className="dark:bg-boxdark-2 dark:text-bodydark">
       {/* <!-- ===== Page Wrapper Start ===== --> */}
       <div className="flex h-screen overflow-hidden">
         {/* <!-- ===== Sidebar Start ===== --> */}
@@ -34,6 +40,8 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
       </div>
       {/* <!-- ===== Page Wrapper End ===== --> */}
     </div>
+</ChatContext.Provider>
+   
   );
 };
 

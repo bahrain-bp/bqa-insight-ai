@@ -1,6 +1,7 @@
-import React, {useState, useEffect, useRef} from "react";
+import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
+import { ChatContext } from "../../layout/DefaultLayout";
 
 type Message = {
     author: "human" | "bot" | "loading";
@@ -9,7 +10,7 @@ type Message = {
 };
 
 const ChatBot = () => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
+    const {isChatOpen, setIsChatOpen} = useContext(ChatContext);
 
     const toggleChat = () => {
         setIsChatOpen(!isChatOpen);
@@ -24,8 +25,8 @@ const ChatBot = () => {
                     style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
                     alt="Open Chat"
                     onClick={toggleChat}
-                    width={150}
-                    height={150}
+                    width={120}
+                    height={120}
                 />
 
             {/* Chat UI */}
@@ -42,7 +43,7 @@ const ChatBot = () => {
 
 const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
-    const [responses, setResponses] = useState(0);
+    // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
 
