@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useNavigate } from 'react-router-dom';
-import { signIn } from 'aws-amplify/auth';
-import { getCurrentUser } from 'aws-amplify/auth';
+import { signIn, getCurrentUser } from '@aws-amplify/auth';
 
 
 
@@ -23,7 +22,7 @@ const SignIning = ({
     try {
       const user = await signIn({ username: email, password });
       setUser(user);
-      navigate('/Dashboard'); 
+      navigate('/');
     } catch (error: any) {
       console.error('Error signing in', error);
       
@@ -31,11 +30,14 @@ const SignIning = ({
   };
   useEffect(() => {
     const checkUserSignIn = async () => {
-      const currentUser = await getCurrentUser();
-      if (currentUser) {
+      try {
+        const currentUser = await getCurrentUser();
         setUser(currentUser);
-        console.log('userid', currentUser.userId);
-        navigate('/dashboard');
+        console.log("User ID:", currentUser.username); // or `.attributes.email` if needed
+        navigate("/");
+      } catch (error) {
+        console.log("User not signed in:", error);
+        navigate("/auth/signin"); // Redirect to login page
       }
     };
     checkUserSignIn();
