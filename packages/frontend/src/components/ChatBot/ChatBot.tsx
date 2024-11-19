@@ -18,19 +18,17 @@ const ChatBot = () => {
     return (
         <div>
             {/* Button to toggle chat */}
-            {!isChatOpen && (
                 <img
                     src={rebotIcon}
-                    className="fixed bottom-4 right-4  text-white p-3  cursor-pointer"
+                    className={`fixed bottom-4 right-4  text-white p-3  cursor-pointer z-20 ${isChatOpen ? 'b-chat--closed' : 'b-chat--open' }`}
+                    style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
                     alt="Open Chat"
                     onClick={toggleChat}
                     width={150}
                     height={150}
                 />
-            )}
 
             {/* Chat UI */}
-            {isChatOpen && (
                 <div className={`b-chat ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
                     <div className="b-chat__header">
                         <span>ChatBot</span>
@@ -38,7 +36,6 @@ const ChatBot = () => {
                     </div>
                         <Chat/>
                 </div>
-            )}
         </div>
     );
 };
