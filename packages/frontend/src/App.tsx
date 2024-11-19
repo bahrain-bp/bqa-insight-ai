@@ -8,7 +8,7 @@ import ChatBot from './pages/Chat';
 import ECommerce from './pages/Dashboard/ECommerce';
 import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
-import ReportUpload from "./pages/ReportUpload.tsx";
+import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
 
 function App() {
@@ -71,11 +71,11 @@ function App() {
           }
         />
           <Route
-            path="/report/upload"
+            path="/fileManagement"
             element={
                 <>
-                    <PageTitle title="Report Upload" />
-                    <ReportUpload />
+                    <PageTitle title="Manage Files" />
+                    <FileManagement />
                 </>
                 }
             />
