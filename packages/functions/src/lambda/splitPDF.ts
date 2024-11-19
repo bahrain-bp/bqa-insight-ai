@@ -2,12 +2,13 @@ import * as AWS from "aws-sdk";
 import { PDFDocument } from "pdf-lib";
 
 const s3 = new AWS.S3();
+const sqs = new AWS.SQS();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function handler(event: any) {
     for (const record of event.Records) {
-        const bucketName = record.s3.bucket.name;
-        const fileKey = record.s3.object.key;
+        const receiptHandle = record.receiptHandle; // Unique identifier for the message
+        const { bucketName, fileKey } = JSON.parse(record.body);
 
         console.log(`Processing file from bucket: ${bucketName}, key: ${fileKey}`);
 
@@ -22,7 +23,7 @@ export async function handler(event: any) {
 
             // Split the PDF using pdf-lib
             const pagesPerFile = 2; // Set the number of pages per split file
-            const pdfChunks = await splitPDF(object.Body as Buffer, pagesPerFile);
+            const pdfChunks = await splitPDFBuffer(object.Body as Buffer, pagesPerFile);
 
             const chunkURLs: string[] = []; // Store URLs of the split files
 
@@ -47,13 +48,17 @@ export async function handler(event: any) {
             await updateFileMetadata(fileKey, chunkURLs);
 
             console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
+
+            // Delete the message from SQS after successful processing
+            await deleteMessageFromQueue(receiptHandle);
         } catch (error) {
             console.error(`Error processing file ${fileKey}:`, error);
         }
     }
 }
 
-async function splitPDF(buffer: Buffer, pagesPerFile: number): Promise<Uint8Array[]> {
+// Utility to split PDF buffer
+async function splitPDFBuffer(buffer: Buffer, pagesPerFile: number): Promise<Uint8Array[]> {
     const pdfDoc = await PDFDocument.load(buffer);
     const pages = pdfDoc.getPages();
     const splitBuffers: Uint8Array[] = [];
@@ -74,6 +79,7 @@ async function splitPDF(buffer: Buffer, pagesPerFile: number): Promise<Uint8Arra
     return splitBuffers;
 }
 
+// Utility to update DynamoDB
 async function updateFileMetadata(fileKey: string, chunkURLs: string[]): Promise<void> {
     const params = {
         TableName: process.env.FILE_METADATA_TABLE_NAME as string,
@@ -88,4 +94,20 @@ async function updateFileMetadata(fileKey: string, chunkURLs: string[]): Promise
 
     await dynamoDb.update(params).promise();
     console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
+}
+
+// Utility to delete a message from the SQS queue
+async function deleteMessageFromQueue(receiptHandle: string): Promise<void> {
+    try {
+        await sqs
+            .deleteMessage({
+                QueueUrl: process.env.SQS_QUEUE_URL!,
+                ReceiptHandle: receiptHandle,
+            })
+            .promise();
+
+        console.log(`Message with receipt handle ${receiptHandle} successfully deleted from the queue.`);
+    } catch (error) {
+        console.error(`Error deleting message with receipt handle ${receiptHandle}:`, error);
+    }
 }
