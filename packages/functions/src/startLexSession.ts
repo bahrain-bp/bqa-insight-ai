@@ -17,18 +17,18 @@ export async function handler(event: APIGatewayEvent) {
     const lexResponse = await lexClient.send(putSessionCommand)
     return {
       statusCode: 200,
-      body: {
+      body: JSON.stringify({
         message: "Session started successfully",
         sessionId: lexResponse.sessionId,
-      }
+      })
     }
   } catch (error) {
     return {
       statusCode: 500,
-      body: {
+      body: JSON.stringify({
         message: "Couldn't start session with Lex",
         error,
-      }
+      })
     }
   }
 }

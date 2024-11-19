@@ -60,9 +60,9 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: `${bot.botId}`,
-                        BOT_ALIAS_ID: "BPO25EUESP",
-                        LOCALE_ID: `${bot.botLocaleIds}`,
+                        BOT_ID: "JUGNAGX1SE",
+                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        LOCALE_ID: "en_US",
                     }
                 }
             },
@@ -72,9 +72,9 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: `${bot.botId}`,
-                        BOT_ALIAS_ID: "BPO25EUESP",
-                        LOCALE_ID: `${bot.botLocaleIds}`,
+                        BOT_ID: "JUGNAGX1SE",
+                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        LOCALE_ID: "en_US",
                     }
                 }
             },

@@ -168,11 +168,6 @@ export function BotStack({ stack }: StackContext) {
         },
     });
 
-    stack.addOutputs({
-        Bot: `${bot.botId()}`,
-       
-    });
-
     return {
         bot
     }
