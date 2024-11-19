@@ -38,6 +38,27 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable],
                 },
             },
+            // retrieve-file-metadata route
+            "GET /retrieve-file-metadata": {
+                function: {
+                    handler: "packages/functions/src/lambda/retrieveFileMetadata.handler",
+                    environment: {
+                        FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                    },
+                    permissions: [fileMetadataTable],
+                },
+            },
+            // delete-file route
+            "POST /delete-file": {
+                function: {
+                    handler: "packages/functions/src/lambda/deleteFile.handler",
+                    environment: {
+                        BUCKET_NAME: bucket.bucketName,
+                        FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                    },
+                    permissions: [bucket, fileMetadataTable],
+                },
+            },
             "POST /textract": {
                 function: {
                     handler: "packages/functions/src/textract.extractTextFromPDF",
