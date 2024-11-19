@@ -111,23 +111,34 @@ const Chat = () => {
         }
     };
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const  handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const input = (e.target as HTMLFormElement).elements.namedItem(
             "input"
         ) as HTMLInputElement;
-        addMessage({author: "human", body: input.value});
-        mockReply();
+        const message = input.value;
+        addMessage({author: "human", body: message});
         input.value = "";
+        
+
+        const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ prompt: message }),
+        });
+        const body = await bedrockResponse.json()
+        addMessage({author: "bot", body: body.response});
     };
 
     useEffect(() => {
         if (isInitialized.current) return;
         isInitialized.current = true;
 
-        initialMessages.forEach((msg) => {
-            setTimeout(() => addMessage(msg), msg.timeout || 0); // Use default timeout if undefined
-        });
+        // initialMessages.forEach((msg) => {
+        //     setTimeout(() => addMessage(msg), msg.timeout || 0); // Use default timeout if undefined
+        // });
     }, []);
 
     // Scroll to the bottom when messages change
