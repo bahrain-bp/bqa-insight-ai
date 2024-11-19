@@ -3,13 +3,14 @@ import { FrontendStack } from "./stacks/FrontendStack";
 import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
 import { AmazonLexSolarMapFulfillment } from "./stacks/Lexstacks/AmazonLexSolarMapFulfillment";
-import { BQABot } from "./stacks/Lexstacks/BQABot";
+import { BotStack } from "./stacks/Lexstacks/BotStack";
 
 import { FileMetadataStack } from "./stacks/FileMetadataStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
+import { BedrockStack } from "./stacks/BedrockStack";
 
 export default {
   config(_input) {
@@ -34,13 +35,13 @@ export default {
       app.stack(DBStack)
       .stack(FileMetadataStack)
       .stack(S3Stack)
-      .stack(ApiStack)
-        .stack(FrontendStack)
-          .stack(AuthStack)
-
-          .stack(AmazonLexSolarMapFulfillment)
-        .stack(BQABot);
+      .stack(BedrockStack)
+      .stack(AmazonLexSolarMapFulfillment)
+      .stack(BotStack)
+      .stack(ApiStack) 
+      .stack(FrontendStack)
+      .stack(AuthStack);
     }
   }
-} satisfies SSTConfig;
-export { BQABot };
+} satisfies SSTConfig; 
+export { BotStack };
