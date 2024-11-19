@@ -10,7 +10,7 @@ import {
 } from '@amaabca/aws-lex-custom-resources';
 import { AmazonLexSolarMapFulfillment } from './AmazonLexSolarMapFulfillment';
 
-export function BQABot({ stack }: StackContext) {
+export function BotStack({ stack }: StackContext) {
 
     const amazonLexSolarMapFulfillment = use(AmazonLexSolarMapFulfillment);
     const fulfillmentFunction = amazonLexSolarMapFulfillment.fulfillmentFunction;
@@ -167,5 +167,9 @@ export function BQABot({ stack }: StackContext) {
             },
         },
     });
+
+    return {
+        bot
+    }
     
 }
