@@ -75,7 +75,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
         <button
           ref={trigger}
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          aria-controls="sidebar"
+           aria-controls="sidebar"
           aria-expanded={sidebarOpen}
           className="block lg:hidden"
         >
@@ -119,21 +119,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                   Dashboard
                 </NavLink>
               </li>
-              {/* <!-- Menu Item Chatbot --> */}
-              <li>
-                <NavLink
-                  to="/chat"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('chat') &&
-                    'bg-graydark dark:bg-meta-4'
-                  }`}
-                >
-             <img src={Chat} alt="Chat" width="18" height="18" />
-
-                  Chatbot
-                </NavLink>
-              </li>
-              {/* <!-- Menu Item Chatbot --> */}
               {/* <!-- Menu Item Upload --> */}
                 <li>
                   <NavLink
