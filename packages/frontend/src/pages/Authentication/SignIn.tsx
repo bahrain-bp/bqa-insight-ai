@@ -1,8 +1,10 @@
-import React, { useState } from'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useNavigate } from 'react-router-dom';
-import { signIn } from 'aws-amplify/auth';
+import { signIn, getCurrentUser } from '@aws-amplify/auth';
+
+
 
 type SetStateType<T> = React.Dispatch<React.SetStateAction<T>>;
 
@@ -19,14 +21,27 @@ const SignIning = ({
   const handleSignIn = async (email: string, password: string) => {
     try {
       const user = await signIn({ username: email, password });
-      console.log('Sign-in attempt:', { email, password });
       setUser(user);
-      navigate('/'); 
+      navigate('/report/upload');
     } catch (error: any) {
       console.error('Error signing in', error);
       
     }
   };
+  useEffect(() => {
+    const checkUserSignIn = async () => {
+      try {
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+        console.log("User ID:", currentUser.username); // or `.attributes.email` if needed
+        navigate("/report/upload");
+      } catch (error) {
+        console.log("User not signed in:", error);
+        navigate("/auth/signin"); // Redirect to login page
+      }
+    };
+    checkUserSignIn();
+  }, []);
   
   return (
     <>
