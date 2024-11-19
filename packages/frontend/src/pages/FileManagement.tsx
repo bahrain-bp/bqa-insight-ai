@@ -323,6 +323,7 @@ const FileManagement: React.FC = () => {
           <div
             className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 z-50"
             onClick={() => setPreviewFile(null)} // Close modal when clicking outside
+            style={{zIndex: 1002}}
           >
             <div
               className="relative w-[95%] max-w-6xl bg-white rounded-lg shadow-lg overflow-hidden"
