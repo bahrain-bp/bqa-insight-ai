@@ -22,7 +22,7 @@ const SignIning = ({
     try {
       const user = await signIn({ username: email, password });
       setUser(user);
-      navigate('/report/upload');
+      navigate('/fileManagement');
     } catch (error: any) {
       console.error('Error signing in', error);
       
@@ -34,7 +34,7 @@ const SignIning = ({
         const currentUser = await getCurrentUser();
         setUser(currentUser);
         console.log("User ID:", currentUser.username); // or `.attributes.email` if needed
-        navigate("/report/upload");
+        navigate("/fileManagement");
       } catch (error) {
         console.log("User not signed in:", error);
         navigate("/auth/signin"); // Redirect to login page

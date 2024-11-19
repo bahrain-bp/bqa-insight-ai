@@ -94,6 +94,16 @@ const FileManagement: React.FC = () => {
       );
 
       fetchFiles(); // Refresh file list after uploading
+
+      // this is job syncing for bedrock knowledgebase
+      const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
+        method: "POST",                
+      });
+
+      const syncJobData = await syncJobResponse.json();
+      if (syncJobData.statusCode == 200) {
+          console.log("Job started successfully!")
+      }
       setAlertMessage("Files uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);
@@ -212,7 +222,8 @@ const FileManagement: React.FC = () => {
           <div className="text-center mb-4">
             <label
               htmlFor="fileUpload"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded bg-primary py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+              className="flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+                style={{backgroundColor: '#003366'}}
             >
               <FaUpload size={16} /> {/* Upload Icon */}
               <input
