@@ -129,7 +129,7 @@ const Chat = () => {
             body: JSON.stringify({ prompt: message }),
         });
         const body = await bedrockResponse.json()
-        addMessage({author: "bot", body: body.response});
+        addMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
     };
 
     useEffect(() => {
