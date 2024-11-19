@@ -4,10 +4,12 @@ import {S3Stack} from "./S3Stack";
 import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
+import { BotStack } from "./Lexstacks/BotStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket} = use(S3Stack); 
+    const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -58,9 +60,9 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "",
-                        BOT_ALIAS_ID: "",
-                        LOCALE_ID: "",
+                        BOT_ID: `${bot.botId}`,
+                        BOT_ALIAS_ID: "BPO25EUESP",
+                        LOCALE_ID: `${bot.botLocaleIds}`,
                     }
                 }
             },
@@ -70,14 +72,24 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "",
-                        BOT_ALIAS_ID: "",
-                        LOCALE_ID: "",
+                        BOT_ID: `${bot.botId}`,
+                        BOT_ALIAS_ID: "BPO25EUESP",
+                        LOCALE_ID: `${bot.botLocaleIds}`,
                     }
+                }
+            },
+
+            "POST /startsession":{
+                function: {
+                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
+                    permissions: ["comprehend"],
+                    timeout: "60 seconds"
                 }
             }
         },
     });
+
+
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
     const apiCachePolicy = new CachePolicy(stack, "CachePolicy", {
