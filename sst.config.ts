@@ -2,6 +2,10 @@ import { SSTConfig } from "sst";
 import { FrontendStack } from "./stacks/FrontendStack";
 import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
+import { AmazonLexSolarMapFulfillment } from "./stacks/Lexstacks/AmazonLexSolarMapFulfillment";
+import { BQABot } from "./stacks/Lexstacks/BQABot";
+
+import { FileMetadataStack } from "./stacks/FileMetadataStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
@@ -28,11 +32,15 @@ export default {
     }
     else {
       app.stack(DBStack)
+      .stack(FileMetadataStack)
       .stack(S3Stack)
       .stack(ApiStack)
-      .stack(FrontendStack)
-      .stack(AuthStack)
-      ;
+        .stack(FrontendStack)
+          .stack(AuthStack)
+
+          .stack(AmazonLexSolarMapFulfillment)
+        .stack(BQABot);
     }
   }
 } satisfies SSTConfig;
+export { BQABot };

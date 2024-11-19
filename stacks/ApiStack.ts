@@ -1,12 +1,14 @@
 import {Api, StackContext, use} from "sst/constructs";
 import {DBStack} from "./DBStack";
-import {S3Stack} from "./S3Stack"; // Import the S3Stack to get bucket details
+import {S3Stack} from "./S3Stack"; 
+import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket} = use(S3Stack); // Access the bucket from S3Stack
+    const {bucket} = use(S3Stack); 
+    const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -31,10 +33,25 @@ export function ApiStack({stack}: StackContext) {
                     handler: "packages/functions/src/lambda/generateUploadUrl.handler",
                     environment: {
                         BUCKET_NAME: bucket.bucketName,
+                        FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
                     },
-                    permissions: [bucket],
+                    permissions: [bucket, fileMetadataTable],
                 },
             },
+            "POST /textract": {
+                function: {
+                    handler: "packages/functions/src/textract.extractTextFromPDF",
+                    permissions: ["textract", "s3"],
+                    timeout: "60 seconds",
+                }
+            },
+            "POST /comprehend": {
+                function: {
+                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
+                    permissions: ["comprehend"],
+                    timeout: "60 seconds"
+                }
+            }
         },
     });
 

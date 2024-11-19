@@ -1,10 +1,12 @@
 import * as AWS from "aws-sdk";
+import { v4 as uuidv4 } from "uuid";
 
 const s3 = new AWS.S3();
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function handler(event: any) {
-    const { files } = JSON.parse(event.body); // `files` should be an array of { fileName, fileType }
-    console.log("Bucket Name:", process.env.BUCKET_NAME); // Debugging log
+    const { files } = JSON.parse(event.body); // `files` should be an array of { fileName, fileType, fileSize }
+    console.log("Bucket Name:", process.env.BUCKET_NAME);
 
     const bucketName = process.env.BUCKET_NAME as string;
     if (!bucketName) {
@@ -14,34 +16,54 @@ export async function handler(event: any) {
         };
     }
 
-    // Array to store upload URLs
     const uploadURLs = [];
 
-    // Generate a pre-signed URL for each file
     for (const file of files) {
-        const { fileName, fileType } = file;
+        const { fileName, fileType, fileSize } = file;
+        const uniqueId = uuidv4(); 
+        const fileKey = `Files/${uniqueId}`;
 
         const params = {
             Bucket: bucketName,
-            Key: fileName,
-            Expires: 60, // URL expiration in seconds
+            Key: fileKey,
+            Expires: 60,
             ContentType: fileType,
         };
 
         try {
             const uploadURL = await s3.getSignedUrlPromise("putObject", params);
-            uploadURLs.push({ fileName, uploadURL });
+            uploadURLs.push({ fileName, fileKey, uploadURL });
+
+            await insertFileMetadata({ fileKey, fileName, fileType, fileSize });
+
         } catch (error) {
-            console.error("Error generating URL for:", fileName, error);
+            console.error("Error processing file:", fileName, error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ error: `Failed to generate URL for ${fileName}` }),
+                body: JSON.stringify({ error: `Failed to process file ${fileName}` }),
             };
         }
     }
 
     return {
         statusCode: 200,
-        body: JSON.stringify({ uploadURLs }), // Return all generated URLs
+        body: JSON.stringify({ uploadURLs }),
     };
 }
+
+// Insert file metadata into DynamoDB
+async function insertFileMetadata(file: { fileKey: string; fileName: string; fileType: string; fileSize: number }) {
+    const params = {
+        TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+        Item: {
+            fileKey: file.fileKey,
+            fileName: file.fileName,
+            fileURL: `https://${process.env.BUCKET_NAME}.s3.amazonaws.com/${file.fileKey}`,
+            fileSize: file.fileSize,
+            fileType: file.fileType,
+            uploadedAt: new Date().toISOString(),
+        },
+    };
+    return await dynamoDb.put(params).promise();
+}
+

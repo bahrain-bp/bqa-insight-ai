@@ -22,6 +22,13 @@
     "packages/*"
   ],
   "dependencies": {
-    "react-router-dom": "^6.28.0"
+    "@aws-sdk/client-comprehend": "^3.687.0",
+    "@aws-sdk/client-textract": "^3.687.0",
+    "pdf-lib": "^1.17.1",
+    "react-router-dom": "^6.28.0",
+    "uuid": "^11.0.3",
+    "@amaabca/aws-lex-custom-resources": "^4.1.0",
+    "@aws-cdk/aws-lex": "^1.203.0",
+    "@aws-cdk/core": "^1.203.0"
   }
 }
