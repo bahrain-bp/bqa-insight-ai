@@ -9,6 +9,7 @@ import ECommerce from './pages/Dashboard/ECommerce';
 import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
 import ReportUpload from "./pages/ReportUpload.tsx";
+import SignOutPage from './pages/Authentication/SignOut.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -50,7 +51,7 @@ function App() {
     
         <Route path="Auth/SignIn" element={<SignIning setUser={setUser} user={user}/>} />
 
-      
+        <Route path="/signout" element={<SignOutPage />} />
         <Route
           path="/auth/ForgotPassword"
           element={
