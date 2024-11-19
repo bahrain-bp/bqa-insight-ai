@@ -129,7 +129,7 @@ export function BedrockStack({ stack, app }: StackContext) {
         // },
       });
       var cfnAgent = undefined
-      if (app.stage == "prod" || app.stage == "hasan") {
+      if (app.stage == "prod" || app.stage == "zainabghanem") {
           cfnAgent = new bedrock.CfnAgent(stack, "BQACfnAgent", {
             agentName: "BQAInsightAIModel",
             // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',

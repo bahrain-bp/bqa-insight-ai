@@ -22,7 +22,9 @@
     "packages/*"
   ],
   "dependencies": {
+    "@aws-sdk/client-bedrock": "^3.693.0",
     "@aws-sdk/client-bedrock-agent": "^3.693.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.693.0",
     "@aws-sdk/client-comprehend": "^3.687.0",
     "@aws-sdk/client-textract": "^3.687.0",
     "pdf-lib": "^1.17.1",
