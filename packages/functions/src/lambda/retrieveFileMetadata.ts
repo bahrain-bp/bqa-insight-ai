@@ -34,7 +34,6 @@ export const handler = async () => {
       uploadedAt: formatTime(item.uploadedAt?.S), // Format time
     }));
 
-    console.log("Items:", items);
     return {
       statusCode: 200,
       body: JSON.stringify({

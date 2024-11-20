@@ -2,17 +2,34 @@ import * as AWS from "aws-sdk";
 import { PDFDocument } from "pdf-lib";
 
 const s3 = new AWS.S3();
+const sqs = new AWS.SQS();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export async function handler(event: any) {
+    console.log("Received SQS Event:", JSON.stringify(event, null, 2));
+
     for (const record of event.Records) {
-        const bucketName = record.s3.bucket.name;
-        const fileKey = record.s3.object.key;
-
-        console.log(`Processing file from bucket: ${bucketName}, key: ${fileKey}`);
-
         try {
-            // Get the file directly from S3
+            // Parse the SQS message body
+            const messageBody = JSON.parse(record.body);
+            const s3Record = messageBody.Records?.[0]?.s3;
+
+            if (!s3Record) {
+                console.error("Missing S3 record in the message body.");
+                continue;
+            }
+
+            const bucketName = s3Record.bucket.name;
+            const fileKey = s3Record.object.key;
+
+            if (!bucketName || !fileKey) {
+                console.error("Missing bucketName or fileKey in the S3 record.");
+                continue;
+            }
+
+            console.log(`Processing file from bucket: ${bucketName}, key: ${fileKey}`);
+
+            // Fetch the file from S3
             const object = await s3.getObject({ Bucket: bucketName, Key: fileKey }).promise();
 
             if (!object.Body) {
@@ -47,12 +64,16 @@ export async function handler(event: any) {
             await updateFileMetadata(fileKey, chunkURLs);
 
             console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
+
+            // Delete the message from the SQS queue after successful processing
+            await deleteMessage(record.receiptHandle);
         } catch (error) {
-            console.error(`Error processing file ${fileKey}:`, error);
+            console.error("Error processing message:", error);
         }
     }
 }
 
+// Utility to split PDF buffer
 async function splitPDF(buffer: Buffer, pagesPerFile: number): Promise<Uint8Array[]> {
     const pdfDoc = await PDFDocument.load(buffer);
     const pages = pdfDoc.getPages();
@@ -74,6 +95,7 @@ async function splitPDF(buffer: Buffer, pagesPerFile: number): Promise<Uint8Arra
     return splitBuffers;
 }
 
+// Utility to update DynamoDB with chunk URLs
 async function updateFileMetadata(fileKey: string, chunkURLs: string[]): Promise<void> {
     const params = {
         TableName: process.env.FILE_METADATA_TABLE_NAME as string,
@@ -88,4 +110,20 @@ async function updateFileMetadata(fileKey: string, chunkURLs: string[]): Promise
 
     await dynamoDb.update(params).promise();
     console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
+}
+
+// Utility to delete a message from the SQS queue
+async function deleteMessage(receiptHandle: string): Promise<void> {
+    try {
+        await sqs
+            .deleteMessage({
+                QueueUrl: process.env.SQS_QUEUE_URL!, // SQS Queue URL from environment variables
+                ReceiptHandle: receiptHandle, // The receipt handle of the message to delete
+            })
+            .promise();
+
+        console.log(`Message with receipt handle ${receiptHandle} successfully deleted from the queue.`);
+    } catch (error) {
+        console.error(`Error deleting message with receipt handle ${receiptHandle}:`, error);
+    }
 }
