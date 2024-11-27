@@ -1,44 +1,87 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import { Route, Routes, useLocation } from 'react-router-dom';
+import Loader from './Loader';
+import PageTitle from './components/PageTitle';
+import SignIning from './pages/Authentication/SignIn';
+import PasswordResetPage from './pages/Authentication/ForgotPassword';
+import ChatBot from './pages/Chat';
+import ECommerce from './pages/Dashboard/ECommerce';
+import DefaultLayout from './layout/DefaultLayout';
+import ModifyPassword from './pages/Authentication/ChangePassword';
+import FileManagement from "./pages/FileManagement.tsx";
+import SignOutPage from './pages/Authentication/SignOut.tsx';
 
 function App() {
-  const [count, setCount] = useState("")
+  const [loading, setLoading] = useState<boolean>(true);
+  const { pathname } = useLocation();
+  const [user, setUser] = useState<any>(null);
 
-  function onClick() {
-    console.log(import.meta.env.VITE_API_URL);
-    fetch(import.meta.env.VITE_API_URL, {
-      method: "POST",
-    })
-      .then((response) => response.text())
-      .then(setCount);
-  }
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={onClick}>
-          count is {count ? count : "unknown"}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 1000);
+  }, []);
+
+  return loading ? (
+    <Loader />
+  ) : (
+    <DefaultLayout>
+      <Routes>
+        <Route
+          index
+          element={
+            <>
+              <PageTitle title="InsightAI" />
+              <ECommerce />
+            </>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <>
+              <PageTitle title="InsightAI" />
+              <ChatBot />
+            </>
+          }
+        />
+      
+    
+        <Route path="Auth/SignIn" element={<SignIning setUser={setUser} user={user}/>} />
+
+        <Route path="/signout" element={<SignOutPage />} />
+        <Route
+          path="/auth/ForgotPassword"
+          element={
+            <>
+              <PageTitle title="Reset your password | InsightAI" />
+              <PasswordResetPage/>
+            </>
+          }
+        />
+        <Route
+          path="/auth/ChangePassword"
+          element={
+            <>
+              <PageTitle title="Change Password | InsightAI" />
+              <ModifyPassword />
+            </>
+          }
+        />
+          <Route
+            path="/fileManagement"
+            element={
+                <>
+                    <PageTitle title="Manage Files" />
+                    <FileManagement />
+                </>
+                }
+            />
+      </Routes>
+    </DefaultLayout>
+  );
 }
 
-export default App
+export default App;
