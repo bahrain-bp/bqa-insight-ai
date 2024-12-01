@@ -43,6 +43,7 @@ const ChatBot = () => {
 
 const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
+    const [sessionId, setSessionId] = useState("");
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
@@ -117,6 +118,21 @@ const Chat = () => {
     //     }
     // };
 
+    const startSession = async (): Promise<string> => {
+        if (sessionId) return sessionId;
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/lex/start-session`, {
+                method: "POST",
+            })
+            const data = await response.json()
+            setSessionId(data.sessionId)
+            console.log("started session ", data.sessionId)
+            return data.sessionId
+        } catch (error) {
+            console.log("Could not start session.", error)
+            throw error
+        }
+    }
     const  handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const input = (e.target as HTMLFormElement).elements.namedItem(
@@ -135,19 +151,24 @@ const Chat = () => {
 
             addMessage({author: "loading", body: "(Thinking...)"})
 
-            const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
+            const sessionId = await startSession()
+            const lexResponse = await fetch(`${import.meta.env.VITE_API_URL}/lex/message-lex`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ prompt: message }),
+                body: JSON.stringify({ message: message, sessionId: sessionId }),
             });
-            const body = await bedrockResponse.json()
+            if (!lexResponse.ok) {
+              throw Error("Could not send request.")
+            }
+            const body = await lexResponse.json()
+            console.log("lex response: ", body)
             // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
             replaceLastMessage({author: "bot", body: body.response})
 
         } catch (error) {
-            console.error(error)
+            console.error("error: ", error)
             replaceLastMessage({author: "bot", body: "An error has occurred. Please try again."})
         } finally {
             input.disabled = false;
@@ -171,6 +192,7 @@ const Chat = () => {
             const chatList = chatListRef.current;
             chatList.scrollTop = chatList.scrollHeight;
         }
+        console.log(messages)
     }, [messages]);
 
     return (

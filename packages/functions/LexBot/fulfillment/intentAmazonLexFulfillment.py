@@ -187,9 +187,20 @@ def WelcomeIntent(intent_request):
     # Return the calculated estimate
     return close(intent_request, session_attributes, fulfillment_State, message)
 
+def BQAIntent(intent_request):
+    session_attributes = get_session_attributes(intent_request)
+
+    text = "This is BQA. What would you like to compare?"
+    message = {
+        'contentType': 'PlainText',
+        'content': text
+    }
+    fulfillment_State = "Fulfilled"
+    return close(intent_request, session_attributes, fulfillment_State, message)
 
 def dispatch(intent_request):
     intent_name = intent_request['sessionState']['intent']['name']
+    print(f"Intent is {intent_name}")
     response = None
     # Dispatch to your bot's intent handlers
     if intent_name == 'WelcomeIntent':
@@ -198,6 +209,8 @@ def dispatch(intent_request):
         return GetSolarPanelInstallationEstimateIntent(intent_request)
     # elif intent_name == 'FollowupCheckBalance':
     #     return FollowupCheckBalance(intent_request)
+    elif intent_name == 'BQAIntent':
+        return BQAIntent(intent_request)
     else:
         raise Exception('Intent with name ' + intent_name + ' not supported')
 

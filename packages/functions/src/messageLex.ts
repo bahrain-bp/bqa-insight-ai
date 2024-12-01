@@ -9,13 +9,13 @@ interface MessageLexInput {
 const lexClient = new LexRuntimeV2Client({ region: "us-east-1" })
 export async function handler(event: APIGatewayEvent) {
   const { message, sessionId }: MessageLexInput = JSON.parse(event.body || "{}")
-  const text = message.trim()
-  if (!text) {
+  if (!message || !message.trim()) {
     return {
       statusCode: 500,
-      body: { message: "Empty text cannot be sent" }
+      body: JSON.stringify({ message: "Empty text cannot be sent" })
     }
   }
+  const text = message.trim()
 
   const recognizeTextRequest: RecognizeTextRequest = {
     text: text,
@@ -27,21 +27,26 @@ export async function handler(event: APIGatewayEvent) {
   try {
     const recognizeTextCommand = new RecognizeTextCommand(recognizeTextRequest)
     const lexResponse: RecognizeTextResponse = await lexClient.send(recognizeTextCommand)
+    console.log(lexResponse)
     const messages = lexResponse.messages
+    if (!messages || messages.length == 0 || !messages[0]['content']) throw new Error("No message received")
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Response received successfully",
-        response: lexResponse,
+        response: messages[0]['content'],
       })
     }
   } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({
-        message: "An error has occurred when sending text to Lex",
-        error: error,
-      })
+    console.log(error)
+    if (error instanceof Error) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({
+          message: "An error has occurred when sending text to Lex",
+          error: error.message,
+        })
+      }
     }
   }
 }

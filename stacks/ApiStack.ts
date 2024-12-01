@@ -77,7 +77,7 @@ export function ApiStack({stack}: StackContext) {
                     timeout: "60 seconds"
                 }
             },
-            "POST /lex/start_session": {
+            "POST /lex/start-session": {
                 function: {
                     handler: "packages/functions/src/startLexSession.handler",
                     permissions: ["lex"],
@@ -89,7 +89,7 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
-            "POST /lex/message_lex": {
+            "POST /lex/message-lex": {
                 function: {
                     handler: "packages/functions/src/messageLex.handler",
                     permissions: ["lex"],
