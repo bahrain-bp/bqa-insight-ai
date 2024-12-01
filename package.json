@@ -37,6 +37,8 @@
     "date-fns": "^4.1.0",
     "mime-types": "^2.1.35",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.8.69",
+    "pdfreader": "^3.0.5",
     "react-router-dom": "^6.28.0",
     "uuid": "^11.0.3"
   }
