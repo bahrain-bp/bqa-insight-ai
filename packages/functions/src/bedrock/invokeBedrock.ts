@@ -75,10 +75,11 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
           console.log(csvData);
           // here must be the saving
            // Set the S3 upload parameters
+          const cleanedCsvData = csvData.replace(/%\[\d+]%/g, "");
           const uploadParams = {
             Bucket: process.env.BUCKET_NAME,
             Key: 'abc.csv',
-            Body: csvData,                // Directly use the CSV string as the file content
+            Body: cleanedCsvData,                // Directly use the CSV string as the file content
             ContentType: "text/csv",        // Set appropriate content type
           };
           
@@ -97,7 +98,7 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
 
       const result = JSON.parse(decodedResponse) || "";
       console.log("result is now: " + result)
-      const cleanedResult = result.result.replace(/%\[(\d+)]%/g, "[$1]");
+      const cleanedResult = result.result.replace(/%\[(\d+)]%/g, "");
 
       // Log for debugging
       console.log("Cleaned result:", cleanedResult);
