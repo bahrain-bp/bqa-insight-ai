@@ -5,8 +5,10 @@ import {
   CreateDashboardCommand, 
   GenerateEmbedUrlForAnonymousUserCommand, 
   DeleteDashboardCommand, 
-  DeleteDataSetCommand 
+  DeleteDataSetCommand,
+  DataSetImportMode
 } from "@aws-sdk/client-quicksight";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import csvParser from "csv-parser";
 import dayjs from "dayjs";
@@ -25,7 +27,7 @@ const SESSION_LIFETIME_MINUTES = 60;
  * @param fileKey - Path to the CSV file in the bucket
  * @returns Promise resolving to an array of row objects
  */
-const readCsvFromS3 = async (bucketName: string, fileKey: string) => {
+const readCsvFromS3 = async (bucketName: string, fileKey: string): Promise<Record<string, string>[]> => {
   // Create a command to retrieve the object from S3
   const command = new GetObjectCommand({ Bucket: bucketName, Key: fileKey });
   
@@ -136,11 +138,11 @@ const createDataset = async (
     AwsAccountId: awsAccountId,
     DataSetId: datasetId,
     Name: "Dynamic Dataset",
-    ImportMode: "SPICE", // In-memory calculation engine
+    ImportMode: "SPICE"as DataSetImportMode, // Explicitly cast to the correct type (enum)
     PhysicalTableMap: {
       [tableId]: {
         S3Source: {
-          // Replace with your actual data source ARN
+          // data source ARN
           DataSourceArn: `arn:aws:quicksight:us-east-1:588738578192:dataset/65b9bf31-b2fb-4f3b-8320-cbaca88a4769`,
           InputColumns: schema.columns,
           UploadSettings: {
@@ -175,8 +177,8 @@ const createDashboard = async (awsAccountId: string, datasetId: string) => {
     Name: "Dynamic Dashboard",
     SourceEntity: {
       SourceTemplate: {
-        // Replace with your actual template ARN
-        Arn: `arn:aws:quicksight:${process.env.AWS_REGION}:${awsAccountId}:template/my-template`,
+        // template ARN
+        Arn: `arn:aws:quicksight:{AWS_REGION}:{awsAccountId}:template/my-template`,
         DataSetReferences: [{ DataSetArn: datasetId, DataSetPlaceholder: "placeholder" }],
       },
     },
@@ -195,7 +197,7 @@ const createDashboard = async (awsAccountId: string, datasetId: string) => {
 };
 
 /**
- * Generate an anonymous embed URL for the dashboard
+ * Generate an anonymous embed (public) URL for the dashboard
  * @param awsAccountId - AWS Account ID
  * @param dashboardId - ID of the created dashboard
  * @returns Embed URL generation response
@@ -205,7 +207,7 @@ const generateAnonymousEmbedUrl = async (awsAccountId: string, dashboardId: stri
   const params = {
     AwsAccountId: awsAccountId,
     Namespace: "default",
-    AuthorizedResourceArns: [`arn:aws:quicksight:${process.env.AWS_REGION}:${awsAccountId}:dashboard/${dashboardId}`],
+    AuthorizedResourceArns: [`arn:aws:quicksight:us-east-1:588738578192:dashboard/${dashboardId}`],
     ExperienceConfiguration: { Dashboard: { InitialDashboardId: dashboardId } },
     SessionLifetimeInMinutes: SESSION_LIFETIME_MINUTES,
   };
@@ -240,7 +242,7 @@ const cleanupResources = async (awsAccountId: string, dashboardId: string, datas
  * @param event - Lambda event containing S3 bucket, file key, and AWS account ID
  * @returns Response with embed URL or error message
  */
-const handler = async (event) => {
+const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
     // Parse input parameters from the event body
     const { bucketName, fileKey, awsAccountId } = JSON.parse(event.body || "{}");
@@ -263,9 +265,17 @@ const handler = async (event) => {
     const datasetResponse = await createDataset(awsAccountId, schema, bucketName, fileKey);
     const datasetId = datasetResponse.DataSetId;
 
+    if (!datasetId) {
+      throw new Error("Dataset creation failed: DataSetId is undefined.");
+    }
+
     // Create QuickSight dashboard
     const dashboardResponse = await createDashboard(awsAccountId, datasetId);
     const dashboardId = dashboardResponse.DashboardId;
+
+    if (!dashboardId) {
+      throw new Error("Dashboard creation failed: DashboardId is undefined.");
+    }
 
     // Generate anonymous embed URL
     const embedUrlResponse = await generateAnonymousEmbedUrl(awsAccountId, dashboardId);
