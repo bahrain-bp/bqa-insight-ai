@@ -130,6 +130,13 @@ export function ApiStack({stack}: StackContext) {
                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                     }
                 }
+            },
+            "POST /invokeExpressLambda": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                }
             }
         },
     });
