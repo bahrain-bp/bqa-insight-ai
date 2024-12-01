@@ -123,12 +123,13 @@ export function ApiStack({stack}: StackContext) {
             "POST /invokeBedrock": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
-                    permissions: ["bedrock"],
+                    permissions: ["bedrock", bucket],
                     timeout: "60 seconds",
                     environment: {
                         AGENT_ID: cfnAgent?.attrAgentId || "",
                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                    }
+                        BUCKET_NAME: bucket.bucketName,
+                    },
                 }
             }
         },
