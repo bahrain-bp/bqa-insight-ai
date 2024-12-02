@@ -6,11 +6,13 @@ import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
 import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
+import { BedrockExpressStack } from "./BedrockExpressStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket, bedrockOutputBucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
+    const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
@@ -135,8 +137,12 @@ export function ApiStack({stack}: StackContext) {
             "POST /invokeExpressLambda": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
-                    permissions: ["bedrock"],
+                    permissions: ["bedrock", "s3", "textract"],
                     timeout: "60 seconds",
+                    environment: {
+                        AGENT_ID : extractReportMetadataAgent.attrAgentId,
+                        AGENT_ALIAS_ID : becrockExtractAgentAlias.attrAgentAliasId,
+                    }
                 }
             }
         },

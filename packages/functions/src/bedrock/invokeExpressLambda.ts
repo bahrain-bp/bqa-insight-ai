@@ -1,65 +1,81 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockAgentRuntimeClient, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import { APIGatewayEvent } from "aws-lambda";
 import AWS from "aws-sdk";
-import * as pdfjsLib from 'pdfjs-dist';
+import { extractTextFromPDF } from "src/lambda/textract";
 
 const s3 = new AWS.S3();
 export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
-    const client = new BedrockRuntimeClient({ region: "us-east-1" });
-    const modelId = "amazon.titan-text-express-v1"
+    const client = new BedrockAgentRuntimeClient({ region: "us-east-1" });
+    const agentId = process.env.AGENT_ID;
+    const agentAliasId = process.env.AGENT_ALIAS_ID;
+    const sessionId = "123";
 
-    const bucketName = "hasan-insight-ai-s3stack-reportbucket6b54e113-r9qakwpuqpkr";
-    const fileName = "Files/20ff198a-b7a7-4f72-9bbd-ad8334769c70";
+    const bucketName = "maryamaleskafi-insight-ai-s3s-reportbucket6b54e113-zoyhomcbjh6w";
+    const fileName = "Files/7183fc99-5416-4f03-bfe0-06d844c62cbe";
 
-    const params = {
-        Bucket: bucketName,
-        Key: fileName,
-    };
-    const s3Object = await s3.getObject(params).promise();
-    const pdfBuffer = s3Object.Body;
-
-    let arrayBuffer: ArrayBuffer;
-
-    // Handle different types of Body
-    if (typeof pdfBuffer === "string") {
-      // Body is a string, convert it to Uint8Array first
-      const uint8Array = new TextEncoder().encode(pdfBuffer);
-      // Then convert Uint8Array to ArrayBuffer
-      arrayBuffer = uint8Array.buffer;
-    } else if (pdfBuffer instanceof Uint8Array) {
-      // Body is already a Uint8Array
-      arrayBuffer = pdfBuffer.buffer;
-    } else if (pdfBuffer instanceof Blob) {
-      // Body is a Blob, convert it to ArrayBuffer
-      arrayBuffer = await pdfBuffer.arrayBuffer();
-    } else {
-      throw new Error("Unsupported type of Body");
-    }
-
-    const pdfjs = pdfjsLib.getDocument({data:arrayBuffer});
-
-    // Load PDF document
-    //const pdfDoc = await PDFDocument.load(arrayBuffer);
-    console.log("pdfjs",pdfjs);
-
-
-    // // const pdfData = await pdfParse(pdfBuffer);
-    // const extractedText = pdfData.text;
-
-    // console.log("extractedText", extractedText);
-    console.log("pdf buffer", pdfBuffer);
-    const input = {
-        inputText: "hello",
-    }
-    const command = new InvokeModelCommand({
-        contentType: "application/json",
-        body : JSON.stringify(input),
-        modelId,
+    const extractedData = await extractTextFromPDF(bucketName,fileName);
+    
+    const command = new InvokeAgentCommand({
+        agentId,
+        agentAliasId,
+        sessionId,
+        inputText : "hello ",
+       
     });
-    const response = await client.send(command);
+   
  
-    const decodedResponseBody = new TextDecoder().decode(response.body);
-    const responseBody = JSON.parse(decodedResponseBody);
-    return responseBody.results[0].outputText;
+    
+    try {
+        let completion = "";
+        const response = await client.send(command);
+  
+        if (response.completion === undefined) {
+          throw new Error("Completion is undefined");
+        }
+  
+        // Check for chunk events by iterating through the AsyncIterable
+        let hasChunks = false;
+        let decodedResponse = "";
+        for await (const chunkEvent of response.completion) {
+          const chunk = chunkEvent.chunk;
+  
+          // Ensure chunk is defined before proceeding
+          if (chunk !== undefined && chunk.bytes) {
+            hasChunks = true;
+            decodedResponse += new TextDecoder("utf-8").decode(chunk.bytes);
+            completion += decodedResponse;
+          } else {
+            console.warn("Received an empty chunk or chunk with no bytes");
+          }
+        }
+  
+        if (!hasChunks) {
+          throw new Error("No chunks received in the response");
+        }
+  
+        //console.log("result is: ", typeof decodedResponse)
+        console.log("extracted data:", extractedData)
+      console.log("decoded response", decodedResponse)
+  
+        //const result = JSON.parse(decodedResponse) || "";
+       /// console.log("result is now: " + result)
+    
+  
+        return {
+          statusCode: 200,
+          body: JSON.stringify({
+            message: "Received Output from Bedrock",
+            response: decodedResponse, // Return the cleaned result here
+          }),
+        };
+      } catch (err) {
+        console.error("Error invoking Bedrock agent:", err);
+        return {
+          statusCode: 500,
+         // body: JSON.stringify({ message: "Error invoking Bedrock agent", error: err.message }),
+        };
+      }
+ 
+
 
 }
