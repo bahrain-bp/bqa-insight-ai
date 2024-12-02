@@ -120,6 +120,7 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+            
             "POST /invokeBedrock": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
@@ -130,7 +131,19 @@ export function ApiStack({stack}: StackContext) {
                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                     }
                 }
-            }
+            },
+                        "POST /filter": {
+            function: {
+                handler: "packages/functions/src/filter.handleFilterRequest",
+                permissions: ["dynamodb"],  
+                timeout: "60 seconds",
+                environment: {
+                FILE_METADATA_TABLE_NAME: "DummyDataTable",
+    },
+  },
+}
+
+
         },
     });
 
