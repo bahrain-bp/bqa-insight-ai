@@ -137,6 +137,8 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
         extractedText = processBlocks(textDetectionResult.Blocks)
     }
 
+    extractedText = extractedText.replaceAll("\n\n", " ")
+
     return {
       statusCode: 200,
       body: JSON.stringify({
