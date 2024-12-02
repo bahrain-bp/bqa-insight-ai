@@ -9,7 +9,7 @@ import { BotStack } from "./Lexstacks/BotStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket} = use(S3Stack);
+    const {bucket, bedrockOutputBucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
@@ -123,12 +123,13 @@ export function ApiStack({stack}: StackContext) {
             "POST /invokeBedrock": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
-                    permissions: ["bedrock"],
+                    permissions: ["bedrock", bedrockOutputBucket],
                     timeout: "60 seconds",
                     environment: {
                         AGENT_ID: cfnAgent?.attrAgentId || "",
                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                    }
+                        BUCKET_NAME: bedrockOutputBucket.bucketName,
+                    },
                 }
             }
         },
