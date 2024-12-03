@@ -1,11 +1,31 @@
 import { BedrockAgentRuntimeClient, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import {BedrockRuntimeClient, ConverseCommand, ConverseCommandInput, ConverseRequest, DocumentBlock} from "@aws-sdk/client-bedrock-runtime";
 import { APIGatewayEvent } from "aws-lambda";
+import { ConversationRole } from "@aws-sdk/client-bedrock-runtime";
+
 import AWS from "aws-sdk";
 import { extractTextFromPDF } from "src/lambda/textract";
 
 const s3 = new AWS.S3();
+const lambda = new AWS.Lambda();
 export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
+    
+
+
+
+    console.log("invoking split lambda");
+    const extractPDFTest = await lambda.invoke({
+        FunctionName: "arn:aws:lambda:us-east-1:588738578192:function:sayed-insight-ai-S3Stack-SplitPDFHandler5175DB9F-WZmcjGgfaZvV", // ARN or name of the second function
+        InvocationType: "Event", // Fire-and-forget
+       // Payload: JSON.stringify(bedrockEvent), // Pass event data or a subset of it
+    }).promise();
+
+    console.log("extractPDFTest ", extractPDFTest)
+    
+    // const bedrockEvent = {
+    //     pdfData : pdfData
+    // }
+
     // const client = new BedrockAgentRuntimeClient({ region: "us-east-1" });
     const {pdfData} = JSON.parse(event.body || "{}"); 
     const client = new BedrockRuntimeClient({ region: "us-east-1" });
@@ -128,13 +148,13 @@ export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
       ],
     };
  
-    const command = new ConverseCommand(test);
-    const response = await client.send(command);
+    // const command = new ConverseCommand(test);
+    // const response = await client.send(command);
     
-    console.log(response.output?.message);
-    return {
-      message: response.output?.message
-    }
+    // console.log(response.output?.message);
+    // return {
+    //   message: response.output?.message
+    // }
     
 
 

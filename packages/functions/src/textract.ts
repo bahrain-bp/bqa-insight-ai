@@ -79,9 +79,9 @@ const processBlocks = (blocks: Block[]): string => {
 
 const textractClient = new TextractClient({ region: "us-east-1" });
 
-export const extractTextFromPDF = async (event: APIGatewayEvent, context: Context) => {
+export const extractTextFromPDF = async (requestBody: TextractRequest) => {
   try {
-    const requestBody: TextractRequest = JSON.parse(event.body || "{}");
+    // const requestBody: TextractRequest = JSON.parse(requestBody || "{}");
     console.log("Request Body:", requestBody);
 
     const bucketName = requestBody.bucketName;

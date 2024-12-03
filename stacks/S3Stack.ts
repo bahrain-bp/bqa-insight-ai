@@ -26,36 +26,35 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
-    // Define the Lambda function for processing PDF splitting
-    const splitPDFHandler = new Function(stack, "SplitPDFHandler", {
-        handler: "packages/functions/src/lambda/extractPDFTest.handler",
-        environment: {
-            FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
-        },
-        permissions: [
-            fileMetadataTable, 
-            bucket, 
-            // Add Textract permissions here
-            "textract:StartDocumentTextDetection",
-            "textract:GetDocumentTextDetection",
-            "textract:StartDocumentAnalysis",
-            "textract:GetDocumentAnalysis",
-        ],
-    });
+    // // Define the Lambda function for processing PDF splitting
+    // const splitPDFHandler = new Function(stack, "SplitPDFHandler", {
+    //     handler: "packages/functions/src/lambda/extractPDFTest.handler",
+    //     environment: {
+    //         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+    //     },
+    //     permissions: [
+    //         fileMetadataTable, 
+    //         bucket, 
+    //         // Add Textract permissions here
+    //         "textract:StartDocumentTextDetection",
+    //         "textract:GetDocumentTextDetection",
+    //         "textract:StartDocumentAnalysis",
+    //         "textract:GetDocumentAnalysis",
+    //     ],
+    // });
 
-    const extractPDF = new Function(stack, "extractPDFHandler", {
-        handler: "packages/functions/src/lambda/PDFPlumber.main",
-        runtime: "python3.11",
-        timeout: "60 seconds",
+    const extractReportMetadataHandler = new Function(stack, "extractReportMetadataHandler", {
+        handler: "packages/functions/src/bedrock/extractReportMetadata.extractReportMetadata",
+        timeout: "300 seconds",
         permissions: [
-            bucket, 
+            bucket, "bedrock", "textract"
         ],
     });
     
     
     bucket.addNotifications(stack, {
         objectCreatedInFiles: {
-            function: splitPDFHandler,
+            function: extractReportMetadataHandler,
             events: ["object_created"], // Trigger on object creation
             filters: [
                 { prefix: "Files/" }, // Only trigger for objects under the `Files/` directory
