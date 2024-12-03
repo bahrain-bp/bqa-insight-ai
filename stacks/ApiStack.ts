@@ -11,7 +11,7 @@ export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
-    const {bot, alias} = use(BotStack);
+    const {botId, aliasId} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -75,8 +75,8 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: bot.resource.ref,
-                        BOT_ALIAS_ID: alias.resource.ref,
+                        BOT_ID: botId,
+                        BOT_ALIAS_ID: aliasId,
                         LOCALE_ID: "en_US",
                     }
                 }
@@ -87,8 +87,8 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: bot.resource.ref,
-                        BOT_ALIAS_ID: alias.resource.ref,
+                        BOT_ID: botId,
+                        BOT_ALIAS_ID: aliasId,
                         LOCALE_ID: "en_US",
                     }
                 }
