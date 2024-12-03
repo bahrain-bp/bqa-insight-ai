@@ -52,6 +52,7 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
     
+    
     bucket.addNotifications(stack, {
         objectCreatedInFiles: {
             function: splitPDFHandler,
@@ -60,8 +61,11 @@ export function S3Stack({ stack }: StackContext) {
                 { prefix: "Files/" }, // Only trigger for objects under the `Files/` directory
                 { suffix: ".pdf" },   // Only trigger for `.pdf` files
             ],
+            
         },
+        
     });
+    
     
 
     const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {

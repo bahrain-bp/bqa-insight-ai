@@ -1,7 +1,9 @@
+import { JsonFileLogDriver } from "aws-cdk-lib/aws-ecs";
 import * as AWS from "aws-sdk";
 import pdfParse from "pdf-parse"; // Import pdf-parse for text extraction
 
 const s3 = new AWS.S3();
+const lambda = new AWS.Lambda();
 
 export async function handler(event: any) {
     for (const record of event.Records) {
@@ -25,6 +27,27 @@ export async function handler(event: any) {
             // Extract information from the PDF using pdf-parse
             const extractedInfo = await extractPDFInfo(pdfData);
             console.log(`Extracted PDF Information:`, extractedInfo);
+
+            const bedrockEvent = {
+                pdfData : pdfData
+            }
+
+            console.log("invoking express lambda");
+            const extractReportMetadataHandler = await lambda.invoke({
+                FunctionName: "arn:aws:lambda:us-east-1:588738578192:function:MaryamAleskafi-insight-ai-ApiLambdaPOSTinvokeExpre-GcWToMk4K8e8", // ARN or name of the second function
+                InvocationType: "Event", // Fire-and-forget
+                Payload: JSON.stringify(bedrockEvent), // Pass event data or a subset of it
+            }).promise();
+
+            console.log("extractReportMetadataHandler ", extractReportMetadataHandler)
+            
+            // const extractReportMetadataHandler = new AWS.("extractReportMetadataHandler", {
+            //     handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
+            //     timeout: "60 seconds",
+            //     permissions: [
+            //         bucket, "bedrock"
+            //     ],
+            // });
 
         } catch (error) {
             console.error(`Error processing file ${fileKey}:`, error);

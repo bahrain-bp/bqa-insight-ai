@@ -7,10 +7,11 @@ import { extractTextFromPDF } from "src/lambda/textract";
 const s3 = new AWS.S3();
 export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
     // const client = new BedrockAgentRuntimeClient({ region: "us-east-1" });
+    const {pdfData} = JSON.parse(event.body || "{}"); 
     const client = new BedrockRuntimeClient({ region: "us-east-1" });
-
-    const agentId = process.env.AGENT_ID;
-    const agentAliasId = process.env.AGENT_ALIAS_ID;
+    console.log("event is: ",event)
+    // const agentId = process.env.AGENT_ID;
+    // const agentAliasId = process.env.AGENT_ALIAS_ID;
     const sessionId = "123";
 
     const bucketName = "maryamaleskafi-insight-ai-s3s-reportbucket6b54e113-zoyhomcbjh6w";
@@ -78,13 +79,13 @@ export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
     //     };
     //   }
 
-    const document: DocumentBlock = {
-      format: "pdf",
-      name: "hello.pdf",
-      source: {
-        bytes: Buffer.from("Given the following text, give me the school name and review year in csv format: the following report is about some schools including 'alsehla sprimary boys school',. the report is conducted on 2019. the followin report will help us to understand how the school performs.")
-      }
-    }
+    // const document: DocumentBlock = {
+    //   format: "pdf",
+    //   name: "hello.pdf",
+    //   source: {
+    //     bytes: event.pdfData;
+    //   }
+    // }
 
     // const input: ConverseRequest = {
     //   modelId: "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-express-v1",
@@ -115,10 +116,10 @@ export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
             { // ContentBlock Union: only one key present
               text: "Summarize this document for me",
               document: { // DocumentBlock
-                format: "txt",
+                format: "pdf",
                 name: "hello", // required
                 source: { // DocumentSource Union: only one key present
-                  bytes: Buffer.from("Alsehla primary boys school is one of the best schools in bahrain. it is very good in english. it has 1000 studetns. it includes grades from 1-9."), // e.g. Buffer.from("") or new TextEncoder().encode("")
+                  bytes: pdfData
                 },
               },
             },
@@ -127,13 +128,13 @@ export const invokeExpressLambda = async (event: APIGatewayEvent) =>{
       ],
     };
  
-    // const command = new ConverseCommand(test);
-    // const response = await client.send(command);
+    const command = new ConverseCommand(test);
+    const response = await client.send(command);
     
-    // console.log(response.output?.message);
-    // return {
-    //   message: response.output?.message
-    // }
+    console.log(response.output?.message);
+    return {
+      message: response.output?.message
+    }
     
 
 
