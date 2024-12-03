@@ -1,22 +1,13 @@
-import { Function, Bucket, Queue, StackContext, use } from "sst/constructs";
-import { aws_lambda as lambda } from 'aws-cdk-lib';
-import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
-import { Duration, aws_iam as iam } from "aws-cdk-lib";
-import { Construct } from 'constructs';
-import { Stack } from 'aws-cdk-lib';
+import {Function, Bucket, Queue, StackContext, use} from "sst/constructs";
+import * as cdk from "aws-cdk-lib";
+
 import {
     LexCustomResource,
     LexBotDefinition,
 } from '@amaabca/aws-lex-custom-resources';
-import { AmazonLexSolarMapFulfillment } from './AmazonLexSolarMapFulfillment';
 
-export function BotStack({ stack }: StackContext) {
+export function BotStack({stack}: StackContext) {
 
-    const amazonLexSolarMapFulfillment = use(AmazonLexSolarMapFulfillment);
-    const fulfillmentFunction = amazonLexSolarMapFulfillment.fulfillmentFunction;
-    
-    // Setting up the custom resource from the AWS Serverless Application Repo.
-    // Application link: https://serverlessrepo.aws.amazon.com/applications/us-east-1/777566285978/lex-v2-cfn-cr
     const provider = new LexCustomResource(
         stack,
         'LexV2CfnCustomResource',
@@ -36,7 +27,7 @@ export function BotStack({ stack }: StackContext) {
             dataPrivacy: {
                 childDirected: false,
             },
-            description: 'A Bot for comparing educational institutes for BQA',
+            description: 'A Bot for comparing educational institutes for BQA 2',
             idleSessionTTLInSeconds: 300,
             roleArn: provider.serviceLinkedRoleArn(),
         }
@@ -62,8 +53,8 @@ export function BotStack({ stack }: StackContext) {
             resolutionStrategy: 'OriginalValue'
         },
         slotTypeValues: [
-            { sampleValue: { value: 'compare between Bahrain Polytechnic and UOB ' } },
-            { sampleValue: { value: 'analyze' } },
+            {sampleValue: {value: 'compare between Bahrain Polytechnic and UOB '}},
+            {sampleValue: {value: 'analyze'}},
         ],
     });
 
@@ -71,8 +62,8 @@ export function BotStack({ stack }: StackContext) {
         intentName: 'BQAIntent',
         description: 'Intent to provide user with detailed comparision of educational institutes.',
         sampleUtterances: [
-            { utterance: 'Hello BQA' },
-            { utterance: 'compare' },
+            {utterance: 'Hello BQA'},
+            {utterance: 'compare'},
         ],
         fulfillmentCodeHook: {
             enabled: true,
@@ -117,7 +108,7 @@ export function BotStack({ stack }: StackContext) {
                         message: {
                             plainTextMessage: {
                                 value: 'How can I help you?'
-                             },
+                            },
                         },
                     },
                 ],
@@ -127,22 +118,21 @@ export function BotStack({ stack }: StackContext) {
     });
 
 
-
     // Calculation Intent
 
-    locale.addSlotType({
+/*    locale.addSlotType({
         slotTypeName: 'ElectricityConsumptionSlot',
         description: 'Types of electricity consumption levels',
         valueSelectionSetting: {
             resolutionStrategy: 'OriginalValue'
         },
         slotTypeValues: [
-            { sampleValue: { value: 'Low' } },
-            { sampleValue: { value: 'Medium' } },
-            { sampleValue: { value: 'High' } },
-            { sampleValue: { value: '300 kilowatt' } },
+            {sampleValue: {value: 'Low'}},
+            {sampleValue: {value: 'Medium'}},
+            {sampleValue: {value: 'High'}},
+            {sampleValue: {value: '300 kilowatt'}},
         ],
-    });
+    });*/
 
 
     // create/update the bot resource
@@ -150,26 +140,49 @@ export function BotStack({ stack }: StackContext) {
 
     // create a version that automatically is built when the bot changes
     const version = bot.automaticVersion();
+/*
+    const fulfillmentFunction = new Function(stack, "FulfillmentFunction", {
+        handler: "packages/functions/src/LexBot/intentAmazonLexFulfillment.lambda_handler",
+        runtime: "python3.11", // SST automatically maps this
+        memorySize: 512,
+        timeout: 60,
+        environment: {
+        },
+        permissions: ["lex"], // SST automatically configures IAM permissions
 
+    });
+*/
+
+    const communicationFunction = new Function(stack, "CommunicationFunction", {
+        handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
+        runtime: "python3.11",
+        memorySize: 512,
+        timeout: 60,
+        environment: {
+            BOT_ID: bot.resource.ref,
+        },
+        permissions: ["lex"], // SST automatically configures IAM permissions
+    });
     // create an alias and assign it to the latest bot version
-    bot.addAlias({
+    const alias = bot.addAlias({
         botAliasName: 'liveAlias',
         botVersion: version.botVersion(),
         botAliasLocaleSettings: {
             en_US: {
-                codeHookSpecification: { 
-                    lambdaCodeHook: { 
-                       codeHookInterfaceVersion: "1.0",
-                       lambdaARN: fulfillmentFunction.functionArn,
+                codeHookSpecification: {
+                    lambdaCodeHook: {
+                        codeHookInterfaceVersion: "1.0",
+                        //lambdaARN: fulfillmentFunction.functionArn,
                     }
-                 },
-                 enabled: true,
+                },
+                enabled: true,
             },
         },
     });
-
+    communicationFunction.addEnvironment("BOT_ALIAS_ID", alias.resource.ref);
     return {
-        bot
+        bot,
+        alias
     }
-    
+
 }
