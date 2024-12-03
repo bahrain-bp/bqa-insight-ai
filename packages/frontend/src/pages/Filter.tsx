@@ -1,35 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 const Filter = () => {
   // State to hold the selected options
-  const [selectedOptions, setSelectedOptions] = useState<string[]>(new Array(5).fill(''));
+  const [selectedOptions, setSelectedOptions] = useState({
+    option1: '',
+    option2: '',
+    option3: '',
+    option4: '',
+    option5: ''
+  });
+
+  // State to hold the message after submission
   const [submittedMessage, setSubmittedMessage] = useState('');
-  const [filters, setFilters] = useState<string[]>([]); // State to hold the fetched filters
-
-  // Fetch filters from the API
-  useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const response = await fetch('https://9wcytv1d0k.execute-api.us-east-1.amazonaws.com/filters'); // Replace with your API Gateway URL
-        const data = await response.json();
-        setFilters(data); // Assuming the data is an array of filter options
-      } catch (error) {
-        console.error('Error fetching filters:', error);
-      }
-    };
-
-    fetchFilters();
-  }, []);
 
   // Handle dropdown change
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, index: number) => {
-    const updatedOptions = [...selectedOptions];
-    updatedOptions[index] = e.target.value;
-    setSelectedOptions(updatedOptions);
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, option: string) => {
+    setSelectedOptions(prevState => ({
+      ...prevState,
+      [option]: e.target.value
+    }));
   };
 
   // Construct the text to display selected options
-  const selectedText = selectedOptions.filter(option => option).join(' and ');
+  const selectedText = Object.keys(selectedOptions)
+    .filter(option => selectedOptions[option as keyof typeof selectedOptions])
+    .map(option => `${selectedOptions[option as keyof typeof selectedOptions]}`)
+    .join(' and ');
 
   // Handle form submission
   const handleSubmit = () => {
@@ -45,26 +41,61 @@ const Filter = () => {
       <div className="w-full max-w-3xl">
         <div className="bg-white p-6 rounded-md shadow-md">
           <div className="flex justify-between gap-2">
-            {/* Dynamically Render Dropdowns */}
-            {Array.from({ length: 5 }).map((_, index) => (
-              <select
-                key={index}
-                className="w-1/6 p-2 border rounded"
-                value={selectedOptions[index]}
-                onChange={(e) => handleSelectChange(e, index)}
-              >
-                <option value="">Select Option {index + 1}</option>
-                {filters.length > 0 ? (
-                  filters.map((filter, i) => (
-                    <option key={i} value={filter}>
-                      {filter}
-                    </option>
-                  ))
-                ) : (
-                  <option value="">Loading options...</option>
-                )}
-              </select>
-            ))}
+            {/* Dropdowns (Thinner search bar section) */}
+            <select
+              className="w-1/6 p-2 border rounded"
+              value={selectedOptions.option1}
+              onChange={(e) => handleSelectChange(e, 'option1')}
+            >
+              <option value="">Select Option 1</option>
+              <option value="option1">Option 1</option>
+              <option value="option2">Option 2</option>
+              <option value="option3">Option 3</option>
+            </select>
+
+            <select
+              className="w-1/6 p-2 border rounded"
+              value={selectedOptions.option2}
+              onChange={(e) => handleSelectChange(e, 'option2')}
+            >
+              <option value="">Select Option 2</option>
+              <option value="option1">Option 1</option>
+              <option value="option2">Option 2</option>
+              <option value="option3">Option 3</option>
+            </select>
+
+            <select
+              className="w-1/6 p-2 border rounded"
+              value={selectedOptions.option3}
+              onChange={(e) => handleSelectChange(e, 'option3')}
+            >
+              <option value="">Select Option 3</option>
+              <option value="option1">Option 1</option>
+              <option value="option2">Option 2</option>
+              <option value="option3">Option 3</option>
+            </select>
+
+            <select
+              className="w-1/6 p-2 border rounded"
+              value={selectedOptions.option4}
+              onChange={(e) => handleSelectChange(e, 'option4')}
+            >
+              <option value="">Select Option 4</option>
+              <option value="option1">Option 1</option>
+              <option value="option2">Option 2</option>
+              <option value="option3">Option 3</option>
+            </select>
+
+            <select
+              className="w-1/6 p-2 border rounded"
+              value={selectedOptions.option5}
+              onChange={(e) => handleSelectChange(e, 'option5')}
+            >
+              <option value="">Select Option 5</option>
+              <option value="option1">Option 1</option>
+              <option value="option2">Option 2</option>
+              <option value="option3">Option 3</option>
+            </select>
           </div>
 
           {/* Text Box displaying selected options */}
@@ -95,14 +126,16 @@ const Filter = () => {
         <div className="mt-6">
           <h3 className="font-semibold text-lg mb-4">Previously Selected Filters:</h3>
           <div className="flex gap-4 flex-wrap">
-            {selectedOptions.map((option, index) => (
-              <div
-                key={index}
-                className="bg-blue-200 text-blue-800 py-2 px-6 text-xl rounded-full shadow-md"
-              >
-                {option || 'No selection'}
-              </div>
-            ))}
+            {/* Example of filter boxes manually placed (limit to 3 boxes) */}
+            <div className="bg-blue-200 text-blue-800 py-2 px-6 text-xl rounded-full shadow-md">
+              Filter 1
+            </div>
+            <div className="bg-blue-200 text-blue-800 py-2 px-6 text-xl rounded-full shadow-md">
+              Filter 2
+            </div>
+            <div className="bg-blue-200 text-blue-800 py-2 px-6 text-xl rounded-full shadow-md">
+              Filter 3
+            </div>
           </div>
         </div>
       </div>
