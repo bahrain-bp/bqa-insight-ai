@@ -4,7 +4,7 @@ import { TextractClient, StartDocumentTextDetectionCommand, GetDocumentTextDetec
 // type for the request
 interface TextractRequest {
   bucketName: string;
-  objectKey: string;
+  objectKey: string | string[];
 }
 
 // type for processing the blocks
@@ -74,7 +74,7 @@ const processBlocks = (blocks: Block[]): string => {
         })
         .filter((text) => text.length > 0);
 
-        return [...lineBlocks, ...tableBlocks].join('\n\n');
+        return [...lineBlocks, ...tableBlocks].join(' ');
 }
 
 const textractClient = new TextractClient({ region: "us-east-1" });
@@ -85,63 +85,77 @@ export const extractTextFromPDF = async (event: APIGatewayEvent, context: Contex
     console.log("Request Body:", requestBody);
 
     const bucketName = requestBody.bucketName;
-    const objectKey = requestBody.objectKey;
+    const keys = (typeof requestBody.objectKey === "string") ? [requestBody.objectKey] : requestBody.objectKey
+    const objectKey: string[] = keys;
 
-    // Use Textract to start document text detection
-    const startDocumentTextDetectionCommand = new StartDocumentTextDetectionCommand({
-      DocumentLocation: {
-        S3Object: {
-          Bucket: bucketName,
-          Name: objectKey,
+    const result: string[] = [];
+    let resultText: string = "";
+
+    await Promise.all(objectKey.map(async (key, i) => {
+      // Use Textract to start document text detection
+      const startDocumentTextDetectionCommand = new StartDocumentTextDetectionCommand({
+        DocumentLocation: {
+          S3Object: {
+            Bucket: bucketName,
+            Name: key,
+          },
         },
-      },
-    });
+      });
 
-    const startDocumentAnalysisCommand = new StartDocumentAnalysisCommand({
-      DocumentLocation: {
-        S3Object: {
-          Bucket: bucketName,
-          Name: objectKey,
+      const startDocumentAnalysisCommand = new StartDocumentAnalysisCommand({
+        DocumentLocation: {
+          S3Object: {
+            Bucket: bucketName,
+            Name: key,
+          },
         },
-      },
-      FeatureTypes: ["TABLES"],
-    });
+        FeatureTypes: ["TABLES"],
+      });
 
-    const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
+      const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
 
-    const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
+      const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
 
-    // Check if the text detection job started successfully
-    if (!startTextDetectionResponse.JobId) {
-      throw new Error("Failed to start document text detection job.");
-    }
+      // Check if the text detection job started successfully
+      if (!startTextDetectionResponse.JobId) {
+        throw new Error("Failed to start document text detection job.");
+      }
 
-    if (!startDocumentAnalysisResponse.JobId) {
-      throw new Error("Failed to start document text detection job.");
-    }
-    
-    const documentAnalysisJobId = startDocumentAnalysisResponse.JobId;
+      if (!startDocumentAnalysisResponse.JobId) {
+        throw new Error("Failed to start document text detection job.");
+      }
+      
+      const documentAnalysisJobId = startDocumentAnalysisResponse.JobId;
 
-    const getDocumentAnalysisCommand = new GetDocumentAnalysisCommand({
-      JobId: documentAnalysisJobId
-    })
+      const getDocumentAnalysisCommand = new GetDocumentAnalysisCommand({
+        JobId: documentAnalysisJobId
+      })
 
-    const textRactJobId = startTextDetectionResponse.JobId;
-    const getDocumentTextDetectionCommand = new GetDocumentTextDetectionCommand({
-      JobId: textRactJobId,
-    });
-    const textDetectionResult = await tryTextract(getDocumentTextDetectionCommand);
+      const textRactJobId = startTextDetectionResponse.JobId;
+      const getDocumentTextDetectionCommand = new GetDocumentTextDetectionCommand({
+        JobId: textRactJobId,
+      });
+      const textDetectionResult = await tryTextract(getDocumentTextDetectionCommand);
 
-    let extractedText = "";
-    if (textDetectionResult.Blocks) {
-        extractedText = processBlocks(textDetectionResult.Blocks)
-    }
+      let extractedText = "";
+
+      if (textDetectionResult.Blocks) {
+          extractedText = processBlocks(textDetectionResult.Blocks)
+      }
+      result[i] = extractedText;
+    }))
+
+    resultText = result.join(" ")
+
+    // resultText = resultText.replaceAll("\n\n", " ")
+
+    console.log(resultText)
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Text extracted successfully",
-        text: extractedText,
+        text: resultText,
       }),
     };
   } catch (error) {
