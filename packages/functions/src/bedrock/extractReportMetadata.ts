@@ -19,7 +19,7 @@ export const extractReportMetadata = async (event: any) =>{
         const ModelId = "arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-express-v1";
 
         const input = {
-            inputText : "Given the following text, give me the school name and give me the review cycle year. Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text,
+            inputText : "Given the following text, give me the school name and give me the date of review and give me the school location including Town and Governate. Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text,
         }
         
 
@@ -31,11 +31,11 @@ export const extractReportMetadata = async (event: any) =>{
         const response = await client.send(command);
         console.log("RESPONSE: ", response)
 
-const decodedResponse = new TextDecoder().decode(response.body);
-const decodedResponseBody = JSON.parse(decodedResponse);
-const output = decodedResponseBody.results[0].outputText;
-console.log("Final output: ",output)
-return output;
+        const decodedResponse = new TextDecoder().decode(response.body);
+        const decodedResponseBody = JSON.parse(decodedResponse);
+        const output = decodedResponseBody.results[0].outputText;
+        console.log("Final output: ",output)
+        return output;
 
         // try {
         //     // Get the file URL directly from S3
