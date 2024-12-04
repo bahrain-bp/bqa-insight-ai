@@ -47,8 +47,11 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/bedrock/extractReportMetadata.extractReportMetadata",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract"
+            bucket, "bedrock", "textract" , fileMetadataTable
         ],
+        environment: {
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        }
     });
     
     

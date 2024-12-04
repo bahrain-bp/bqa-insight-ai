@@ -1,7 +1,12 @@
 import { extractTextFromPDF } from "src/textract";
-import { InvokeModelCommand, BedrockRuntimeClient, InvokeModelRequest } from "@aws-sdk/client-bedrock-runtime";
+import { InvokeModelCommand, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
+import { DynamoDB } from "aws-sdk";
+import csv from "csv-parser";
+import { Readable } from "stream";
 
+const dynamoDb = new DynamoDB.DocumentClient();
 const client = new BedrockRuntimeClient({region: "us-east-1"});
+
 export const extractReportMetadata = async (event: any) =>{
 
     for (const record of event.Records) {
@@ -34,73 +39,173 @@ export const extractReportMetadata = async (event: any) =>{
         const decodedResponse = new TextDecoder().decode(response.body);
         const decodedResponseBody = JSON.parse(decodedResponse);
         const output = decodedResponseBody.results[0].outputText;
+        const extractedOutput = parseMetadata(output);
+
+
+        // const parsedOutput = await parseMetadata(output);
+
         console.log("Final output: ",output)
-        return output;
+        console.log("Extracted Output:", extractedOutput)
+        // await insertReportMetadata(extractedOutput, fileKey);
 
-        // try {
-        //     // Get the file URL directly from S3
-        //     const fileURL = `https://${bucketName}.s3.amazonaws.com/${fileKey}`;
-
-        //     // Fetch the file from the URL using crawler-request
-        //     const pdfData = await crawlerRequest(fileURL);
-
-        //     if (!pdfData) {
-        //         console.error(`Error fetching PDF from URL: ${fileURL}`);
-        //         continue;
-        //     }
-
-        //     // Extract information from the PDF using pdf-parse
-        //     // const extractedInfo = await extractPDFInfo(pdfData);
-        //     // console.log(`Extracted PDF Information:`, extractedInfo);
-
-           
-            
-        //     // const extractReportMetadataHandler = new AWS.("extractReportMetadataHandler", {
-        //     //     handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
-        //     //     timeout: "60 seconds",
-        //     //     permissions: [
-        //     //         bucket, "bedrock"
-        //     //     ],
-        //     // });
-
-        // } catch (error) {
-        //     console.error(`Error processing file ${fileKey}:`, error);
-        // }
+        return extractedOutput;
+       
+    
     }
 
+    
+
 }
-// Function to fetch the PDF using crawler-request
-// function crawlerRequest(url: string): Promise<Buffer | null> {
-//     return new Promise((resolve, reject) => {
-//         crawler(url, (error: any, response: any, body: Buffer) => {
-//             if (error) {
-//                 reject(error);
-//             } else {
-//                 resolve(body);
-//             }
-//         });
-//     });
-// }
+// Insert file metadata into DynamoDB
+async function insertReportMetadata(data :object, fileKey : string) {
+    console.log("datatype of data:", typeof data)
+    console.log("data zero:",  data)
 
-// // Function to extract text and other information from the PDF using pdf-parse
-// async function extractPDFInfo(buffer: Buffer): Promise<any> {
-//     try {
-//         const data = await pdfParse(buffer); // Parse the PDF buffer
-        
-//         const extractedInfo = {
-//             text: data.text,             // Extracted text content
-//             numPages: data.numpages,     // Number of pages in the PDF
-//             info: data.info,             // PDF info (author, title, etc.)
-//             metadata: data.metadata,     // PDF metadata (if available)
-//             version: data.version        // PDF.js version used
-//         };
+    const params = {
+        TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+             Key : {fileKey},
+            UpdateExpression: "SET instituteName = :instituteName",
+            ExpressionAttributeValues: {
+                ":instituteName": data,
+            },
+            ReturnValues: "UPDATED_NEW",
+    };
+    return await dynamoDb.update(params).promise();
+}
+function extractCsvData(bedrockResponse: string) {
+    // Regular expression to extract CSV data between backticks
+    const regex = /```tabular-data-csv([\s\S]*?)```/;
+    const match = bedrockResponse.match(regex);
+    return match ? match[1].trim() : null;
+}
 
-//         return extractedInfo; // Return the extracted PDF information
-//     } catch (error) {
-//         console.error("Error extracting information from PDF:", error);
-//         throw new Error("Failed to extract PDF information");
+function parseCsvToJson(csv: string, delimiter = ','): object[] {
+    const lines = csv.split('\n');  // Split into lines
+    const headers = lines[0].split(delimiter); // Extract headers from the first line
+
+    return lines.slice(1).map(line => {
+        const values = line.split(delimiter); // Split the line into values
+        const entry: { [key: string]: string } = {};
+
+        headers.forEach((header, index) => {
+            entry[header.trim()] = values[index]?.trim() || ''; // Map headers to values
+        });
+
+        return entry;
+    });
+}
+
+function processResponse(bedrockResponse: string) {
+    const csvData = extractCsvData(bedrockResponse);
+    if (!csvData) return null;
+
+    // Parse the CSV data into JSON format
+    const json = parseCsvToJson(csvData);
+
+    // Return the JSON result
+    return JSON.stringify(json, null, 2);  // Pretty-print the JSON with 2 spaces indentation
+}
+
+// function extractResponse(bedrockResponse: string){
+//     // Regular expression to match the string from the JSON string
+//     const regex = /"([^"]+)"\s*:\s*"([^"]*)"/;
+  
+//     // Attempt to find the match
+//     const match = bedrockResponse.match(regex);
+  
+//     // If match found, return the "response" value; otherwise, return null
+//     if (match && match[1]) {
+//       return match[1]; // The value of "response" is in match[1]
+//     } else {
+//       return null; // No "result" field found or it's not a valid string
 //     }
-// }
-function crawler(url: string, arg1: (error: any, response: any, body: Buffer) => void) {
-    throw new Error("Function not implemented.");
+//   }
+  
+//   function extractCsvData(bedrockResponse: string){
+//     // Regular expression to extract CSV data between backticks
+//     const regex = /```tabular-data-csv([\s\S]*?)```/;
+//     const match = bedrockResponse.match(regex);
+//     return match ? match[1].trim() : null;
+//   }
+
+function parseMetadata(input: string, delimiter = ',') {
+    // Extract content between the triple backticks
+    const matches = input.match(/```tabular-data-csv([\s\S]*?)```/);
+    
+    if (!matches || matches.length < 2) {
+        throw new Error('No valid CSV content found within backticks.');
+    }
+
+    const csvContent = matches[1].trim(); // Get the content inside backticks and trim whitespace
+    const lines = csvContent.split('\n'); // Split into lines
+    const headers = lines[0].split(delimiter); // Extract headers from the first line
+
+    // Map each subsequent line to a JSON object
+    const json = lines.slice(1).map(line => {
+        const values = line.split(delimiter); // Split the line into values
+        const entry: { [key: string]: string } = {};
+
+        headers.forEach((header, index) => {
+            entry[header.trim()] = values[index]?.trim() || ""; // Map headers to values
+        });
+
+        return entry;
+    });
+
+    // Return the JSON string with double quotes
+    return JSON.stringify(json, null, 2); // This ensures double quotes and formats the output
 }
+// function parseMetadata(input: string, delimiter = ','): object {
+//     // Extract content between the triple backticks
+//     const matches = input.match(/```tabular-data-csv([\s\S]*?)```/);
+    
+//     if (!matches || matches.length < 2) {
+//         throw new Error('No valid CSV content found within backticks.');
+//     }
+
+//     const csvContent = matches[1].trim(); // Get the content inside backticks and trim whitespace
+//     const lines = csvContent.split('\n'); // Split into lines
+//     const headers = lines[0].split(delimiter); // Extract headers from the first line
+
+//     // Map each subsequent line to a JSON object
+//     const json = lines.slice(1).map(line => {
+//         const values = line.split(delimiter); // Split the line into values
+//         const entry: { [key: string]: string } = {};
+
+//         headers.forEach((header, index) => {
+//             entry[header.trim()] = values[index]?.trim() || ""; // Map headers to values
+//         });
+
+//         return entry;
+//     });
+
+//     return json;
+// }
+
+//old
+// async function parseMetadata(csvData: string): Promise<any[]> {
+//   const rows: any[] = [];
+
+//   // Create a readable stream from the CSV data
+//   const csvStream = Readable.from(csvData);
+
+//   // Parse the CSV data dynamically
+//   await new Promise<void>((resolve, reject) => {
+//     csvStream
+//       .pipe(csv())
+//       .on("data", (data) => {
+//         rows.push(data); // Add each row to an array
+//       })
+//       .on("end", () => {
+//         console.log("CSV Parsing Complete. Rows: ", rows); // Debug log
+//         resolve();
+//       })
+//       .on("error", (error) => {
+//         console.error("Error Parsing CSV: ", error); // Log errors
+//         reject(error);
+//       });
+//   });
+
+//   return rows; // Explicitly return the parsed rows
+// }
+
