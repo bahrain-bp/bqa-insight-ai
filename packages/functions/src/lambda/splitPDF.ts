@@ -1,36 +1,89 @@
 import * as AWS from "aws-sdk";
 import { PDFDocument } from "pdf-lib";
-import { extractTextFromPDF } from "./textract"; // Import the Textract function
+import { SQSEvent } from "aws-lambda";
 
 const s3 = new AWS.S3();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const sqs = new AWS.SQS();
 
-export async function handler(event: any) {
-    for (const record of event.Records) {
+export const sendMessage = async (event: any) => {
+    // Extract the bucket name and file key from the S3 notification event
+    const records = event.Records;
+    
+    // Ensure QUEUE_URL environment variable is set
+    const queueUrl = process.env.QUEUE_URL;
+    if (!queueUrl) {
+        throw new Error("QUEUE_URL environment variable is not set.");
+    }
+
+    for (const record of records) {
         const bucketName = record.s3.bucket.name;
         const fileKey = record.s3.object.key;
+
+        // Construct the SQS message payload
+        const messageBody = JSON.stringify({
+            bucketName,
+            fileKey,
+        });
+
+        // Add the MessageGroupId parameter for FIFO queue
+        const sqsMessage = {
+            QueueUrl: queueUrl, // This is guaranteed to be a string
+            MessageBody: messageBody,
+            MessageGroupId: bucketName,  // Use bucket name or any unique string
+            MessageDeduplicationId: fileKey, // Optional but recommended for deduplication
+        };
+
+        try {
+            const result = await sqs.sendMessage(sqsMessage).promise();
+            console.log("SQS message sent:", result.MessageId);
+        } catch (error) {
+            console.error("Error sending SQS message:", error);
+        }
+    }
+
+    return {
+        statusCode: 200,
+        body: JSON.stringify({ message: "Message sent to SQS" }),
+    };
+};
+
+
+export async function handler(event: SQSEvent) {
+    for (const record of event.Records) {
+        // Parsing the SQS message body to extract file details
+        let s3Event;
+        try {
+            s3Event = JSON.parse(record.body); // Parse the body of the message
+        } catch (error) {
+            console.error("Error parsing SQS message:", record.body, error);
+            continue; // Skip to next record if parsing fails
+        }
+
+        const bucketName = s3Event.bucketName;
+        const fileKey = s3Event.fileKey;
+
+        if (!bucketName || !fileKey) {
+            console.error("Missing bucket name or file key in SQS message:", record.body);
+            continue; // Skip to next record if bucket name or file key is missing
+        }
 
         console.log(`Processing file from bucket: ${bucketName}, key: ${fileKey}`);
 
         try {
-            // Get the file directly from S3
+            // Get the file from S3
             const object = await s3.getObject({ Bucket: bucketName, Key: fileKey }).promise();
 
             if (!object.Body) {
                 console.error(`File ${fileKey} not found or empty.`);
-                continue;
+                continue; // Skip to next record if the file is not found or is empty
             }
 
-            //print the whole file using pdf lib // do your thing
-
-
-            // Split the PDF using pdf-lib
-            const pagesPerFile = 2; // Set the number of pages per split file
+            // Process PDF (splitting, etc.)
+            const pagesPerFile = 2;  // Adjust as needed
             const pdfChunks = await splitPDF(object.Body as Buffer, pagesPerFile);
 
-            const chunkURLs: string[] = []; // Store URLs of the split files
-
-            // Upload split files back to S3 and process each chunk with Textract
+            const chunkURLs: string[] = [];
             for (let i = 0; i < pdfChunks.length; i++) {
                 const chunkKey = `SplitFiles/${fileKey.split('/').pop()}/${i}`;
                 await s3.putObject({
@@ -40,24 +93,27 @@ export async function handler(event: any) {
                     ContentType: "application/pdf",
                 }).promise();
 
-                // Generate the URL for each chunk
                 const chunkURL = `https://${bucketName}.s3.amazonaws.com/${chunkKey}`;
                 chunkURLs.push(chunkURL);
-
-                // Call Textract to process the chunk
-                const extractedText = await extractTextFromPDF(bucketName, chunkKey);
-                console.log(`Extracted text for chunk ${i}:`, extractedText);
             }
 
             console.log(`Successfully split and uploaded PDF: ${fileKey}`);
 
-            // Update DynamoDB to append the URLs
+            // Update DynamoDB metadata
             await updateFileMetadata(fileKey, chunkURLs);
 
             console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
 
-            // Insert an empty metadata.json file for the original file key
+            // Insert empty metadata.json file
             await insertMetadataFile(bucketName, fileKey);
+
+            // Delete the message from the queue after successful processing
+            const deleteParams = {
+                QueueUrl: process.env.QUEUE_URL!, // Your queue URL (make sure it's available in the environment variables)
+                ReceiptHandle: record.receiptHandle, // The receipt handle from the event record
+            };
+            await sqs.deleteMessage(deleteParams).promise();
+            console.log(`Successfully deleted message from the queue: ${record.messageId}`);
         } catch (error) {
             console.error(`Error processing file ${fileKey}:`, error);
         }

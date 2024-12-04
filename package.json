@@ -33,11 +33,9 @@
     "@aws-sdk/client-dynamodb": "^3.693.0",
     "@aws-sdk/client-lex-runtime-v2": "^3.693.0",
     "@aws-sdk/client-textract": "^3.687.0",
-    "crawler-request": "^1.2.2",
     "date-fns": "^4.1.0",
     "mime-types": "^2.1.35",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.1",
     "react-router-dom": "^6.28.0",
     "uuid": "^11.0.3"
   }

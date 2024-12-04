@@ -1,16 +1,15 @@
-import { StackContext, Bucket, Function, use } from "sst/constructs";
+import { StackContext, Bucket, Function, Queue, use, toCdkDuration } from "sst/constructs";
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
 
 export function S3Stack({ stack }: StackContext) {
-    // Reference the DynamoDB table from FileMetadataStack
     const { fileMetadataTable } = use(FileMetadataStack);
 
-    // Create an SST Bucket with versioning, CORS
+    // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
         cdk: {
             bucket: {
-                versioned: true, // Enable versioning
+                versioned: true,
                 removalPolicy: stack.stage === "prod" ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
                 publicReadAccess: true,
             },
@@ -18,57 +17,65 @@ export function S3Stack({ stack }: StackContext) {
         cors: [
             {
                 allowedHeaders: ["*"],
-                allowedMethods: ["GET", "PUT", "POST"], // Allowed HTTP methods
-                allowedOrigins: ["*"], // TODO: Replace "*" with your frontend's domain for production
+                allowedMethods: ["GET", "PUT", "POST"],
+                allowedOrigins: ["*"],
                 exposedHeaders: ["ETag"],
                 maxAge: "3000 seconds",
             },
         ],
     });
 
-    // Define the Lambda function for processing PDF splitting
+    // Create an SQS Queue
+    const queue = new Queue(stack, "PDFSplitQueue", {
+        cdk: {
+            queue: {
+                fifo: true,
+                contentBasedDeduplication: true,
+                visibilityTimeout: toCdkDuration("301 seconds"),
+            },
+        },
+    });
+
+    // Create the PDF split handler function
     const splitPDFHandler = new Function(stack, "SplitPDFHandler", {
-        handler: "packages/functions/src/lambda/extractPDFTest.handler",
+        handler: "packages/functions/src/lambda/splitPDF.handler",
         environment: {
             FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+            QUEUE_URL: queue.queueUrl, // Pass queue URL to the function environment
         },
-        permissions: [
-            fileMetadataTable, 
-            bucket, 
-            // Add Textract permissions here
-            "textract:StartDocumentTextDetection",
-            "textract:GetDocumentTextDetection",
-            "textract:StartDocumentAnalysis",
-            "textract:GetDocumentAnalysis",
-        ],
+        permissions: [fileMetadataTable, bucket, queue], // Grant permissions to the function
     });
 
-    const extractPDF = new Function(stack, "extractPDFHandler", {
-        handler: "packages/functions/src/lambda/PDFPlumber.main",
-        runtime: "python3.11",
-        timeout: "60 seconds",
-        permissions: [
-            bucket, 
-        ],
+    // Set the consumer for the queue
+    queue.addConsumer(stack, {
+        function: splitPDFHandler,
     });
-    
+
+    // Create the PDF split handler function
+    const sendSplitMessage = new Function(stack, "SendMessage", {
+        handler: "packages/functions/src/lambda/splitPDF.sendMessage",
+        environment: {
+            FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+            QUEUE_URL: queue.queueUrl, 
+        },
+        permissions: [fileMetadataTable, bucket, queue], // Grant permissions to the function
+    });
+
+
+    // Add S3 event notification to trigger the SQS queue on object creation
     bucket.addNotifications(stack, {
-        objectCreatedInFiles: {
-            function: splitPDFHandler,
-            events: ["object_created"], // Trigger on object creation
-            filters: [
-                { prefix: "Files/" }, // Only trigger for objects under the `Files/` directory
-                { suffix: ".pdf" },   // Only trigger for `.pdf` files
-            ],
+        objectCreatedNotification: {
+            function: sendSplitMessage, // Send notifications to the SQS queue
+            events: ["object_created"], // Only trigger on object creation (uploads)
+            filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
         },
     });
-    
 
-
-    // Add outputs for the bucket
+    // Add outputs for the bucket and queue
     stack.addOutputs({
         BucketName: bucket.bucketName,
+        QueueURL: queue.queueUrl,
     });
 
-    return { bucket };
+    return { bucket, queue };
 }
