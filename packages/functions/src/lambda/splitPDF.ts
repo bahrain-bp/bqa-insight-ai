@@ -11,9 +11,9 @@ export const sendMessage = async (event: any) => {
     const records = event.Records;
     
     // Ensure QUEUE_URL environment variable is set
-    const queueUrl = process.env.QUEUE_URL;
+    const queueUrl = process.env.SPLIT_QUEUE_URL;
     if (!queueUrl) {
-        throw new Error("QUEUE_URL environment variable is not set.");
+        throw new Error("SPLIT_QUEUE_URL environment variable is not set.");
     }
 
     for (const record of records) {
@@ -60,6 +60,13 @@ export async function handler(event: SQSEvent) {
             continue; // Skip to next record if parsing fails
         }
 
+        const textractQueueUrl = process.env.TEXTRACT_QUEUE_URL!;  // Textract Queue URL
+
+        // Ensure that the required environment variables are set
+        if (!textractQueueUrl) {
+            throw new Error("TEXTRACT_QUEUE_URL environment variable is not set.");
+        }
+
         const bucketName = s3Event.bucketName;
         const fileKey = s3Event.fileKey;
 
@@ -101,7 +108,6 @@ export async function handler(event: SQSEvent) {
 
             // Update DynamoDB metadata
             await updateFileMetadata(fileKey, chunkURLs);
-
             console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
 
             // Insert empty metadata.json file
@@ -109,11 +115,27 @@ export async function handler(event: SQSEvent) {
 
             // Delete the message from the queue after successful processing
             const deleteParams = {
-                QueueUrl: process.env.QUEUE_URL!, // Your queue URL (make sure it's available in the environment variables)
+                QueueUrl: process.env.SPLIT_QUEUE_URL!, // Your queue URL (make sure it's available in the environment variables)
                 ReceiptHandle: record.receiptHandle, // The receipt handle from the event record
             };
             await sqs.deleteMessage(deleteParams).promise();
             console.log(`Successfully deleted message from the queue: ${record.messageId}`);
+
+            // Send message to Textract queue with chunkURLs
+            const textractMessage = {
+                QueueUrl: textractQueueUrl,
+                MessageBody: JSON.stringify({
+                    bucketName,
+                    chunkURLs,
+                    fileKey,
+                }),
+                MessageGroupId: fileKey,  // Use the fileKey to group messages if FIFO is enabled
+                MessageDeduplicationId: fileKey,  // Use the fileKey for deduplication
+            };
+            
+            const textractResult = await sqs.sendMessage(textractMessage).promise();
+            console.log(`Successfully sent message to Textract queue: ${textractResult.MessageId}`);
+
         } catch (error) {
             console.error(`Error processing file ${fileKey}:`, error);
         }

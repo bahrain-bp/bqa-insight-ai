@@ -25,8 +25,36 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
-    // Create an SQS Queue
-    const queue = new Queue(stack, "PDFSplitQueue", {
+    //Create an SQS Queue for Textract
+    const textractQueue = new Queue(stack, "TextractQueue", {
+        consumer: {
+            function: {
+                handler: "packages/functions/src/lambda/textract.handler",
+                environment: {
+                    FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                    BUCKET_NAME: bucket.bucketName,
+                },
+                permissions: [
+                    fileMetadataTable,  // Allow access to the DynamoDB table
+                    bucket,              // Allow access to the S3 bucket
+                    "textract:StartDocumentTextDetection",  // Allow Textract text detection
+                    "textract:StartDocumentAnalysis",      // Allow Textract document analysis
+                    "textract:GetDocumentTextDetection",  // Allow Textract to get text detection results
+                    "textract:GetDocumentAnalysis",       // Allow Textract to get analysis results
+                ],
+            },
+        },
+        cdk: {
+            queue: {
+                fifo: true,
+                contentBasedDeduplication: true,
+                visibilityTimeout: toCdkDuration("301 seconds"),
+            },
+        },
+    });
+
+    // Create an SQS Queue for PDF splitting
+    const splitPDFqueue = new Queue(stack, "PDFSplitQueue", {
         cdk: {
             queue: {
                 fifo: true,
@@ -41,13 +69,14 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/lambda/splitPDF.handler",
         environment: {
             FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
-            QUEUE_URL: queue.queueUrl, // Pass queue URL to the function environment
+            SPLIT_QUEUE_URL: splitPDFqueue.queueUrl,
+            TEXTRACT_QUEUE_URL: textractQueue.queueUrl,
         },
-        permissions: [fileMetadataTable, bucket, queue], // Grant permissions to the function
+        permissions: [fileMetadataTable, bucket, splitPDFqueue, textractQueue], // Grant permissions to the function
     });
 
     // Set the consumer for the queue
-    queue.addConsumer(stack, {
+    splitPDFqueue.addConsumer(stack, {
         function: splitPDFHandler,
     });
 
@@ -56,9 +85,9 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/lambda/splitPDF.sendMessage",
         environment: {
             FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
-            QUEUE_URL: queue.queueUrl, 
+            SPLIT_QUEUE_URL: splitPDFqueue.queueUrl, 
         },
-        permissions: [fileMetadataTable, bucket, queue], // Grant permissions to the function
+        permissions: [fileMetadataTable, bucket, splitPDFqueue], // Grant permissions to the function
     });
 
 
@@ -74,8 +103,8 @@ export function S3Stack({ stack }: StackContext) {
     // Add outputs for the bucket and queue
     stack.addOutputs({
         BucketName: bucket.bucketName,
-        QueueURL: queue.queueUrl,
+        QueueURL: splitPDFqueue.queueUrl,
     });
 
-    return { bucket, queue };
+    return { bucket, queue: splitPDFqueue };
 }
