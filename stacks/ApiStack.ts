@@ -83,8 +83,8 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "JUGNAGX1SE",
-                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        BOT_ID: "ANXK9FZZTJ",
+                        BOT_ALIAS_ID: "4ZTPTR4PLV",
                         LOCALE_ID: "en_US",
                     }
                 }
@@ -95,8 +95,8 @@ export function ApiStack({stack}: StackContext) {
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "JUGNAGX1SE",
-                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        BOT_ID: "ANXK9FZZTJ",
+                        BOT_ALIAS_ID: "4ZTPTR4PLV",
                         LOCALE_ID: "en_US",
                     }
                 }

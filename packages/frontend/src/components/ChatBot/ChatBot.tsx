@@ -125,6 +125,7 @@ const Chat = () => {
                 method: "POST",
             })
             const data = await response.json()
+            if (!data.sessionId) throw new Error("Session not started")
             setSessionId(data.sessionId)
             console.log("started session ", data.sessionId)
             return data.sessionId

@@ -23,6 +23,7 @@ export async function handler(event: APIGatewayEvent) {
       })
     }
   } catch (error) {
+    console.log("Could not start session with Lex: ", error)
     return {
       statusCode: 500,
       body: JSON.stringify({
