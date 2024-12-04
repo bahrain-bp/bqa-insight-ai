@@ -10,6 +10,7 @@ import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
+import Filter from "./pages/Filter.tsx";
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -70,6 +71,7 @@ function App() {
             </>
           }
         />
+        
           <Route
             path="/fileManagement"
             element={
@@ -79,7 +81,18 @@ function App() {
                 </>
                 }
             />
+
+<Route
+          path="/Filter"
+          element={
+            <>
+              <PageTitle title="Filter" />
+              <Filter/>
+            </>
+          }
+        />
       </Routes>
+      
     </DefaultLayout>
   );
 }
