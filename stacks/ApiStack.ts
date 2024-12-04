@@ -77,26 +77,26 @@ export function ApiStack({stack}: StackContext) {
                     timeout: "60 seconds"
                 }
             },
-            "POST /lex/start_session": {
+            "POST /lex/start-session": {
                 function: {
                     handler: "packages/functions/src/startLexSession.handler",
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "JUGNAGX1SE",
-                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        BOT_ID: "ANXK9FZZTJ",
+                        BOT_ALIAS_ID: "4ZTPTR4PLV",
                         LOCALE_ID: "en_US",
                     }
                 }
             },
-            "POST /lex/message_lex": {
+            "POST /lex/message-lex": {
                 function: {
                     handler: "packages/functions/src/messageLex.handler",
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "JUGNAGX1SE",
-                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        BOT_ID: "ANXK9FZZTJ",
+                        BOT_ALIAS_ID: "4ZTPTR4PLV",
                         LOCALE_ID: "en_US",
                     }
                 }
