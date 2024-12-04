@@ -46,8 +46,12 @@ export const extractReportMetadata = async (event: any) =>{
 
         console.log("Final output: ",output)
         console.log("Extracted Output:", extractedOutput)
-        // await insertReportMetadata(extractedOutput, fileKey);
-
+        // console.log("Extracted Output type:", typeof JSON.parse(extractedOutput))
+        // console.log("Extracted Output jsonparsed:", JSON.parse(extractedOutput))
+        const parsed = JSON.parse(extractedOutput);
+        console.log(parsed[0]["School Name"])
+        await insertReportMetadata(parsed[0], fileKey);
+        console.log("IT SHOULD BE INSERTED")
         return extractedOutput;
        
     
@@ -57,21 +61,24 @@ export const extractReportMetadata = async (event: any) =>{
 
 }
 // Insert file metadata into DynamoDB
-async function insertReportMetadata(data :object, fileKey : string) {
+async function insertReportMetadata(data :any, fileKey : string) {
     console.log("datatype of data:", typeof data)
     console.log("data zero:",  data)
 
     const params = {
         TableName: process.env.FILE_METADATA_TABLE_NAME as string,
-             Key : {fileKey},
-            UpdateExpression: "SET instituteName = :instituteName",
+            Key : {fileKey},
+            UpdateExpression: "SET instituteName = :instituteName, ReviewDate = :DateOfReview, SchoolLocation = :SchoolLocation",
             ExpressionAttributeValues: {
-                ":instituteName": data,
+                ":instituteName": data["School Name"],
+                ":DateOfReview": data["Date of Review"],
+                ":SchoolLocation": data["School Location"]
             },
             ReturnValues: "UPDATED_NEW",
     };
     return await dynamoDb.update(params).promise();
 }
+
 function extractCsvData(bedrockResponse: string) {
     // Regular expression to extract CSV data between backticks
     const regex = /```tabular-data-csv([\s\S]*?)```/;
@@ -79,7 +86,7 @@ function extractCsvData(bedrockResponse: string) {
     return match ? match[1].trim() : null;
 }
 
-function parseCsvToJson(csv: string, delimiter = ','): object[] {
+function parseCsvToJson(csv: string, delimiter = ','): object {
     const lines = csv.split('\n');  // Split into lines
     const headers = lines[0].split(delimiter); // Extract headers from the first line
 
