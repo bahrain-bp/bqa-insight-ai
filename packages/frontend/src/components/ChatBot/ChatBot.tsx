@@ -2,6 +2,7 @@ import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
 import { ChatContext } from "../../layout/DefaultLayout";
+import LexAWS from "./LexAWS.tsx";
 
 type Message = {
     author: "human" | "bot" | "loading";
@@ -35,7 +36,8 @@ const ChatBot = () => {
                         <span>ChatBot</span>
                         <button onClick={toggleChat}>Close</button>
                     </div>
-                        <Chat/>
+                        <LexAWS />
+                        {/* <Chat/> */}
                 </div>
         </div>
     );
