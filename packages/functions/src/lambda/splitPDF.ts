@@ -91,6 +91,7 @@ export async function handler(event: SQSEvent) {
             const pdfChunks = await splitPDF(object.Body as Buffer, pagesPerFile);
 
             const chunkURLs: string[] = [];
+            const chunkKeys: string[] = [];
             for (let i = 0; i < pdfChunks.length; i++) {
                 const chunkKey = `SplitFiles/${fileKey.split('/').pop()}/${i}`;
                 await s3.putObject({
@@ -102,6 +103,7 @@ export async function handler(event: SQSEvent) {
 
                 const chunkURL = `https://${bucketName}.s3.amazonaws.com/${chunkKey}`;
                 chunkURLs.push(chunkURL);
+                chunkKeys.push(chunkKey);
             }
 
             console.log(`Successfully split and uploaded PDF: ${fileKey}`);
@@ -126,10 +128,10 @@ export async function handler(event: SQSEvent) {
                 QueueUrl: textractQueueUrl,
                 MessageBody: JSON.stringify({
                     bucketName,
-                    chunkURLs,
+                    chunkKeys,
                     fileKey,
                 }),
-                MessageGroupId: fileKey,  // Use the fileKey to group messages if FIFO is enabled
+                MessageGroupId: bucketName,  // Use the bucket name to group messages if FIFO is enabled
                 MessageDeduplicationId: fileKey,  // Use the fileKey for deduplication
             };
             

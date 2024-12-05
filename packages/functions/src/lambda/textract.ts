@@ -1,3 +1,4 @@
+import * as AWS from "aws-sdk";
 import { SQSEvent } from "aws-lambda";
 import {
   TextractClient,
@@ -6,8 +7,17 @@ import {
   StartDocumentAnalysisCommand,
   GetDocumentAnalysisCommand,
 } from "@aws-sdk/client-textract";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-// type for processing the blocks
+// Initialize the SQS client from AWS SDK v2
+const sqs = new AWS.SQS();
+const s3Client = new S3Client({ region: "us-east-1" });
+const textractClient = new TextractClient({ region: "us-east-1" });
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
+
+// Retrieve the queue URL from the environment
+const queueUrl = process.env.TEXTRACT_QUEUE_URL; // Ensure this environment variable is set
+
 interface Block {
   BlockType?: string;
   Text?: string;
@@ -19,15 +29,12 @@ interface Block {
   Cells?: Cell[];
 }
 
-// type for processing the cells
 interface Cell {
   RowIndex: number;
   ColumnIndex: number;
   Text?: string;
 }
 
-// function to process the response from Textract
-// (tables processing might need to be changed for vertical text)
 const processBlocks = (blocks: Block[]): string => {
   if (!blocks || blocks.length === 0) {
     return "";
@@ -47,7 +54,6 @@ const processBlocks = (blocks: Block[]): string => {
         return "";
       }
 
-      // Group cells by row
       const rows = table.Cells.reduce((acc: { [key: number]: Cell[] }, cell) => {
         const rowIndex = cell.RowIndex;
         if (!acc[rowIndex]) {
@@ -57,7 +63,6 @@ const processBlocks = (blocks: Block[]): string => {
         return acc;
       }, {});
 
-      // Convert rows to text
       const tableText = Object.values(rows)
         .map((row) =>
           row
@@ -76,23 +81,99 @@ const processBlocks = (blocks: Block[]): string => {
   return [...lineBlocks, ...tableBlocks].join(" ");
 };
 
-const textractClient = new TextractClient({ region: "us-east-1" });
-
 // Function to wait for document text detection job completion
 async function tryTextract(command: GetDocumentTextDetectionCommand): Promise<any> {
   const maxRetries = 5;
   let retries = 0;
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   while (retries < maxRetries) {
-    const response = await textractClient.send(command);
-    if (response.JobStatus === "SUCCEEDED" || response.JobStatus === "FAILED") {
-      return response;
-    } else if (response.JobStatus === "PARTIAL_SUCCESS") {
-      // Wait for 5 seconds before checking again
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      retries++;
+    try {
+      const response = await textractClient.send(command);
+      if (response.JobStatus === "SUCCEEDED" || response.JobStatus === "FAILED") {
+        return response;
+      } else if (response.JobStatus === "PARTIAL_SUCCESS") {
+        const waitTime = Math.pow(2, retries) * 1000; // Exponential backoff
+        console.log(`Retrying after ${waitTime / 1000} seconds...`);
+        await delay(waitTime);
+        retries++;
+      }
+    } catch (error: any) {
+      console.error("Textract request failed:", error);
+      if (error.name === 'ProvisionedThroughputExceededException') {
+        const waitTime = Math.pow(2, retries) * 1000;
+        console.log(`ProvisionedThroughputExceededException - retrying after ${waitTime / 1000} seconds...`);
+        await delay(waitTime);
+        retries++;
+      } else {
+        throw error;
+      }
     }
   }
-  throw new Error("Text detection job failed");
+
+  throw new Error("Text detection job failed after retries.");
+}
+
+// Function to upload the extracted text as a .txt file to S3
+async function uploadTextToS3(bucketName: string, fileKey: string, resultText: string): Promise<void> {
+  const cleanFileKey = fileKey.startsWith('Files/') ? fileKey.slice(6) : fileKey;
+
+  const textFileKey = `TextFiles/${cleanFileKey}.txt`;
+
+  try {
+    // Upload the extracted text as a .txt file to S3
+    const uploadParams = {
+      Bucket: bucketName,
+      Key: textFileKey,
+      Body: resultText,
+      ContentType: "text/plain",
+    };
+
+    const command = new PutObjectCommand(uploadParams);
+    await s3Client.send(command);
+
+    console.log(`Successfully uploaded ${textFileKey} to ${bucketName}`);
+
+    // Generate the URL of the uploaded .txt file
+    const textFileUrl = `https://${bucketName}.s3.amazonaws.com/${textFileKey}`;
+
+    // Update the DynamoDB table with the new URL in a new column 'textFileURL'
+    const params = {
+      TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+      Key: { fileKey },
+      UpdateExpression: "SET textFileURL = :newURL", // New column for text file URL
+      ExpressionAttributeValues: {
+        ":newURL": textFileUrl, // Store the single URL
+      },
+      ReturnValues: "UPDATED_NEW",
+    };
+
+    await dynamoDb.update(params).promise();
+    console.log(`Inserted .txt file URL for ${fileKey} into 'textFileURL' column in DynamoDB`);
+
+  } catch (error) {
+    console.error(`Error uploading ${textFileKey} to ${bucketName}:`, error);
+  }
+}
+
+// Function to delete the SQS message after successful processing
+async function deleteSQSMessage(receiptHandle: string): Promise<void> {
+  if (!queueUrl) {
+    console.error("Queue URL is not available in the environment.");
+    return;
+  }
+
+  const deleteParams = {
+    QueueUrl: queueUrl,
+    ReceiptHandle: receiptHandle,
+  };
+
+  try {
+    await sqs.deleteMessage(deleteParams).promise();
+    console.log("SQS message deleted successfully");
+  } catch (error) {
+    console.error("Error deleting SQS message:", error);
+  }
 }
 
 // SQS event handler
@@ -107,28 +188,28 @@ export async function handler(event: SQSEvent) {
         sqsEvent = JSON.parse(record.body); // Parse the body of the SQS message
       } catch (error) {
         console.error("Error parsing SQS message:", record.body, error);
-        continue; // Skip to the next record if parsing fails
+        continue;
       }
 
-      const chunkURLs = sqsEvent.chunkURLs; // Assuming chunkURLs is part of the message
-      if (!chunkURLs || chunkURLs.length === 0) {
-        console.error("No chunk URLs found in the SQS message:", record.body);
-        continue; // Skip if no chunk URLs are provided
+      const bucketName = sqsEvent.bucketName;
+      const chunkKeys = sqsEvent.chunkKeys;
+      const fileKey = sqsEvent.fileKey;
+
+      if (!bucketName || !chunkKeys || chunkKeys.length === 0 || !fileKey) {
+        console.error("Invalid message content: missing bucketName, chunkKeys, or fileKey:", record.body);
+        continue;
       }
 
-      console.log(`Processing chunk URLs: ${chunkURLs}`);
+      console.log(`Processing chunk keys for bucket: ${bucketName}`, chunkKeys);
 
+      // Process each chunkKey in the array
       await Promise.all(
-        chunkURLs.map(async (chunkURL: string, i: number) => {
-          const bucketName = chunkURL.split("/")[2]; // Extract bucket name from URL
-          const objectKey = chunkURL.split("/").slice(3).join("/"); // Extract object key
-
-          // Start Textract jobs for text detection and analysis
+        chunkKeys.map(async (chunkKey: string, i: number) => {
           const startDocumentTextDetectionCommand = new StartDocumentTextDetectionCommand({
             DocumentLocation: {
               S3Object: {
                 Bucket: bucketName,
-                Name: objectKey,
+                Name: chunkKey,
               },
             },
           });
@@ -137,51 +218,56 @@ export async function handler(event: SQSEvent) {
             DocumentLocation: {
               S3Object: {
                 Bucket: bucketName,
-                Name: objectKey,
+                Name: chunkKey,
               },
             },
             FeatureTypes: ["TABLES"],
           });
 
-          const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
-          const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
+          try {
+            const startTextDetectionResponse = await textractClient.send(startDocumentTextDetectionCommand);
+            const startDocumentAnalysisResponse = await textractClient.send(startDocumentAnalysisCommand);
 
-          if (!startTextDetectionResponse.JobId || !startDocumentAnalysisResponse.JobId) {
-            throw new Error("Failed to start Textract jobs.");
+            if (!startTextDetectionResponse.JobId || !startDocumentAnalysisResponse.JobId) {
+              throw new Error(`Failed to start Textract jobs for chunk: ${chunkKey}`);
+            }
+
+            const textDetectionResult = await tryTextract(new GetDocumentTextDetectionCommand({
+              JobId: startTextDetectionResponse.JobId!,
+            }));
+
+            const documentAnalysisResult = await tryTextract(new GetDocumentAnalysisCommand({
+              JobId: startDocumentAnalysisResponse.JobId!,
+            }));
+
+            let extractedText = "";
+
+            if (textDetectionResult.Blocks) {
+              extractedText = processBlocks(textDetectionResult.Blocks);
+            }
+
+            result[i] = extractedText;
+
+          } catch (error) {
+            console.error(`Error processing chunk: ${chunkKey}`, error);
           }
-
-          // Fetch the text detection results
-          const textDetectionResult = await tryTextract(new GetDocumentTextDetectionCommand({
-            JobId: startTextDetectionResponse.JobId!,
-          }));
-
-          // Fetch the document analysis results
-          const documentAnalysisResult = await tryTextract(new GetDocumentAnalysisCommand({
-            JobId: startDocumentAnalysisResponse.JobId!,
-          }));
-
-          let extractedText = "";
-
-          if (textDetectionResult.Blocks) {
-            extractedText = processBlocks(textDetectionResult.Blocks);
-          }
-
-          result[i] = extractedText; // Store the result for each chunk
         })
       );
 
-      // Combine all the results from the chunks
       resultText = result.join(" ");
+      console.log("Extracted Text for all chunks:", resultText);
 
-      console.log("Extracted Text:", resultText);
+      // Upload the resultText to the S3 bucket as a .txt file
+      await uploadTextToS3(bucketName, fileKey, resultText);
+
+      // Delete the SQS message after successful processing
+      await deleteSQSMessage(record.receiptHandle);
     }
 
-    // Final response
     return {
       statusCode: 200,
       body: JSON.stringify({
-        message: "Text extracted successfully from all chunks",
-        text: resultText,
+        message: "Text extracted, uploaded, and SQS message deleted successfully from all chunks",
       }),
     };
   } catch (error) {
@@ -189,7 +275,7 @@ export async function handler(event: SQSEvent) {
     return {
       statusCode: 500,
       body: JSON.stringify({
-        message: "Failed to extract text from files",
+        message: "Failed to extract, upload text, or delete SQS message from files",
       }),
     };
   }
