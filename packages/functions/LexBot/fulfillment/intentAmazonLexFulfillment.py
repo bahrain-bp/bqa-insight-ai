@@ -196,6 +196,7 @@ def BQAIntent(intent_request):
         'content': text
     }
     fulfillment_State = "Fulfilled"
+    session_attributes["Url"] = "https://bababooey.com"
     return close(intent_request, session_attributes, fulfillment_State, message)
 
 def dispatch(intent_request):

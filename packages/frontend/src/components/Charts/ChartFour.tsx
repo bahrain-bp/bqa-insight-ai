@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 import { ChatContext } from '../../layout/DefaultLayout';
+import LexAWS from '../ChatBot/LexAWS';
 
 const ChartFour: React.FC = () => {
     const { setIsChatOpen } = useContext(ChatContext);
@@ -30,8 +31,9 @@ const ChartFour: React.FC = () => {
 
           {/* Content section */}
           <div className="mb-2">
-            <div id="chartThree" className="mx-auto flex justify-center">
+            <div id="chartThree" className="mx-auto flex justify-center" style={{height: "500px"}}>
               {/* Content goes here */}
+              <LexAWS />
             </div>
           </div>
         </div>

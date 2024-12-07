@@ -36,7 +36,7 @@ const ChatBot = () => {
                         <span>ChatBot</span>
                         <button onClick={toggleChat}>Close</button>
                     </div>
-                        <LexAWS />
+                        {/* <LexAWS /> */}
                         {/* <Chat/> */}
                 </div>
         </div>

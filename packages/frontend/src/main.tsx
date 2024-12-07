@@ -9,11 +9,11 @@ import { Amplify } from "aws-amplify";
 import 'flatpickr/dist/flatpickr.min.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <Router>
       <App />
-    </Router>
-  </React.StrictMode>,
+    </Router>,
+  // </React.StrictMode>,
 )
 Amplify.configure({
   Auth: {
