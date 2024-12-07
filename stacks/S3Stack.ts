@@ -1,10 +1,11 @@
 import { StackContext, Bucket, Function, use } from "sst/constructs";
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
-
+import { InstituteMetadataStack } from "./InstituteMetadataStack";
 export function S3Stack({ stack }: StackContext) {
     // Reference the DynamoDB table from FileMetadataStack
     const { fileMetadataTable } = use(FileMetadataStack);
+    const {instituteMetadata} = use (InstituteMetadataStack);
 
     // Create an SST Bucket with versioning, CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -47,10 +48,11 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/bedrock/extractReportMetadata.extractReportMetadata",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata
         ],
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         }
     });
     

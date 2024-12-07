@@ -52,6 +52,16 @@ export const extractReportMetadata = async (event: any) =>{
         console.log(parsed[0]["School Name"])
         await insertReportMetadata(parsed[0], fileKey);
         console.log("IT SHOULD BE INSERTED")
+
+
+        //static data to insert into institueMetadata Table
+        const instName = "Jidhafs Secondary Girls School";
+        const instType = "School";
+        const instClassification = "Public";
+        const instGradeLevels = "High school";
+        const location = "Jidhafs";
+
+        await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
         return extractedOutput;
        
     
@@ -78,6 +88,32 @@ async function insertReportMetadata(data :any, fileKey : string) {
     };
     return await dynamoDb.update(params).promise();
 }
+
+// Insert institute metadata into DynamoDB
+async function insertInstituteMetadata(institute: { institueName: string; instituteType: string; instituteClassification: string; instituteGradeLevels: string; instituteLocation: string; }) {
+    // console.log("datatype of data:", typeof data)
+    // console.log("data zero:",  data)
+
+    const params = {
+        TableName: process.env.INSTITUTE_METADATA_TABLE_NAME as string,
+                      Item: {
+                        institueName: institute.institueName,
+                        instituteType: institute.instituteType,
+                        instituteClassification: institute.instituteClassification,
+                        instituteGradeLevels: institute.instituteGradeLevels,
+                        instituteLocation: institute.instituteLocation,
+                        },
+                        // UpdateExpression: "SET instituteName = :instituteName, ReviewDate = :DateOfReview, SchoolLocation = :SchoolLocation",
+            // ExpressionAttributeValues: {
+            //     ":instituteName": data["School Name"],
+            //     ":DateOfReview": data["Date of Review"],
+            //     ":SchoolLocation": data["School Location"]
+            // },
+            // ReturnValues: "UPDATED_NEW",
+    };
+    return await dynamoDb.put(params).promise();
+}
+
 
 function extractCsvData(bedrockResponse: string) {
     // Regular expression to extract CSV data between backticks
