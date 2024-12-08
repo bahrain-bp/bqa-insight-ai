@@ -66,8 +66,12 @@ export function ApiStack({stack}: StackContext) {
             "POST /textract": {
                 function: {
                     handler: "packages/functions/src/textract.extractTextFromPDF",
-                    permissions: ["textract", "s3"],
+                    permissions: ["textract", "s3", "bedrock"],
                     timeout: "60 seconds",
+                    environment: {
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
                 }
             },
             "POST /comprehend": {

@@ -8,6 +8,7 @@ import {
   GetDocumentAnalysisCommand,
 } from "@aws-sdk/client-textract";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { syncKnowlegeBase } from "src/bedrock/sync";
 
 // Initialize the SQS client from AWS SDK v2
 const sqs = new AWS.SQS();
@@ -176,6 +177,30 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
   }
 }
 
+async function getMessageInQueue() {
+  const params = {
+    QueueUrl: queueUrl || "",
+    AttributeNames: ["ApproximateNumberOfMessages"]
+  }
+
+  try {    
+    const data = await sqs.getQueueAttributes(params).promise();
+    const numberOfMessages = data.Attributes?.ApproximateNumberOfMessages;
+    console.log(numberOfMessages, ": numbder")
+    if (numberOfMessages === "0") {
+      console.log("Syncing starting now");
+
+      syncKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "");
+      
+    }
+
+    
+  } catch (err) {
+    console.error('Error fetching queue attributes:', err);
+  }
+
+}
+
 // SQS event handler
 export async function handler(event: SQSEvent) {
   try {
@@ -262,6 +287,7 @@ export async function handler(event: SQSEvent) {
 
       // Delete the SQS message after successful processing
       await deleteSQSMessage(record.receiptHandle);
+      await getMessageInQueue();
     }
 
     return {

@@ -96,14 +96,14 @@ const FileManagement: React.FC = () => {
       fetchFiles(); // Refresh file list after uploading
 
       // this is job syncing for bedrock knowledgebase
-      const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
-        method: "POST",                
-      });
+      // const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
+      //   method: "POST",                
+      // });
 
-      const syncJobData = await syncJobResponse.json();
-      if (syncJobData.statusCode == 200) {
-          console.log("Job started successfully!")
-      }
+      // const syncJobData = await syncJobResponse.json();
+      // if (syncJobData.statusCode == 200) {
+      //     console.log("Job started successfully!")
+      // }
       setAlertMessage("Files uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);

@@ -131,7 +131,7 @@ export function S3Stack({ stack }: StackContext) {
     // Add outputs for the bucket
     stack.addOutputs({
         BucketName: bucket.bucketName,
-        BedrockOutputBucket: bedrockOutputBucket.bucketName
+        BedrockOutputBucket: bedrockOutputBucket.bucketName,
         QueueURL: splitPDFqueue.queueUrl,
     });
 
