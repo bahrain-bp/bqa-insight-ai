@@ -242,7 +242,7 @@ span.flatpickr-weekday,
 }
 
 .submit-button {
-  background-color: #014064;
+  /*background-color: #014064;*/
   color: #fff;
   border: none;
   padding: 10px 20px;
@@ -290,7 +290,7 @@ span.flatpickr-weekday,
 }
 
 .submit-button {
-  background-color: #014064;
+  /*background-color: #014064;*/
   color: #fff;
   border: none;
   padding: 10px 20px;

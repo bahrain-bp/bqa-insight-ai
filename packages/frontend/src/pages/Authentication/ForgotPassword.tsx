@@ -107,7 +107,7 @@ export default function PasswordResetPage() {
           <button
             type="submit"
             disabled={!isCodeFormValid()}
-            className="submit-button"
+            className="submit-button bg-primary"
             
           >
             Send Confirmation Code
@@ -156,7 +156,7 @@ export default function PasswordResetPage() {
           <button
             type="submit"
             disabled={!isPasswordResetFormValid()}
-            className="submit-button"
+            className="submit-button bg-primary"
           >
             Confirm Password Reset
           </button>
