@@ -125,11 +125,12 @@ export function ApiStack({stack}: StackContext) {
                     handler: "packages/functions/src/bedrock/invokeBedrockLlama.invokeBedrockLlama",
                     permissions: ["bedrock", bedrockOutputBucket],
                     timeout: "60 seconds",
-                    // environment: {
-                    //     AGENT_ID: cfnAgent?.attrAgentId || "",
-                    //     AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                    //     BUCKET_NAME: bedrockOutputBucket.bucketName,
-                    // },
+                    environment: {
+                        // AGENT_ID: cfnAgent?.attrAgentId || "",
+                        // AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                        BUCKET_NAME: bedrockOutputBucket.bucketName,
+                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
+                    },
                 }
             }
         },

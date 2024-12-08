@@ -1,7 +1,9 @@
 import { InvokeModelCommand, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { APIGatewayEvent } from "aws-lambda";
+import { BedrockAgentRuntimeClient, RetrieveAndGenerateCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 
 const client = new BedrockRuntimeClient({ region: "us-east-1" });
+const clientAgent = new BedrockAgentRuntimeClient({ region: "us-east-1" });
 
 export const invokeBedrockLlama = async (event: APIGatewayEvent) => {
   const ModelId = "meta.llama3-70b-instruct-v1:0";
@@ -32,26 +34,46 @@ export const invokeBedrockLlama = async (event: APIGatewayEvent) => {
     modelId: ModelId,
   });
 
-  const response = await client.send(command);
-  console.log("RESPONSE: ", response)
+
+
+  // 
+
+const input = { // RetrieveAndGenerateRequest
+  // sessionId: "STRING_VALUE",
+  input: { // RetrieveAndGenerateInput
+    text: prompt, // required
+  },
+  retrieveAndGenerateConfiguration: { // RetrieveAndGenerateConfiguration
+    type: "KNOWLEDGE_BASE",
+    knowledgeBaseConfiguration: { // KnowledgeBaseRetrieveAndGenerateConfiguration
+      knowledgeBaseId: process.env.KNOWLEDGEBASE_ID, // required
+      modelArn: ModelId, // required
+  }},
+};
+
+  const commandKnowledgeBase = new RetrieveAndGenerateCommand(input);
+  const response = await clientAgent.send(commandKnowledgeBase);
+
+  // const response = await client.send(command);
+  console.log("RESPONSE: ", response.output?.text)
 
   // const decodedResponse = new TextDecoder().decode(response.body);
   // const decodedResponseBody = JSON.parse(decodedResponse);
   // const output = decodedResponseBody.results[0].outputText;
-  const nativeResponse = JSON.parse(new TextDecoder().decode(response.body));
-  const responseText = nativeResponse.generation;
+  // const nativeResponse = JSON.parse(new TextDecoder().decode(response.body));
+  // const responseText = nativeResponse.generation;
   // const extractedOutput = parseMetadata(output);
 
 
   // const parsedOutput = await parseMetadata(output);
 
-  console.log("Final output: ", responseText)
+  // console.log("Final output: ", responseText)
 
   return {
     statusCode: 200,
     body: JSON.stringify({
       message: "Received Output from Bedrock",
-      response: responseText, // Return the cleaned result here
+      response: response.output?.text, // Return the cleaned result here
     }),
   };
 
