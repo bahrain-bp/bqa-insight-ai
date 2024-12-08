@@ -44,8 +44,20 @@ export function S3Stack({ stack }: StackContext) {
     //     ],
     // });
 
-    const extractReportMetadataHandler = new Function(stack, "extractReportMetadataHandler", {
-        handler: "packages/functions/src/bedrock/extractReportMetadata.extractReportMetadata",
+    // const extractReportMetadataHandler = new Function(stack, "extractReportMetadataHandler", {
+    //     handler: "packages/functions/src/bedrock/extractReportMetadata.extractReportMetadata",
+    //     timeout: "300 seconds",
+    //     permissions: [
+    //         bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata
+    //     ],
+    //     environment: {
+    //     FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+    //     INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+    //     }
+    // });
+
+    const llamaExtractReportMetadata = new Function(stack, "llamaExtractReportMetadata", {
+        handler: "packages/functions/src/bedrock/llamaExtractReportMetadata.llamaExtractReportMetadata",
         timeout: "300 seconds",
         permissions: [
             bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata
@@ -59,7 +71,7 @@ export function S3Stack({ stack }: StackContext) {
     
     bucket.addNotifications(stack, {
         objectCreatedInFiles: {
-            function: extractReportMetadataHandler,
+            function: llamaExtractReportMetadata,
             events: ["object_created"], // Trigger on object creation
             filters: [
                 { prefix: "Files/" }, // Only trigger for objects under the `Files/` directory
