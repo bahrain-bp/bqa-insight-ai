@@ -1,8 +1,6 @@
 import { extractTextFromPDF } from "src/textract";
 import { InvokeModelCommand, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDB } from "aws-sdk";
-import csv from "csv-parser";
-import { Readable } from "stream";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 const client = new BedrockRuntimeClient({region: "us-east-1"});
@@ -24,9 +22,23 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         const ModelId = "meta.llama3-70b-instruct-v1:0";
 
         
-          const userMessage =
-            "Given the following text, Please give me the school name ending with the word school and give me the school classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the school location in which town and governate is it and make the column name School Location. Please Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text;
+        //   const userMessage =
+        //     "Given the following text, Please give me the school name ending with the word school and give me the school classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the school location in which town and governate is it and make the column name School Location. Please Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text;
+          const userMessage = `Your goal is to extract structured information from the user's input that matches the form described below. 
+          When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
+          These are the columns, ensure that they are in the response:
+          "School Name","School Classification","Date of Review","Overall Effectiveness","School Location","School Type", "Grades In School"
           
+          Please output the extracted information in CSV format. 
+          Do not output anything except for the extracted information and the columns. Do not add any clarifying information. Do not add any fields that are not in the schema. Do not forget the columns.If the text contains attributes that do not appear in the schema, please ignore them. All output must be in CSV format and follow the schema specified above.
+          
+          Below is one sample of input and expected output, please follow the same way:
+          Input: AlRawabi Private School located in sehla Northern Governorate in Bahrain. It includes levels from 1-9. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
+          Output: "School Name","School Classification","Date of Review","Overall Effectiveness","School Location","School Type", "Grades In School"
+                   "AlRawabi Private School","Private","30 April and 2-3 May 2018","3: Satisfactory","Sehla - Northern Governorate", "School", "1-9"
+
+          Input: ` + text + `
+          Output: "School Name","School Classification","Date of Review","Overall Effectiveness","School Location","School Type", "Grades In School"`;
      
           const prompt = `
           <|begin_of_text|><|start_header_id|>user<|end_header_id|>
@@ -67,17 +79,17 @@ export const llamaExtractReportMetadata = async (event: any) =>{
          const parsed = JSON.parse(extractedOutput);
          console.log(parsed[0]["School Name"])
          await insertReportMetadata(parsed[0], fileKey);
-        console.log("IT SHOULD BE INSERTED")
+        console.log("IT SHOULD BE INSERTED to reportMetaData");
 
 
         //static data to insert into institueMetadata Table
-        const instName = "Jidhafs Secondary Girls School";
-        const instType = "School";
-        const instClassification = "Public";
-        const instGradeLevels = "High school";
-        const location = "Jidhafs";
+        const instName = parsed[0]["School Name"];
+        const instType = parsed[0]["School Type"];
+        const instClassification = parsed[0]["School Classification"];
+        const instGradeLevels = parsed[0]["Grades In School"];
+        const location = parsed[0]["School Location"];
 
-        //await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
+        await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
         return extractedOutput;
        
     
