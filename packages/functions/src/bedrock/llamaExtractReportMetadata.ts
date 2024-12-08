@@ -19,13 +19,13 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         const textractData = await extractTextFromPDF(payload);
     //    console.log("TEXTRACT DATA: ", textractData);
 
-       const {text} = JSON.parse(textractData.body || "{}");
+        const {text} = JSON.parse(textractData.body || "{}");
         console.log("formatted textract: ", text)
         const ModelId = "meta.llama3-70b-instruct-v1:0";
 
         
           const userMessage =
-            "Given the following text, Please give me the school name and give me the school classification is it Goverment School or Private School and give me the date of review and give me the school’s overall effectiveness  and give me the school location including Town and Governate. Please Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text;
+            "Given the following text, Please give me the school name ending with the word school and give me the school classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the school location in which town and governate is it and make the column name School Location. Please Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text;
           
      
           const prompt = `
@@ -55,19 +55,19 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         const decodedResponseBody = JSON.parse(decodedResponse);
         const output = decodedResponseBody.generation;
         console.log("Final output: ",output)
-        // const extractedOutput = parseMetadata(output);
+        const extractedOutput = parseMetadata(output);
 
 
         // const parsedOutput = await parseMetadata(output);
 
        
-        // console.log("Extracted Output:", extractedOutput)
+        console.log("Extracted Output:", extractedOutput)
         // console.log("Extracted Output type:", typeof JSON.parse(extractedOutput))
         // console.log("Extracted Output jsonparsed:", JSON.parse(extractedOutput))
-        // const parsed = JSON.parse(extractedOutput);
-        // console.log(parsed[0]["School Name"])
-        // await insertReportMetadata(parsed[0], fileKey);
-        //console.log("IT SHOULD BE INSERTED")
+         const parsed = JSON.parse(extractedOutput);
+         console.log(parsed[0]["School Name"])
+         await insertReportMetadata(parsed[0], fileKey);
+        console.log("IT SHOULD BE INSERTED")
 
 
         //static data to insert into institueMetadata Table
@@ -77,8 +77,8 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         const instGradeLevels = "High school";
         const location = "Jidhafs";
 
-        await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
-        return output;
+        //await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
+        return extractedOutput;
        
     
     }
@@ -167,33 +167,42 @@ function processResponse(bedrockResponse: string) {
 
 
 
-function parseMetadata(input: string, delimiter = ',') {
-    // Extract content between the triple backticks
-    const matches = input.match(/```tabular-data-csv([\s\S]*?)```/);
-    
-    if (!matches || matches.length < 2) {
-        throw new Error('No valid CSV content found within backticks.');
+
+
+function parseMetadata(input: string, delimiter = ','): string {
+    // Find the index of the first double quote
+    const startIndex = input.indexOf('"');
+    if (startIndex === -1) {
+        throw new Error('No starting double quote found in the input.');
     }
 
-    const csvContent = matches[1].trim(); // Get the content inside backticks and trim whitespace
+    // Extract content starting from the first double quote
+    const csvContent = input.slice(startIndex).trim();
     const lines = csvContent.split('\n'); // Split into lines
-    const headers = lines[0].split(delimiter); // Extract headers from the first line
+
+    if (lines.length < 2) {
+        throw new Error('Invalid CSV format. Ensure there are headers and at least one row of data.');
+    }
+
+    // Extract headers and remove surrounding quotes
+    const headers = lines[0].split(delimiter).map(header => header.trim().replace(/^"|"$/g, ''));
 
     // Map each subsequent line to a JSON object
-    const json = lines.slice(1).map(line => {
-        const values = line.split(delimiter); // Split the line into values
+    const json = lines.slice(1).filter(line => line.trim() !== "").map(line => {
+        const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, '')); // Remove quotes from values
         const entry: { [key: string]: string } = {};
 
         headers.forEach((header, index) => {
-            entry[header.trim()] = values[index]?.trim() || ""; // Map headers to values
+            entry[header] = values[index] || ""; // Map headers to values
         });
 
         return entry;
     });
 
-    // Return the JSON string with double quotes
-    return JSON.stringify(json, null, 2); // This ensures double quotes and formats the output
+    // Return the JSON string with double quotes and pretty formatting
+    return JSON.stringify(json, null, 2);
 }
+
 
 
 
