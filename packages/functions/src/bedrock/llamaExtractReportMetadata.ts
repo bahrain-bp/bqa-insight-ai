@@ -229,8 +229,16 @@ function processResponse(bedrockResponse: string) {
 
 function parseMetadata(input: string): string {
     
+    // extract JSON  part incase there is text also
+    const jsonRegex = /{([\s\S]*?)}/;
+    const extractedJson = input.match(jsonRegex);
+
+    if (!extractedJson) {
+        throw new Error("No JSON-like structure found in the input.");
+    }
     // Parse the input string into a JSON object
-    const parsedData = JSON.parse(input);
+    
+    const parsedData = JSON.parse(extractedJson[0]);
 
     // Ensure the parsed data is an object
     if (typeof parsedData !== "object" || parsedData === null) {
