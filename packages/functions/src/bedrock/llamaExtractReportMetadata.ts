@@ -31,7 +31,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
           
             request: {
             Institute Name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
-            Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School.
+            Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, only if you detect the word private it means private school, otherwise keep it as Government.
             Date of Review: String// The date of the review.
             Location: String// The institute location including Town - Governate.
             Institute Type: String// The institute type is it a school or university.
@@ -190,43 +190,6 @@ async function insertInstituteMetadata(data :any) {
     return await dynamoDb.put(params).promise();
 }
 
-
-function extractCsvData(bedrockResponse: string) {
-    // Regular expression to extract CSV data between backticks
-    const regex = /```tabular-data-csv([\s\S]*?)```/;
-    const match = bedrockResponse.match(regex);
-    return match ? match[1].trim() : null;
-}
-
-function parseCsvToJson(csv: string, delimiter = ','): object {
-    const lines = csv.split('\n');  // Split into lines
-    const headers = lines[0].split(delimiter); // Extract headers from the first line
-
-    return lines.slice(1).map(line => {
-        const values = line.split(delimiter); // Split the line into values
-        const entry: { [key: string]: string } = {};
-
-        headers.forEach((header, index) => {
-            entry[header.trim()] = values[index]?.trim() || ''; // Map headers to values
-        });
-
-        return entry;
-    });
-}
-
-function processResponse(bedrockResponse: string) {
-    const csvData = extractCsvData(bedrockResponse);
-    if (!csvData) return null;
-
-    // Parse the CSV data into JSON format
-    const json = parseCsvToJson(csvData);
-
-    // Return the JSON result
-    return JSON.stringify(json, null, 2);  // Pretty-print the JSON with 2 spaces indentation
-}
-
-
-
 function parseMetadata(input: string): string {
     
     // Parse the input string into a JSON object
@@ -237,102 +200,10 @@ function parseMetadata(input: string): string {
         throw new Error("Input is not a valid JSON object.");
     }
 
-    // Convert the parsed JSON object back to a formatted JSON string
-    // return JSON.stringify(parsedData, null, 2); // Pretty print with 2 spaces
     return parsedData;
 
 }
 
-
-// function parseMetadata(input: string, delimiter = ','): string {
-//     // Find the index of the first double quote
-//     const startIndex = input.indexOf('"');
-//     if (startIndex === -1) {
-//         throw new Error('No starting double quote found in the input.');
-//     }
-
-//     // Extract content starting from the first double quote
-//     const csvContent = input.slice(startIndex).trim();
-//     const lines = csvContent.split('\n'); // Split into lines
-
-//     if (lines.length < 2) {
-//         throw new Error('Invalid CSV format. Ensure there are headers and at least one row of data.');
-//     }
-
-//     // Extract headers and remove surrounding quotes
-//     const headers = lines[0].split(delimiter).map(header => header.trim().replace(/^"|"$/g, ''));
-
-//     // Map each subsequent line to a JSON object
-//     const json = lines.slice(1).filter(line => line.trim() !== "").map(line => {
-//         const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, '')); // Remove quotes from values
-//         const entry: { [key: string]: string } = {};
-
-//         headers.forEach((header, index) => {
-//             entry[header] = values[index] || ""; // Map headers to values
-//         });
-
-//         return entry;
-//     });
-
-//     // Return the JSON string with double quotes and pretty formatting
-//     return JSON.stringify(json, null, 2);
-// }
-
-
-
-
-
-// // Send a prompt to Meta Llama 3 and print the response stream in real-time.
-// import {
-//     BedrockRuntimeClient,
-//     InvokeModelWithResponseStreamCommand,
-//   } from "@aws-sdk/client-bedrock-runtime";
-//   
-//   // Create a Bedrock Runtime client in the AWS Region of your choice.
-//   const client = new BedrockRuntimeClient({ region: "us-west-2" });
-  
-//   // Set the model ID, e.g., Llama 3 70B Instruct.
-//   const modelId = "meta.llama3-70b-instruct-v1:0";
-  
-//   // Define the user message to send.
-//   const userMessage =
-//     "Describe the purpose of a 'hello world' program in one sentence.";
-  
-//   // Embed the message in Llama 3's prompt format.
-//   const prompt = `
-//   <|begin_of_text|><|start_header_id|>user<|end_header_id|>
-//   ${userMessage}
-//   <|eot_id|>
-//   <|start_header_id|>assistant<|end_header_id|>
-//   `;
-  
-//   // Format the request payload using the model's native structure.
-//   const request = {
-//     prompt,
-//     // Optional inference parameters:
-//     max_gen_len: 512,
-//     temperature: 0.5,
-//     top_p: 0.9,
-//   };
-  
-//   // Encode and send the request.
-//   const responseStream = await client.send(
-//     new InvokeModelWithResponseStreamCommand({
-//       contentType: "application/json",
-//       body: JSON.stringify(request),
-//       modelId,
-//     }),
-//   );
-  
-//   // Extract and print the response stream in real-time.
-//   for await (const event of responseStream.body) {
-//     /** @type {{ generation: string }} */
-//     const chunk = JSON.parse(new TextDecoder().decode(event.chunk.bytes));
-//     if (chunk.generation) {
-//       process.stdout.write(chunk.generation);
-//     }
-//   }
-  
 //   // Learn more about the Llama 3 prompt format at:
 //   // https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/#special-tokens-used-with-meta-llama-3
   
