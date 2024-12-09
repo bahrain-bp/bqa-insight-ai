@@ -133,7 +133,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
   }
 
   // Check if any required filters are missing
-  const requiredFilters = ["Institute Level", "Report Year", "Institute Name"];
+  const requiredFilters = ["Institute Level", "Institute Name"];
   const missingFilters = requiredFilters.filter(
     (filter) => selectedOptions[filter].length === 0
   );
