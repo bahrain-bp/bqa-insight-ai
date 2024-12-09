@@ -1,8 +1,6 @@
 import { extractTextFromPDF } from "src/textract";
 import { InvokeModelCommand, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDB } from "aws-sdk";
-import csv from "csv-parser";
-import { Readable } from "stream";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 const client = new BedrockRuntimeClient({region: "us-east-1"});

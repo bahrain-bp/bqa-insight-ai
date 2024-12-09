@@ -111,7 +111,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         console.log("output type: ", typeof (output))
         console.log(["Institute Name"])
         const extractedOutput = parseMetadata(output);
-        //console.log("EXTRACTED OUTPUT type: ", typeof (extractedOutput))
+        console.log("EXTRACTED OUTPUT type: ", typeof (extractedOutput))
         //console.log("JSON EXTRACTED OUTPUT type: ", typeof JSON.parse(extractedOutput))
 
 
@@ -124,18 +124,20 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         // console.log("Extracted Output jsonparsed:", JSON.parse(extractedOutput))
          //const parsed = JSON.parse(extractedOutput);
         // console.log(parsed[0]["School Name"])
-       //  await insertReportMetadata(extractedOutput, fileKey);
-        //console.log("IT SHOULD BE INSERTED to reportMetaData");
+        // console.log(extractedOutput["Institute Name"], "Instituite Name");
+        await insertReportMetadata(extractedOutput, fileKey);
+        console.log("IT SHOULD BE INSERTED to reportMetaData");
 
 
         //data to insert into institueMetadata Table
-        //const instName = extractedOutput["Institute Name"];
-        //const instType = parsed[0]["Institute Type"];
-        // const instClassification = parsed[0]["Institute Classification"];
-        // const instGradeLevels = parsed[0]["Grades In School"];
-        // const location = parsed[0]["Location"];
+        // const instName = extractedOutput["Institute Name"];
+        // const instType = extractedOutput["Institute Type"];
+        // const instClassification = extractedOutput["Institute Classification"];
+        // const instGradeLevels = extractedOutput["Grades In School"];
+        // const location = extractedOutput["Location"];
 
-        // await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
+        await insertInstituteMetadata(extractedOutput);
+        console.log("IT SHOULD BE INSERTED to instituiteMetaData");
         return extractedOutput;
        
     
@@ -164,18 +166,18 @@ async function insertReportMetadata(data :any, fileKey : string) {
 }
 
 // Insert institute metadata into DynamoDB
-async function insertInstituteMetadata(institute: { institueName: string; instituteType: string; instituteClassification: string; instituteGradeLevels: string; instituteLocation: string; }) {
+async function insertInstituteMetadata(data :any) {
     // console.log("datatype of data:", typeof data)
     // console.log("data zero:",  data)
 
     const params = {
         TableName: process.env.INSTITUTE_METADATA_TABLE_NAME as string,
                       Item: {
-                        institueName: institute.institueName,
-                        instituteType: institute.instituteType,
-                        instituteClassification: institute.instituteClassification,
-                        instituteGradeLevels: institute.instituteGradeLevels,
-                        instituteLocation: institute.instituteLocation,
+                        institueName: data["Institute Name"],
+                        instituteType: data["Institute Type"],
+                        instituteClassification: data["Institute Classification"],
+                        instituteGradeLevels: data["Grades In School"],
+                        instituteLocation: data["Location"],
                         },
                         // UpdateExpression: "SET instituteName = :instituteName, ReviewDate = :DateOfReview, SchoolLocation = :SchoolLocation",
             // ExpressionAttributeValues: {
@@ -236,7 +238,8 @@ function parseMetadata(input: string): string {
     }
 
     // Convert the parsed JSON object back to a formatted JSON string
-    return JSON.stringify(parsedData, null, 2); // Pretty print with 2 spaces
+    // return JSON.stringify(parsedData, null, 2); // Pretty print with 2 spaces
+    return parsedData;
 
 }
 
