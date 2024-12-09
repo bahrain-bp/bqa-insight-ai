@@ -6,10 +6,16 @@ const Filter = () => {
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null); // For styling
   const [isFilterActive, setIsFilterActive] = useState(false); // Tracks filter activity
 
+
   const filterOptions: Record<string, string[]> = {
-    "Report Type": ["Annual Report", "Review Cycle"],
+    "Institute Classification": ["Government", "Private"],
     "Institute Level": ["Primary", "Secondary", "Higher Secondary"],
-    "Report Year": ["2021", "2022", "2023", "2024"],
+    "Location": [
+      "Capital Governorate",
+      "Northern Governorate",
+      "Southern Governorate",
+      "Muharraq Governorate",
+    ],
     "Institute Name": [
       "Al Noor International School",
       "Ibn Khuldoon National School",
@@ -20,14 +26,16 @@ const Filter = () => {
       "Al Hidd Secondary Girls School",
       "Al Raja School",
     ],
+    "Report Year": ["2021", "2022", "2023", "2024"],
   };
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
     Object.keys(filterOptions).reduce((acc, header) => {
-      acc[header] = [];
+      acc[header] = []; 
       return acc;
     }, {} as Record<string, string[]>)
   );
+  
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
@@ -78,22 +86,30 @@ const Filter = () => {
 
   const generateSentence = () => {
     const parts: string[] = [];
-
-    if (selectedOptions["Report Type"].length > 0) {
-      parts.push(`report type is ${selectedOptions["Report Type"].join(", ")}`);
+  
+    if (mode) {
+      parts.push(`${mode} insights for`);
     }
-    if (selectedOptions["Institute Level"].length > 0) {
+    if (selectedOptions["Institute Classification"]?.length > 0) {
+      parts.push(`classification ${selectedOptions["Institute Classification"].join(", ")}`);
+    }
+    if (selectedOptions["Institute Level"]?.length > 0) {
       parts.push(`institute level is ${selectedOptions["Institute Level"].join(", ")}`);
     }
-    if (selectedOptions["Report Year"].length > 0) {
-      parts.push(`report year is ${selectedOptions["Report Year"].join(", ")}`);
+    if (selectedOptions["Location"]?.length > 0) {
+      parts.push(`location is in ${selectedOptions["Location"].join(", ")}`);
     }
-    if (selectedOptions["Institute Name"].length > 0) {
+    if (selectedOptions["Institute Name"]?.length > 0) {
       parts.push(`institute name is ${selectedOptions["Institute Name"].join(", ")}`);
     }
-
+    if (selectedOptions["Report Year"]?.length > 0) {
+      parts.push(`report year is ${selectedOptions["Report Year"].join(", ")}`);
+    }
+  
     return parts.length > 0 ? `Insights for: ${parts.join(", ")}.` : "";
   };
+  
+   
 
   const showMessage = (message: string, type: "success" | "error") => {
     setSubmittedMessage(message);
@@ -117,7 +133,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
   }
 
   // Check if any required filters are missing
-  const requiredFilters = ["Report Type", "Institute Level", "Report Year", "Institute Name"];
+  const requiredFilters = ["Institute Level", "Institute Name"];
   const missingFilters = requiredFilters.filter(
     (filter) => selectedOptions[filter].length === 0
   );
@@ -167,7 +183,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
       {/* Pop-Up Message */}
       {submittedMessage && (
         <div
-          className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
+          className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-md shadow-md ${
             messageType === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
           }`}
         >
@@ -177,8 +193,8 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
 
       <div className="w-full mt-4">
         <div className="bg-white p-6 rounded-md shadow-md w-full">
-          <div className="flex justify-between mb-4">
-            <label className="block font-semibold text-lg">Insights</label>
+          <div className="flex items-center mb-4">
+            <label className="block font-semibold text-2xl mr-10">Insighting To</label>
             <select
               className="p-2 border rounded text-sm w-1/4"
               value={mode}
@@ -196,67 +212,71 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
             </select>
           </div>
 
-          <div className="grid grid-cols-4 gap-6">
-            {Object.keys(filterOptions).map((header, index) => (
-              <div key={index} className="w-full">
-                <label className="block text-sm font-semibold mb-2">{header}</label>
-                <select
-                  className="p-2 border rounded text-sm w-full"
-                  onChange={(e) => handleSelectChange(e, header)}
-                  value={selectedOptions[header].length ? selectedOptions[header][0] : "Select..."}
-                >
-                  <option value="Select...">Select...</option>
-                  {filterOptions[header].map((option, idx) => (
-                    <option key={idx} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-4">
-            {Object.keys(selectedOptions).map((header) =>
-              selectedOptions[header].map((value, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center px-3 py-1 m-1 text-sm font-medium text-gray-800 bg-gray-200 rounded-full"
-                >
-                  {value}
-                  <button
-                    type="button"
-                    className="ml-2 text-red-500 hover:text-red-700"
-                    onClick={() => removeTag(header, value)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))
-            )}
-          </div>
-
-          {isFilterActive && (
+          {/* Conditionally Render Filters */}
+          {mode && (
             <>
-              <div className="mt-6 p-4 bg-blue-50 text-blue-800 rounded text-sm w-full">
-                {generateSentence()}
+              <div className="grid grid-cols-4 gap-6">
+                {Object.keys(filterOptions).map((header, index) => (
+                  <div key={index} className="w-full">
+                    <label className="block text-sm font-semibold mb-2">{header}</label>
+                    <select
+                      className="p-2 border rounded text-sm w-full"
+                      onChange={(e) => handleSelectChange(e, header)}
+                      value={selectedOptions[header].length ? selectedOptions[header][0] : "Select..."}
+                    >
+                      <option value="Select...">Select...</option>
+                      {filterOptions[header].map((option, idx) => (
+                        <option key={idx} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
               </div>
 
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleSubmit}
-                  className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-                  style={{ backgroundColor: "#003366" }}
-                >
-                  Submit
-                </button>
-                <button
-                  onClick={handleClear}
-                  className="ml-4 px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                >
-                  Clear
-                </button>
+              <div className="mt-4">
+                {Object.keys(selectedOptions).map((header) =>
+                  selectedOptions[header].map((value, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-3 py-1 m-1 text-sm font-medium text-gray-800 bg-gray-200 rounded-full"
+                    >
+                      {value}
+                      <button
+                        type="button"
+                        className="ml-2 text-red-500 hover:text-red-700"
+                        onClick={() => removeTag(header, value)}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))
+                )}
               </div>
+
+              {isFilterActive && (
+                <>
+                  <div className="mt-6 p-4 bg-blue-50 text-blue-800 rounded text-sm w-full">
+                    {generateSentence()}
+                  </div>
+                  <div className="mt-6 text-center">
+                    <button
+                      onClick={handleSubmit}
+                      className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                      style={{ backgroundColor: "#003366" }}
+                    >
+                      Submit
+                    </button>
+                    <button
+                      onClick={handleClear}
+                      className="ml-4 px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </>
+              )}
             </>
           )}
         </div>
@@ -264,5 +284,6 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     </div>
   );
 };
+
 
 export default Filter;
