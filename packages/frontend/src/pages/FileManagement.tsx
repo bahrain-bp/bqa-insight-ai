@@ -58,14 +58,13 @@ const FileManagement: React.FC = () => {
     }
   };
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const filesToUpload = Array.from(event.target.files || []);
+  const uploadFiles = async (filesToUpload: File[]) => {
     if (filesToUpload.length === 0) return;
 
     setUploading(true);
     try {
       const fileDetails = filesToUpload.map((file) => ({
-        fileName: file.name,
+        fileName: file.webkitRelativePath ?? file.name,
         fileType: file.type,
         fileSize: file.size,
       }));
@@ -111,6 +110,13 @@ const FileManagement: React.FC = () => {
     } finally {
       setUploading(false);
     }
+  }
+
+  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const filesToUpload = Array.from(event.target.files || []);
+
+    await uploadFiles(filesToUpload)
+
   };
 
   const handleDelete = async () => {
@@ -195,6 +201,17 @@ const FileManagement: React.FC = () => {
     file.fileName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // FOLDER UPLOAD //
+  const directoryUploadAttributes = {directory: "true", webkitdirectory: "true", mozdirectory: "true"}
+
+  const handleFolderUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return
+
+    const files = Array.from(event.target.files)
+    // const folderName = files[0]?.webkitRelativePath.split("/")[0]
+    await uploadFiles(files)
+  }
+
   return (
     <>
       <Breadcrumb pageName="Manage Files" />
@@ -235,6 +252,25 @@ const FileManagement: React.FC = () => {
                 disabled={uploading}
               />
               Upload Files
+            </label>
+          </div>
+          <div className="text-center mb-4">
+            <label
+              htmlFor="folderUpload"
+              className="flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+                style={{backgroundColor: '#003366'}}
+            >
+              <FaUpload size={16} /> {/* Upload Icon */}
+              <input
+                type="file"
+                id="folderUpload"
+                className="sr-only"
+                onChange={handleFolderUpload}
+                disabled={uploading}
+                multiple
+                { ...directoryUploadAttributes }
+              />
+              Upload Folder
             </label>
           </div>
 
