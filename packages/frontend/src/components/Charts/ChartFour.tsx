@@ -31,9 +31,8 @@ const ChartFour: React.FC = () => {
 
           {/* Content section */}
           <div className="mb-2">
-            <div id="chartThree" className="mx-auto flex justify-center" style={{height: "500px"}}>
+            <div id="chartThree" className="mx-auto flex justify-center">
               {/* Content goes here */}
-              <LexAWS />
             </div>
           </div>
         </div>

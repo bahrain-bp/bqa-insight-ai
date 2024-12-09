@@ -16,20 +16,25 @@ const LexAWS = () => {
   useEffect(() => {
     const iframeContainer = document.getElementById("lex-web-ui-iframe")
     const script = document.createElement("script")
-    script.src = "https://d2s64hej98v33o.cloudfront.net/lex-web-ui-loader.min.js"
+    script.src = "https://d11yta04pbf38e.cloudfront.net/lex-web-ui-loader.min.js"
     script.async = true
     iframeContainer?.appendChild(script)
     script.onload = () => {
       const loaderOpts = {
-        baseUrl: 'https://d2s64hej98v33o.cloudfront.net/',
+        baseUrl: 'https://d11yta04pbf38e.cloudfront.net/',
         shouldLoadMinDeps: true,
       };
       const loader = new window.ChatBotUiLoader.IframeLoader(loaderOpts);
       console.log("loader: ", loader)
+      console.log(import.meta.env.BOT_ID)
       const chatbotUiConfig = {
         ui: {
           parentOrigin: window.location.origin,
-        }
+        },
+        // lex: {
+        //   v2BotId: "WVXHQBYDD5",
+        //   v2BotAliasId: "MCNSNFEXV0",
+        // }
               /* Example of setting session attributes on parent page
               lex: {
                 sessionAttributes: {
