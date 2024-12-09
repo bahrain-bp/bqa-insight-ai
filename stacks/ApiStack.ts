@@ -131,6 +131,16 @@ export function ApiStack({stack}: StackContext) {
                         BUCKET_NAME: bedrockOutputBucket.bucketName,
                     },
                 }
+            },
+            //QuickSight Generated Dashboards Public Link
+            "POST /generatedQuickSightPublicLink": {
+                function: {
+                    handler: "packages/functions/src/QuickSight/QuickSight.handler",
+                    permissions: [bedrockOutputBucket, "QuickSight"],
+                    environment: {
+                        BUCKET_NAME: bedrockOutputBucket.bucketName
+                    }
+                }
             }
         },
     });
