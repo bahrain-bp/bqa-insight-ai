@@ -44,7 +44,7 @@ export function BotStack({stack}: StackContext) {
     });
 
 
-    // Welcome Intent
+    // Welcome Intent 
 
     locale.addSlotType({
         slotTypeName: 'BQASlot',
@@ -64,6 +64,17 @@ export function BotStack({stack}: StackContext) {
         sampleUtterances: [
             {utterance: 'Hello BQA'},
             {utterance: 'compare'},
+            { utterance: 'Hi BQA' },
+            { utterance: 'About' },
+            { utterance: 'Tell me more' },
+            { utterance: 'What is this?' },
+            { utterance: 'How can I get started?' },
+            { utterance: 'Good morning' },
+            { utterance: 'Explain' },
+            { utterance: 'Another' },
+            { utterance: 'Next' },
+            { utterance: 'Again' },
+            { utterance: 'Help' },
         ],
         fulfillmentCodeHook: {
             enabled: true,
@@ -74,7 +85,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'Do you want to compare between Bahrain Polytechnic and UOB?',
+                                value: 'Okay, your selected category is "{BQASlot}", please type "Confirm".',
                             },
                         },
                     },
@@ -86,7 +97,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'Can you explain more?',
+                                value: 'Okay, please choose another category.',
                             },
                         },
                     },
@@ -106,16 +117,70 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'How can I help you?'
-                            },
-                        },
-                    },
-                ],
+                            imageResponseCard: { 
+                                buttons: [ 
+                                   { 
+                                      text: "Analyzing",
+                                      value: "Analyzing"
+                                   },
+                                   { 
+                                      text: "Comparing",
+                                      value: "Comparing"
+                                   },
+                                   { 
+                                      text: "Other",
+                                      value: "Other"
+                                   },
+                                ],
+                                imageUrl: "https://example.com/educational-institutes.jpg",
+                                subtitle: "Please pick a category to get started or say More for additional support",
+                                title: "Learn About Educational Institutes"
+                             },
+                          },
+                      },
+                  ],
                 maxRetries: 2,
             },
         },
     });
+
+    // New intents for each button option
+    const analyzingIntent = locale.addIntent({
+        intentName: 'AnalyzingIntent',
+        description: 'Provide information about analyzing educational institutes',
+        sampleUtterances: [{ utterance: 'Tell me more about analyzing' }],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    });
+
+    const comparingIntent = locale.addIntent({
+        intentName: 'ComparingIntent',
+        description: 'Provide information about comparing educational institutes',
+        sampleUtterances: [{ utterance: 'Tell me more about comparing' }],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    });
+
+    const otherIntent = locale.addIntent({
+        intentName: 'OtherIntent',
+        description: 'Handle other inquiries about educational institutes',
+        sampleUtterances: [{ utterance: 'I have another question' }],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    });
+
+    const handleNoResponse = locale.addIntent({
+        intentName: 'HandleNoResponse',
+        description: 'Manage user response when they say no',
+        sampleUtterances: [{ utterance: 'no' }],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    });
+    
 
 
     // Calculation Intent
@@ -140,7 +205,7 @@ export function BotStack({stack}: StackContext) {
 
     // create a version that automatically is built when the bot changes
     const version = bot.automaticVersion();
-/*
+
     const fulfillmentFunction = new Function(stack, "FulfillmentFunction", {
         handler: "packages/functions/src/LexBot/intentAmazonLexFulfillment.lambda_handler",
         runtime: "python3.11", // SST automatically maps this
@@ -151,7 +216,7 @@ export function BotStack({stack}: StackContext) {
         permissions: ["lex"], // SST automatically configures IAM permissions
 
     });
-*/
+
 
     const communicationFunction = new Function(stack, "CommunicationFunction", {
         handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
@@ -172,7 +237,7 @@ export function BotStack({stack}: StackContext) {
                 codeHookSpecification: {
                     lambdaCodeHook: {
                         codeHookInterfaceVersion: "1.0",
-                        //lambdaARN: fulfillmentFunction.functionArn,
+                        lambdaARN: fulfillmentFunction.functionArn,
                     }
                 },
                 enabled: true,
