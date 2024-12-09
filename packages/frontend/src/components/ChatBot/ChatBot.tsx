@@ -140,7 +140,7 @@ const Chat = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ prompt: message }),
+                body: JSON.stringify({ userMessage: message }),
             });
             const body = await bedrockResponse.json()
             // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
