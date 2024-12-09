@@ -23,23 +23,64 @@ export const llamaExtractReportMetadata = async (event: any) =>{
 
         
         //   const userMessage =
-        //     "Given the following text, Please give me the school name ending with the word school and give me the school classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the school location in which town and governate is it and make the column name School Location. Please Give it in csv format and csv format only. Exlude the word Education and Training Quality Authority: "+text;
-          const userMessage = `Your goal is to extract structured information from the user's input that matches the form described below. 
+        //     "Given the following text, Please give me the institute name ending with the word school and give me the institute classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the institute type is it a school or university and give me the grades in school by checking the primary middle high columns excluding 'Grades e.g. 1 to 12'and give me the school location in which town and governate is it and make the column name Location. Please Give it in csv format and csv format only. These are the columns, ensure that they are in the response 'Institute Name','Institute Classification','Date of Review','Overall Effectiveness','Location','Institute Type', 'Grades In School' Exlude the word Education and Training Quality Authority: "+text;
+          const userMessage = `Your goal is to extract structured information from the user's input that matches the form described below, returning a CSV formatted output.
           When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
-          These are the columns, ensure that they are in the response:
-          "School Name","School Classification","Date of Review","Overall Effectiveness","School Location","School Type", "Grades In School"
+          These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
+          "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
           
-          Please output the extracted information in CSV format. 
-          Do not output anything except for the extracted information and the columns. Do not add any clarifying information. Do not add any fields that are not in the schema. Do not forget the columns.If the text contains attributes that do not appear in the schema, please ignore them. All output must be in CSV format and follow the schema specified above.
-          
-          Below is one sample of input and expected output, please follow the same way:
-          Input: AlRawabi Private School located in sehla Northern Governorate in Bahrain. It includes levels from 1-9. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
-          Output: "School Name","School Classification","Date of Review","Overall Effectiveness","School Location","School Type", "Grades In School"
-                   "AlRawabi Private School","Private","30 April and 2-3 May 2018","3: Satisfactory","Sehla - Northern Governorate", "School", "1-9"
+            request: {
+            Institute Name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
+            Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School.
+            Date of Review: String// The date of the review.
+            Location: String// The institute location including Town - Governate.
+            Institute Type: String// The institute type is it a school or university.
+            Grades In School: String // The Grades in school by checking the primary middle high columns excluding 'Grades e.g. 1 to 12'.
+            }
 
-          Input: ` + text + `
-          Output: "School Name","School Classification","Date of Review","Overall Effectiveness","School Location","School Type", "Grades In School"`;
-     
+            Please output the extracted information in JSON format. 
+            Do not output anything except for the extracted information. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
+
+            Input: AlRawabi Private School located in sehla Northern Governorate in Bahrain. It includes levels from 1-9. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
+            Output: "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
+            "AlRawabi Private School","Private","30 April and 2-3 May 2018","3: Satisfactory","Sehla - Northern Governorate", "School", "1-9"
+
+            Output: 
+            {
+            "Institute Name": "AlRawabi Private School",
+            "Institute Classification": "Private",
+            "Date of Review": "30 April and 2-3 May 2018",
+            "Overall Effectiveness": "3: Satisfactory",
+            "Location": "Sehla - Northern Governorate",
+            "Institute Type": "School",
+            "Grades In School": "1-9"
+            }
+
+            Input: Jidhafs Secondary Girls School located in Jidhafs Capital Governorate in Bahrain. It includes levels from 10-12. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
+            {
+            "School Name": "Jidhafs Secondary Girls School",
+            "School Classification": "Government School",
+            "Date of Review": "30 April and 2-3 May 2018",
+            "Overall Effectiveness": "3: Satisfactory",
+            "School Location": "Jidhafs - Capital Governorate",
+            "School Type": "School",
+            "Grades In School": "10-12"
+            }
+
+
+            Input: ` + text + `
+            Output: {
+            "Institute Name": "",
+            "Institute Classification": "",
+            "Date of Review": "",
+            "Overall Effectiveness": "",
+            "Location": "",
+            "Institute Type": "",
+            "Grades In School": ""
+            }`;
+                
+       
+
           const prompt = `
           <|begin_of_text|><|start_header_id|>user<|end_header_id|>
           ${userMessage}
@@ -67,30 +108,31 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         const decodedResponseBody = JSON.parse(decodedResponse);
         const output = decodedResponseBody.generation;
         console.log("Final output: ",output)
-        const extractedOutput = parseMetadata(output);
+        console.log(output[0]["Institute Name"])
+        //const extractedOutput = parseMetadata(output);
 
 
         // const parsedOutput = await parseMetadata(output);
 
        
-        console.log("Extracted Output:", extractedOutput)
+       // console.log("Extracted Output:", extractedOutput)
         // console.log("Extracted Output type:", typeof JSON.parse(extractedOutput))
         // console.log("Extracted Output jsonparsed:", JSON.parse(extractedOutput))
-         const parsed = JSON.parse(extractedOutput);
-         console.log(parsed[0]["School Name"])
-         await insertReportMetadata(parsed[0], fileKey);
-        console.log("IT SHOULD BE INSERTED to reportMetaData");
+        // const parsed = JSON.parse(extractedOutput);
+        // console.log(parsed[0]["School Name"])
+         //await insertReportMetadata(parsed[0], fileKey);
+        //console.log("IT SHOULD BE INSERTED to reportMetaData");
 
 
-        //static data to insert into institueMetadata Table
-        const instName = parsed[0]["School Name"];
-        const instType = parsed[0]["School Type"];
-        const instClassification = parsed[0]["School Classification"];
-        const instGradeLevels = parsed[0]["Grades In School"];
-        const location = parsed[0]["School Location"];
+        //data to insert into institueMetadata Table
+        //const instName = parsed[0]["Institute Name"];
+        //const instType = parsed[0]["Institute Type"];
+        //const instClassification = parsed[0]["Institute Classification"];
+        //const instGradeLevels = parsed[0]["Grades In School"];
+        //const location = parsed[0]["Location"];
 
-        await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
-        return extractedOutput;
+        //await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
+        return output;
        
     
     }
@@ -108,9 +150,9 @@ async function insertReportMetadata(data :any, fileKey : string) {
             Key : {fileKey},
             UpdateExpression: "SET instituteName = :instituteName, ReviewDate = :DateOfReview, SchoolLocation = :SchoolLocation",
             ExpressionAttributeValues: {
-                ":instituteName": data["School Name"],
+                ":instituteName": data["Institute Name"],
                 ":DateOfReview": data["Date of Review"],
-                ":SchoolLocation": data["School Location"]
+                ":SchoolLocation": data["Location"]
             },
             ReturnValues: "UPDATED_NEW",
     };
