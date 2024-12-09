@@ -120,6 +120,7 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+            
             "POST /invokeBedrock": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
@@ -130,11 +131,22 @@ export function ApiStack({stack}: StackContext) {
                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                     }
                 }
+            },
+            "POST /fetchfilters": {
+                function: {
+                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    environment: {
+                        TABLE_NAME: table.tableName, // Pass the table name to the Lambda function
+                    },
+                    permissions: [table], // Grant permissions to the table
+                },
+            },
+        
+              
+              
             }
-        },
+
     });
-
-
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
     const apiCachePolicy = new CachePolicy(stack, "CachePolicy", {
