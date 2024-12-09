@@ -24,7 +24,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         
         //   const userMessage =
         //     "Given the following text, Please give me the institute name ending with the word school and give me the institute classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the institute type is it a school or university and give me the grades in school by checking the primary middle high columns excluding 'Grades e.g. 1 to 12'and give me the school location in which town and governate is it and make the column name Location. Please Give it in csv format and csv format only. These are the columns, ensure that they are in the response 'Institute Name','Institute Classification','Date of Review','Overall Effectiveness','Location','Institute Type', 'Grades In School' Exlude the word Education and Training Quality Authority: "+text;
-          const userMessage = `Your goal is to extract structured information from the user's input that matches the form described below, returning a CSV formatted output.
+          const userMessage = `Your goal is to extract structured information from the user's input that matches the form described below.
           When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
           These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
           "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
@@ -35,7 +35,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             Date of Review: String// The date of the review.
             Location: String// The institute location including Town - Governate.
             Institute Type: String// The institute type is it a school or university.
-            Grades In School: String // The Grades in school by checking the primary middle high columns excluding 'Grades e.g. 1 to 12'.
+            Grades In School: String // The Grades in school by checking the primary, middle, and high columns excluding 'Grades e.g. 1 to 12'.
             }
 
             Please output the extracted information in JSON format. 
@@ -108,31 +108,35 @@ export const llamaExtractReportMetadata = async (event: any) =>{
         const decodedResponseBody = JSON.parse(decodedResponse);
         const output = decodedResponseBody.generation;
         console.log("Final output: ",output)
-        console.log(output[0]["Institute Name"])
-        //const extractedOutput = parseMetadata(output);
+        console.log("output type: ", typeof (output))
+        console.log(["Institute Name"])
+        const extractedOutput = parseMetadata(output);
+        //console.log("EXTRACTED OUTPUT type: ", typeof (extractedOutput))
+        //console.log("JSON EXTRACTED OUTPUT type: ", typeof JSON.parse(extractedOutput))
+
 
 
         // const parsedOutput = await parseMetadata(output);
 
        
-       // console.log("Extracted Output:", extractedOutput)
+        console.log("Extracted Output:", extractedOutput)
         // console.log("Extracted Output type:", typeof JSON.parse(extractedOutput))
         // console.log("Extracted Output jsonparsed:", JSON.parse(extractedOutput))
-        // const parsed = JSON.parse(extractedOutput);
+         //const parsed = JSON.parse(extractedOutput);
         // console.log(parsed[0]["School Name"])
-         //await insertReportMetadata(parsed[0], fileKey);
+       //  await insertReportMetadata(extractedOutput, fileKey);
         //console.log("IT SHOULD BE INSERTED to reportMetaData");
 
 
         //data to insert into institueMetadata Table
-        //const instName = parsed[0]["Institute Name"];
+        //const instName = extractedOutput["Institute Name"];
         //const instType = parsed[0]["Institute Type"];
-        //const instClassification = parsed[0]["Institute Classification"];
-        //const instGradeLevels = parsed[0]["Grades In School"];
-        //const location = parsed[0]["Location"];
+        // const instClassification = parsed[0]["Institute Classification"];
+        // const instGradeLevels = parsed[0]["Grades In School"];
+        // const location = parsed[0]["Location"];
 
-        //await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
-        return output;
+        // await insertInstituteMetadata({ institueName : instName, instituteType:instType,instituteClassification: instClassification, instituteGradeLevels: instGradeLevels, instituteLocation: location });
+        return extractedOutput;
        
     
     }
@@ -221,41 +225,55 @@ function processResponse(bedrockResponse: string) {
 
 
 
+function parseMetadata(input: string): string {
+    
+    // Parse the input string into a JSON object
+    const parsedData = JSON.parse(input);
 
-
-function parseMetadata(input: string, delimiter = ','): string {
-    // Find the index of the first double quote
-    const startIndex = input.indexOf('"');
-    if (startIndex === -1) {
-        throw new Error('No starting double quote found in the input.');
+    // Ensure the parsed data is an object
+    if (typeof parsedData !== "object" || parsedData === null) {
+        throw new Error("Input is not a valid JSON object.");
     }
 
-    // Extract content starting from the first double quote
-    const csvContent = input.slice(startIndex).trim();
-    const lines = csvContent.split('\n'); // Split into lines
+    // Convert the parsed JSON object back to a formatted JSON string
+    return JSON.stringify(parsedData, null, 2); // Pretty print with 2 spaces
 
-    if (lines.length < 2) {
-        throw new Error('Invalid CSV format. Ensure there are headers and at least one row of data.');
-    }
-
-    // Extract headers and remove surrounding quotes
-    const headers = lines[0].split(delimiter).map(header => header.trim().replace(/^"|"$/g, ''));
-
-    // Map each subsequent line to a JSON object
-    const json = lines.slice(1).filter(line => line.trim() !== "").map(line => {
-        const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, '')); // Remove quotes from values
-        const entry: { [key: string]: string } = {};
-
-        headers.forEach((header, index) => {
-            entry[header] = values[index] || ""; // Map headers to values
-        });
-
-        return entry;
-    });
-
-    // Return the JSON string with double quotes and pretty formatting
-    return JSON.stringify(json, null, 2);
 }
+
+
+// function parseMetadata(input: string, delimiter = ','): string {
+//     // Find the index of the first double quote
+//     const startIndex = input.indexOf('"');
+//     if (startIndex === -1) {
+//         throw new Error('No starting double quote found in the input.');
+//     }
+
+//     // Extract content starting from the first double quote
+//     const csvContent = input.slice(startIndex).trim();
+//     const lines = csvContent.split('\n'); // Split into lines
+
+//     if (lines.length < 2) {
+//         throw new Error('Invalid CSV format. Ensure there are headers and at least one row of data.');
+//     }
+
+//     // Extract headers and remove surrounding quotes
+//     const headers = lines[0].split(delimiter).map(header => header.trim().replace(/^"|"$/g, ''));
+
+//     // Map each subsequent line to a JSON object
+//     const json = lines.slice(1).filter(line => line.trim() !== "").map(line => {
+//         const values = line.split(delimiter).map(value => value.trim().replace(/^"|"$/g, '')); // Remove quotes from values
+//         const entry: { [key: string]: string } = {};
+
+//         headers.forEach((header, index) => {
+//             entry[header] = values[index] || ""; // Map headers to values
+//         });
+
+//         return entry;
+//     });
+
+//     // Return the JSON string with double quotes and pretty formatting
+//     return JSON.stringify(json, null, 2);
+// }
 
 
 
