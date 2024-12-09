@@ -1,11 +1,35 @@
 import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
-import { ChatContext } from "../../layout/DefaultLayout";
+import {ChatContext} from "../../layout/DefaultLayout";
+import {Line} from "react-chartjs-2";
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
+    Legend
+} from "chart.js";
+
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 type Message = {
     author: "human" | "bot" | "loading";
     body: string | { url: string; text: string }[];
+    chartData?: {
+        labels: string[];
+        datasets: {
+            label: string;
+            data: number[];
+            borderColor: string;
+            tension: number;
+        }[];
+    };
+    //TODO: maybe u will need to check chart type if there is no general chart type
+    chartType?: "line" | "bar"; // Optional chart type
     timeout?: number; // Optional timeout
 };
 
@@ -19,24 +43,24 @@ const ChatBot = () => {
     return (
         <div>
             {/* Button to toggle chat */}
-                <img
-                    src={rebotIcon}
-                    className={`fixed bottom-4 right-4  text-white p-3  cursor-pointer z-20 ${isChatOpen ? 'b-chat--closed' : 'b-chat--open' }`}
-                    style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
-                    alt="Open Chat"
-                    onClick={toggleChat}
-                    width={120}
-                    height={120}
-                />
+            <img
+                src={rebotIcon}
+                className={`fixed bottom-4 right-4  text-white p-3  cursor-pointer z-20 ${isChatOpen ? 'b-chat--closed' : 'b-chat--open'}`}
+                style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
+                alt="Open Chat"
+                onClick={toggleChat}
+                width={120}
+                height={120}
+            />
 
             {/* Chat UI */}
-                <div className={`b-chat ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
-                    <div className="b-chat__header">
-                        <span>ChatBot</span>
-                        <button onClick={toggleChat}>Close</button>
-                    </div>
-                        <Chat/>
+            <div className={`b-chat ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
+                <div className="b-chat__header">
+                    <span>ChatBot</span>
+                    <button onClick={toggleChat}>Close</button>
                 </div>
+                <Chat/>
+            </div>
         </div>
     );
 };
@@ -46,7 +70,16 @@ const Chat = () => {
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
-
+    const [setChartData] = useState({
+        labels: [],
+        datasets: [
+            {
+                data: [],
+                borderColor: "rgba(75,192,192,1)",
+                tension: 0.1,
+            },
+        ],
+    });
     // const initialMessages: Message[] = [
     //     {author: "loading", body: "...", timeout: 0},
     //     {author: "bot", body: "Hello", timeout: 800},
@@ -87,6 +120,64 @@ const Chat = () => {
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
         setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
     };
+    const replaceLastMessageGraph = (item: Message) => {
+        let dataBody = item.body;
+        item.body = "";
+
+        const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
+        setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
+
+        // Check if the body contains a graph message (in JSON format)
+        try {
+            debugger
+            let validJson = "";
+            if (typeof dataBody === "string") {
+                validJson = dataBody.replace(/'/g, '"');
+            }
+
+            const data = JSON.parse(validJson); // Parse the JSON string to an object/array
+
+            // Extract labels (reviewYears) and data (scores) from the parsed data
+            //todo: change the keys to match the keys in the json dynamic
+            const labels = data.map((item: { reviewYear: string }) => item.reviewYear);
+            const scores = data.map((item: { score: string }) => parseInt(item.score));
+
+            // Create the message with both body text and chart data
+            const messageWithDefaults = {
+                timeout: 0,
+                ...item,
+                chartData: {
+                    labels,
+                    datasets: [
+                        {
+                            label: "Review Scores",
+                            data: scores,
+                            borderColor: "rgba(75,192,192,1)",
+                            tension: 0.1,
+                        },
+                    ],
+                }
+            };
+
+            setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
+
+            // Update chart data state (if you're still using it)
+            setChartData({
+                labels,
+                datasets: [
+                    {
+                        label: "Review Scores",
+                        data: scores,
+                        borderColor: "rgba(75,192,192,1)",
+                        tension: 0.1,
+                    },
+                ],
+            });
+        } catch (error) {
+            console.error("Error parsing graph data:", error);
+        }
+
+    };
 
     // const mockReply = () => {
     //     const response = responseTexts[responses];
@@ -117,16 +208,19 @@ const Chat = () => {
     //     }
     // };
 
-    const  handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const input = (e.target as HTMLFormElement).elements.namedItem(
             "input"
         ) as HTMLInputElement;
-        const message = input.value;
+        var message = input.value;
         addMessage({author: "human", body: message});
+        var hasGraph = message.includes("graph");
 
         const inputPlaceholder = input.placeholder
-
+        if (hasGraph) {
+            message = message + " in json format. do not include and clarifying information. Use the following schema: {'reviewYear': '2019', 'score': '3'}";
+        }
         try {
 
             input.value = "";
@@ -140,11 +234,17 @@ const Chat = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ userMessage: message }),
+                body: JSON.stringify({userMessage: message}),
             });
             const body = await bedrockResponse.json()
             // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
-            replaceLastMessage({author: "bot", body: body.response})
+            if (hasGraph) {
+                replaceLastMessageGraph({author: "bot", body: body.response})
+            } else {
+                replaceLastMessage({author: "bot", body: body.response})
+
+            }
+
 
         } catch (error) {
             console.error(error)
@@ -186,7 +286,8 @@ const Chat = () => {
                     >
                         <div className={`c-chat__message`}>
                             {typeof message.body === "string" ? (
-                                <span className={message.author === "loading" ? "c-chat__item--loading" : ""}>{ message.body }</span>
+                                <span
+                                    className={message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
                             ) : (
                                 message.body.map((link, idx) => (
                                     <a
@@ -199,6 +300,27 @@ const Chat = () => {
                                         {link.text}
                                     </a>
                                 ))
+                            )}
+
+                            {/* Render chart if chartData exists */}
+                            {message.chartData && (
+                                <div className="mt-2">
+                                    <Line
+                                        data={message.chartData}
+                                        options={{
+                                            responsive: true,
+                                            plugins: {
+                                                legend: {
+                                                    display: true,
+                                                },
+                                                title: {
+                                                    display: true,
+                                                    text: 'Review Scores Over Years'
+                                                }
+                                            }
+                                        }}
+                                    />
+                                </div>
                             )}
                         </div>
                     </li>
