@@ -33,13 +33,14 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             Institute Name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
             Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, only if you detect the word private it means private school, otherwise keep it as Government.
             Date of Review: String// The date of the review.
+            Overall Effectiveness: String // The institute overall effectiveness is either 1 which means outsanding, if 2 means Good, if 3 means Satisfactory, if 4 means Inadequate.
             Location: String// The institute location including Town - Governate.
             Institute Type: String// The institute type is it a school or university.
             Grades In School: String // The Grades in school by checking the primary, middle, and high columns excluding 'Grades e.g. 1 to 12'.
             }
 
             Please output the extracted information in JSON format. 
-            Do not output anything except for the extracted information. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
+            Do not output anything except for the extracted information. Do not use the below input output examples as a response. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
 
             Input: AlRawabi Private School located in sehla Northern Governorate in Bahrain. It includes levels from 1-9. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
             Output: "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
