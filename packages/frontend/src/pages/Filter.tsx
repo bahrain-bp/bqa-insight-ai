@@ -167,7 +167,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
       {/* Pop-Up Message */}
       {submittedMessage && (
         <div
-          className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-md shadow-md ${
+          className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
             messageType === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
           }`}
         >
