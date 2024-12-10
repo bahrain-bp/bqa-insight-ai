@@ -37,7 +37,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             Overall Effectiveness: String // The institute overall effectiveness is either 1 which means outsanding, if 2 means Good, if 3 means Satisfactory, if 4 means Inadequate.
             Location: String// The institute location ONLY including Governate, without town.
             Institute Type: String// The institute type is it a school or university.
-            Grades In School: String // The Grades in school by checking the primary, middle, and high columns excluding 'Grades e.g. 1 to 12'.
+            Grades In School: String // The Grade level in school by checking the primary, middle, and high columns tell me is it Primary School, Secondary School, or High School excluding 'Grades e.g. 1 to 12'.
             }
 
             Please output the extracted information in JSON format. 
@@ -55,7 +55,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             "Overall Effectiveness": "3: Satisfactory",
             "Location": "Northern Governorate",
             "Institute Type": "School",
-            "Grades In School": "1-9"
+            "Grades In School": "Secondary",
             }
 
             Input: Jidhafs Secondary Girls School located in Jidhafs Capital Governorate in Bahrain. It includes levels from 10-12. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
@@ -66,7 +66,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             "Overall Effectiveness": "3: Satisfactory",
             "School Location": "Capital Governorate",
             "School Type": "School",
-            "Grades In School": "10-12"
+            "Grades In School": "High School"
             }
 
 
