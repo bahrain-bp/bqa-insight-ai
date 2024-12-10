@@ -183,8 +183,8 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
       {/* Pop-Up Message */}
       {submittedMessage && (
         <div
-          className={`fixed top-4 right-4 z-50 px-6 py-4 rounded-md shadow-md ${
-            messageType === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+          className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
+            messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
           }`}
         >
           {submittedMessage}
@@ -245,7 +245,7 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
                       {value}
                       <button
                         type="button"
-                        className="ml-2 text-red-500 hover:text-red-700"
+                        className="ml-2 text-danger hover:text-red-700"
                         onClick={() => removeTag(header, value)}
                       >
                         ×
@@ -257,14 +257,13 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
 
               {isFilterActive && (
                 <>
-                  <div className="mt-6 p-4 bg-blue-50 text-blue-800 rounded text-sm w-full">
+                  <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
                     {generateSentence()}
                   </div>
                   <div className="mt-6 text-center">
                     <button
                       onClick={handleSubmit}
                       className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-                      style={{ backgroundColor: "#003366" }}
                     >
                       Submit
                     </button>
