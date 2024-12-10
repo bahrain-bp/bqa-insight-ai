@@ -33,6 +33,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     return {
       statusCode: 200,
       body: JSON.stringify({ filters }),
+
+      
     };
   } catch (error) {
     console.error('Error fetching items:', error);
