@@ -12,7 +12,7 @@ import { Chart } from 'react-chartjs-2';
 ChartJS.register(...registerables);
 
 // Updated interface to match the specific JSON structure
-interface ChartJsonData {
+export interface ChartJsonData {
     title: string;
     chartType?: ChartType;
     data: Array<{
@@ -42,7 +42,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
     const chartData: ChartData = useMemo(() => ({
         labels: parsedData.data.map(item => item.reviewYear),
         datasets: [{
-            label: parsedData.title || 'Review Scores',
+            label: parsedData.title || 'Generated Graph',
             data: parsedData.data.map(item => parseFloat(item.score.toString())),
             borderColor: "rgba(75,192,192,1)",
             backgroundColor: "rgba(75,192,192,0.2)",

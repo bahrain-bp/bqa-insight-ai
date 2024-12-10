@@ -72,53 +72,48 @@ const Chat = () => {
         setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
     };
     const replaceLastMessageGraph = (item: Message) => {
-        let dataBody = item.body;
-        item.body = "Generated Chart Displayed on Home Page";
-        // const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
-        // setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
-
         try {
-            debugger
-            let validJson = "";
-            if (typeof dataBody === "string") {
-                validJson = dataBody.replace(/'/g, '"');
-            }
+            // Use the hardcoded JSON or your dynamic JSON data
+            const validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}";
 
-            validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}"
-            item.dynamicChartData = validJson;
-            // // Create the message with both body text and chart data
-            // const messageWithDefaults = {
-            //     timeout: 0,
-            //     ...item,
-            //     chartData: {
-            //         labels,
-            //         datasets: [
-            //             {
-            //                 label: "Review Scores",
-            //                 data: scores,
-            //                 borderColor: "rgba(75,192,192,1)",
-            //                 tension: 0.1,
-            //             },
-            //         ],
-            //     }
-            // };
-
-            // setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
-
+            // Modify the message to accumulate chart data
             const messageWithDefaults: Message = {
                 timeout: 0,
                 ...item,
                 body: "Generated Chart Displayed on Home Page",
-                dynamicChartData: validJson  // Store raw JSON for DynamicChart
+                dynamicChartData: validJson
             };
 
-            setMessages((prev) => prev.map((msg, i) =>
-                i === prev.length - 1 ? messageWithDefaults : msg
-            ));
+            setMessages((prev) => {
+                // Create a new array with the updated last message
+                const updatedMessages = [...prev];
+                const lastMessageIndex = updatedMessages.length - 1;
+
+                // If the last message already has chart data, append to it
+                if (updatedMessages[lastMessageIndex].dynamicChartData) {
+                    const existingChartData = JSON.parse(updatedMessages[lastMessageIndex].dynamicChartData || '[]');
+                    const newChartData = JSON.parse(validJson);
+
+                    // Combine the chart data
+                    const combinedChartData = JSON.stringify({
+                        ...newChartData,
+                        data: [...existingChartData.data, ...newChartData.data]
+                    });
+
+                    updatedMessages[lastMessageIndex] = {
+                        ...updatedMessages[lastMessageIndex],
+                        dynamicChartData: combinedChartData
+                    };
+                } else {
+                    // If no existing chart data, set the new data
+                    updatedMessages[lastMessageIndex] = messageWithDefaults;
+                }
+
+                return updatedMessages;
+            });
         } catch (error) {
             console.error("Error parsing graph data:", error);
         }
-
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
