@@ -201,6 +201,30 @@ async function getMessageInQueue() {
 
 }
 
+// Function to send a message to the extract metadata queue
+async function sendMessageToExtractMetadataQueue(text: string, fileKey: string): Promise<void> {
+  const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL; // Ensure this environment variable is set
+
+  if (!extractMetadataQueueUrl) {
+    console.error("Extract metadata queue URL is not available in the environment.");
+    return;
+  }
+
+  const params = {
+    QueueUrl: extractMetadataQueueUrl,
+    MessageBody: JSON.stringify({ text: text, fileKey }), // Include both resultText and fileKey
+    MessageGroupId: "MetadataProcessing", // Required for FIFO queues
+  };
+
+  try {
+    await sqs.sendMessage(params).promise();
+    console.log("Message sent to extract metadata queue successfully:");
+  } catch (error) {
+    console.error("Error sending message to extract metadata queue:", error);
+  }
+}
+
+
 // SQS event handler
 export async function handler(event: SQSEvent) {
   try {
@@ -280,7 +304,6 @@ export async function handler(event: SQSEvent) {
       );
 
       resultText = result.join(" ");
-      console.log("Extracted Text for all chunks:", resultText);
 
       // Upload the resultText to the S3 bucket as a .txt file
       await uploadTextToS3(bucketName, fileKey, resultText);
@@ -288,6 +311,7 @@ export async function handler(event: SQSEvent) {
       // Delete the SQS message after successful processing
       await deleteSQSMessage(record.receiptHandle);
       await getMessageInQueue();
+      await sendMessageToExtractMetadataQueue(resultText, fileKey);
     }
 
     return {
