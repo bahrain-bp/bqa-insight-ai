@@ -237,16 +237,16 @@ export function BotStack({stack}: StackContext) {
         principal: new iam.ServicePrincipal('lex.amazonaws.com')
     })
 
-    const communicationFunction = new Function(stack, "CommunicationFunction", {
-        handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
-        runtime: "python3.11",
-        memorySize: 512,
-        timeout: 60,
-        environment: {
-            BOT_ID: bot.resource.ref,
-        },
-        permissions: ["lex"], // SST automatically configures IAM permissions
-    });
+    // const communicationFunction = new Function(stack, "CommunicationFunction", {
+    //     handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
+    //     runtime: "python3.11",
+    //     memorySize: 512,
+    //     timeout: 60,
+    //     environment: {
+    //         BOT_ID: bot.resource.ref,
+    //     },
+    //     permissions: ["lex"], // SST automatically configures IAM permissions
+    // });
     // create an alias and assign it to the latest bot version
     const alias = bot.addAlias({
         botAliasName: 'liveAlias',
@@ -263,7 +263,7 @@ export function BotStack({stack}: StackContext) {
             },
         },
     });
-    communicationFunction.addEnvironment("BOT_ALIAS_ID", alias.resource.ref);
+    // communicationFunction.addEnvironment("BOT_ALIAS_ID", alias.resource.ref);
     return {
         bot,
         alias
