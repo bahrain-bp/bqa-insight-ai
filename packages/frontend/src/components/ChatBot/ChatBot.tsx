@@ -4,7 +4,7 @@ import rebotIcon from "../../images/rebot.svg";
 import {ChatContext} from "../../layout/DefaultLayout";
 
 import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
-//import {ChartContext} from "../RouterRoot.tsx";
+import {ChartContext} from "../RouterRoot.tsx";
 
 
 type Message = {
@@ -52,17 +52,17 @@ const Chat = () => {
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
-    // const [chartData, setChartData] = useState([{
-    //     labels: [],
-    //     datasets: [
-    //         {
-    //             data: [],
-    //             borderColor: "rgba(75,192,192,1)",
-    //             tension: 0.1,
-    //         },
-    //     ],
-    // }]);
-    //const {chartJson, setChartJson} = useContext(ChartContext)
+/*    const [chartData, setChartData] = useState([{
+        labels: [],
+        datasets: [
+            {
+                data: [],
+                borderColor: "rgba(75,192,192,1)",
+                tension: 0.1,
+            },
+        ],
+    }]);*/
+    const {chartJson, setChartJson} = useContext(ChartContext)
 
     const addMessage = (item: Message) => {
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
@@ -78,7 +78,11 @@ const Chat = () => {
             // Use the hardcoded JSON or your dynamic JSON data
 
             //const validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}";
-            //setChartJson([...chartJson, JSON.parse(validJson)])
+
+            const validJson = item.body as string;
+
+
+            setChartJson([...chartJson, JSON.parse(validJson)])
 
             debugger;
 
@@ -86,7 +90,6 @@ const Chat = () => {
                 return;
             }
 
-            const validJson = JSON.parse(item.body);
             // Modify the message to accumulate chart data
             const messageWithDefaults: Message = {
                 timeout: 0,
@@ -134,7 +137,7 @@ const Chat = () => {
         ) as HTMLInputElement;
         var message = input.value;
         addMessage({author: "human", body: message});
-        var hasGraph = true;//message.includes("graph");
+        var hasGraph = message.includes("graph");
 
         const inputPlaceholder = input.placeholder
         if (hasGraph) {
@@ -148,7 +151,7 @@ const Chat = () => {
 
             addMessage({author: "loading", body: "(Thinking...)"})
 
-            const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/langChain`, {
+            const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

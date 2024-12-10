@@ -9,8 +9,8 @@
 // import TableOne from '../../components/Tables/TableOne';
 
 import { ChartContext } from "../../components/RouterRoot";
-import DynamicChart from "./dynamicChart";
-import React, {useContext, useEffect} from "react";
+import DynamicChart, {ChartJsonData} from "./dynamicChart";
+import React, {useContext, useEffect, useState} from "react";
 
 const ECommerce: React.FC = () => {
   //   return (
@@ -122,7 +122,7 @@ const ECommerce: React.FC = () => {
   // };
 
 
-  //const [jsonDataList, setJsonDataList] = useState<ChartJsonData[]>([]);
+  const [jsonDataList, setJsonDataList] = useState<ChartJsonData[]>([]);
   const {chartJson} = useContext(ChartContext)
 
   useEffect(() => {
