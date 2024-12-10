@@ -6,8 +6,10 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 // Lambda handler
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const tableName = process.env.TABLE_NAME || ''; // Ensure this is the correct table name
-  
+  const tableName = process.env.TABLE_NAME || ''; 
+  const filemetadatatable = process.env.FILE_METADATA_TABLE_NAME;
+
+
   if (!tableName) {
     return {
       statusCode: 500,
