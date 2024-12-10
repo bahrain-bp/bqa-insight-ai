@@ -28,9 +28,9 @@
   ],
   "dependencies": {
     "@amaabca/aws-lex-custom-resources": "^4.1.0",
-    "@aws-cdk/aws-apigateway": "^1.203.0",
-    "@aws-cdk/aws-dynamodb": "^1.203.0",
-    "@aws-cdk/aws-lambda": "^1.203.0",
+    "@aws-cdk/aws-apigateway": "^1.38.0",
+    "@aws-cdk/aws-dynamodb": "^1.121.0",
+    "@aws-cdk/aws-lambda": "^1.12.0",
     "@aws-cdk/aws-lex": "^1.203.0",
     "@aws-cdk/core": "^1.203.0",
     "@aws-sdk/client-bedrock": "^3.693.0",
@@ -49,9 +49,9 @@
     "express": "^4.21.1",
     "mime-types": "^2.1.35",
     "pdf-lib": "^1.17.1",
+    "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.8.69",
     "pdfreader": "^3.0.5",
-    "pdf-parse": "^1.1.1",
     "react-router-dom": "^6.28.0",
     "uuid": "^11.0.3"
   }
