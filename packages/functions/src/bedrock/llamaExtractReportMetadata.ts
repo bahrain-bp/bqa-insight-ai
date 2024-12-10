@@ -180,6 +180,7 @@ async function insertInstituteMetadata(data :any) {
                         instituteClassification: data["Institute Classification"],
                         instituteGradeLevels: data["Grades In School"],
                         instituteLocation: data["Location"],
+                        dateOfReview: data["Date of Review"],
                         },
                         // UpdateExpression: "SET instituteName = :instituteName, ReviewDate = :DateOfReview, SchoolLocation = :SchoolLocation",
             // ExpressionAttributeValues: {

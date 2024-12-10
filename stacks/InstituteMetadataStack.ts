@@ -8,6 +8,7 @@ export function InstituteMetadataStack({ stack }: StackContext) {
         instituteClassification: "number",
         instituteGradeLevels: "string", 
         instituteLocation: "string", 
+        dateOfReview: "string",
     },
     primaryIndex: { partitionKey: "institueName" },
   });
