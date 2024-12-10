@@ -13,6 +13,7 @@ import {
     Tooltip,
     Legend
 } from "chart.js";
+import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
 
 ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
@@ -30,6 +31,7 @@ type Message = {
     };
     //TODO: maybe u will need to check chart type if there is no general chart type
     chartType?: "line" | "bar"; // Optional chart type
+    dynamicChart?: React.FC<any>;
     timeout?: number; // Optional timeout
 };
 
@@ -70,7 +72,7 @@ const Chat = () => {
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
-    const [setChartData] = useState({
+    const [chartData,setChartData] = useState({
         labels: [],
         datasets: [
             {
@@ -123,7 +125,7 @@ const Chat = () => {
     const replaceLastMessageGraph = (item: Message) => {
         let dataBody = item.body;
         item.body = "";
-
+        item.dynamicChart = new DynamicChart();
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
         setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
 

@@ -65,7 +65,7 @@ export function ApiStack({stack}: StackContext) {
             },
             "POST /textract": {
                 function: {
-                    handler: "packages/functions/src/textract.extractTextFromPDF",
+                    handler: "packages/functions/src/lambda/textract.extractTextFromPDF",
                     permissions: ["textract", "s3", "bedrock"],
                     timeout: "60 seconds",
                     environment: {
