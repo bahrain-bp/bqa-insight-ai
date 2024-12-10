@@ -12,8 +12,8 @@ import { InstituteMetadataStack } from "./InstituteMetadataStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket, bedrockOutputBucket} = use(S3Stack);
-    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
+    const {bucket} = use(S3Stack);
+    const {cfnKnowledgeBase, cfnDataSource} = use(BedrockStack);
     // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
@@ -133,12 +133,12 @@ export function ApiStack({stack}: StackContext) {
             "POST /invokeBedrock": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrockLlama.invokeBedrockLlama",
-                    permissions: ["bedrock", bedrockOutputBucket],
+                    permissions: ["bedrock"],
                     timeout: "60 seconds",
                     environment: {
                         // AGENT_ID: cfnAgent?.attrAgentId || "",
                         // AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                        BUCKET_NAME: bedrockOutputBucket.bucketName,
+                        // BUCKET_NAME: bedrockOutputBucket.bucketName,
                         KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
                     },
                 }
