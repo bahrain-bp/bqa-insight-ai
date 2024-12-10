@@ -13,7 +13,7 @@ export function ApiStack({stack}: StackContext) {
     const {bucket, bedrockOutputBucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
     // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
-    const {bot} = use(BotStack);
+    const {bot , alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
