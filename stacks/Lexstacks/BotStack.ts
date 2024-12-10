@@ -1,10 +1,11 @@
-import {Function, Bucket, Queue, StackContext, use} from "sst/constructs";
+import { Function, Bucket, Queue, StackContext, use } from "sst/constructs";
 import * as cdk from "aws-cdk-lib";
-
+import * as iam from "aws-cdk-lib/aws-iam";
 import {
     LexCustomResource,
     LexBotDefinition,
 } from '@amaabca/aws-lex-custom-resources';
+
 
 export function BotStack({stack}: StackContext) {
 
@@ -216,7 +217,6 @@ export function BotStack({stack}: StackContext) {
         permissions: ["lex"], // SST automatically configures IAM permissions
 
     });
-
 
     const communicationFunction = new Function(stack, "CommunicationFunction", {
         handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
