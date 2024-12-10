@@ -2,7 +2,6 @@ import { SSTConfig } from "sst";
 import { FrontendStack } from "./stacks/FrontendStack";
 import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
-import { AmazonLexSolarMapFulfillment } from "./stacks/Lexstacks/AmazonLexSolarMapFulfillment";
 import { BotStack } from "./stacks/Lexstacks/BotStack";
 
 import { FileMetadataStack } from "./stacks/FileMetadataStack";
@@ -36,7 +35,6 @@ export default {
       .stack(FileMetadataStack)
       .stack(S3Stack)
       .stack(BedrockStack)
-      .stack(AmazonLexSolarMapFulfillment)
       .stack(BotStack)
       .stack(ApiStack) 
       .stack(FrontendStack)
