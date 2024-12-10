@@ -13,30 +13,49 @@
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.1",
+    "@types/aws-lambda": "^8.10.146",
+    "@types/express": "^5.0.0",
     "@types/mime-types": "^2.1.4",
+    "@types/node": "^22.10.1",
     "aws-cdk-lib": "^2.164.1",
     "constructs": "10.3.0",
     "sst": "2.40.3",
-    "typescript": "^5.2.2"
+    "typescript": "^5.7.2",
+    "vite": "^6.0.2"
   },
   "workspaces": [
     "packages/*"
   ],
   "dependencies": {
-    "@aws-sdk/client-lex-runtime-v2": "^3.693.0",
+    "@amaabca/aws-lex-custom-resources": "^4.1.0",
+    "@aws-cdk/aws-apigateway": "^1.203.0",
+    "@aws-cdk/aws-dynamodb": "^1.203.0",
+    "@aws-cdk/aws-lambda": "^1.203.0",
+    "@aws-cdk/aws-lex": "^1.203.0",
+    "@aws-cdk/core": "^1.203.0",
     "@aws-sdk/client-bedrock": "^3.693.0",
     "@aws-sdk/client-bedrock-agent": "^3.693.0",
     "@aws-sdk/client-bedrock-agent-runtime": "^3.693.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.699.0",
     "@aws-sdk/client-comprehend": "^3.687.0",
     "@aws-sdk/client-dynamodb": "^3.693.0",
+    "@aws-sdk/client-lex-runtime-v2": "^3.693.0",
     "@aws-sdk/client-textract": "^3.687.0",
+    "crawler-request": "^1.2.2",
+    "@aws-sdk/client-dynamodb": "^3.699.0",
+    "@aws-sdk/client-lex-runtime-v2": "^3.693.0",
+    "@aws-sdk/client-textract": "^3.687.0",
+    "@aws-sdk/util-dynamodb": "^3.704.0",
+    "aws-sdk": "^2.1692.0",
+    "body-parser": "^1.20.3",
     "date-fns": "^4.1.0",
+    "express": "^4.21.1",
     "mime-types": "^2.1.35",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.8.69",
+    "pdfreader": "^3.0.5",
+    "pdf-parse": "^1.1.1",
     "react-router-dom": "^6.28.0",
-    "uuid": "^11.0.3",
-    "@amaabca/aws-lex-custom-resources": "^4.1.0",
-    "@aws-cdk/aws-lex": "^1.203.0",
-    "@aws-cdk/core": "^1.203.0"
+    "uuid": "^11.0.3"
   }
 }
