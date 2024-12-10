@@ -32,18 +32,16 @@ aws_access_key_id=""
 aws_secret_access_key=""
 aws_session_token=""
 
-# Parse the clipboard content (expecting format similar to environment variables)
-# Example format in clipboard:
-# AWS_ACCESS_KEY_ID=ASIAYSE4NY4IHGKRBCEI
-# AWS_SECRET_ACCESS_KEY=+UcTdCfOoW0YoYTU1DHeb8K0orD7T6X+zDl2kp/J
-# AWS_SESSION_TOKEN=IqOjb3Jp2ZluX2vjEEaACXzVLWhc3QtMSgMGEQCfHkwXSfKf18Ra86gFCQY2QxVDTCM0L3RZPmTqJw
-
+# Parse the clipboard content (INI-style format)
+profile_found=false
 while IFS= read -r line; do
-  if [[ $line =~ ^AWS_ACCESS_KEY_ID=(.+)$ ]]; then
+  if [[ $line =~ ^\[588738578192_AWSAdministratorAccess\]$ ]]; then
+    profile_found=true
+  elif $profile_found && [[ $line =~ ^aws_access_key_id=(.+)$ ]]; then
     aws_access_key_id="${BASH_REMATCH[1]}"
-  elif [[ $line =~ ^AWS_SECRET_ACCESS_KEY=(.+)$ ]]; then
+  elif $profile_found && [[ $line =~ ^aws_secret_access_key=(.+)$ ]]; then
     aws_secret_access_key="${BASH_REMATCH[1]}"
-  elif [[ $line =~ ^AWS_SESSION_TOKEN=(.+)$ ]]; then
+  elif $profile_found && [[ $line =~ ^aws_session_token=(.+)$ ]]; then
     aws_session_token="${BASH_REMATCH[1]}"
   fi
 done <<< "$clipboard_content"
