@@ -7,7 +7,7 @@ module.exports = {
   darkMode: 'class',
   theme: {
     fontFamily: {
-      satoshi: ['Satoshi', 'sans-serif'],
+      graphik: ['Graphik Arabic', 'sans-serif'],
     },
     screens: {
       '2xsm': '375px',
@@ -29,12 +29,13 @@ module.exports = {
           ...colors.red,
           DEFAULT: '#FB5454',
         },
+        lightblue: '#3376CC',
         body: '#64748B',
         bodydark: '#AEB7C0',
         bodydark1: '#DEE4EE',
         bodydark2: '#8A99AF',
-        primary: '#3C50E0',
-        secondary: '#80CAEE',
+        primary: '#1C4679',
+        secondary: '#397B26',
         stroke: '#E2E8F0',
         gray: {
           ...colors.gray,
@@ -62,9 +63,9 @@ module.exports = {
           9: '#E5E7EB',
           10: '#0FADCF',
         },
-        success: '#219653',
-        danger: '#D34053',
-        warning: '#FFA70B',
+        success: '#397B26',
+        danger: '#E64125',
+        warning: '#F3BB41',
       },
       fontSize: {
         'title-xxl': ['44px', '55px'],
