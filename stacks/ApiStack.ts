@@ -147,7 +147,15 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [table], // Grant permissions to the table
                 },
             },
-        
+            "POST /langChain": {
+                function: {
+                    handler: "packages/functions/src/bedrock/langChain.handler", // Your new handler
+                    environment: {
+                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId, // Pass the table name to the Lambda function
+                    },
+                    permissions: ["bedrock", "s3"], // Grant permissions to the table
+                },
+            },
               
               
             }

@@ -23,7 +23,6 @@ export const handler = async (event: APIGatewayEvent) => {
       const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
       When extracting information please make sure it matches the type information exactly.
     
-       
         Please output the extracted information in JSON format. 
         Do not output anything except for the extracted information. All output must be in JSON format and follow the schema specified below. Wrap the JSON in tags.
 
@@ -53,10 +52,11 @@ export const handler = async (event: APIGatewayEvent) => {
         "score": "4.5"
         }
         ]
-        }"
-            
-                }
-        Add more columns and provide insightful data to be displayed in a graph. Do not add any clarifying information.`;
+        }"    
+        }
+        Add more columns and provide insightful data to be displayed in a graph. Do not add any clarifying information.
+        
+        Input: `;
 
         const final = response + " " + prompt
       const request = {
@@ -77,6 +77,8 @@ export const handler = async (event: APIGatewayEvent) => {
       const decodedResponseBody = JSON.parse(decodedResponse);
       const output = decodedResponseBody.generation;
 
+      console.log(decodedResponse);
+      console.log("output: ", output);
       
       return {
           statusCode: 200,

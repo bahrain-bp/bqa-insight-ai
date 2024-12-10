@@ -148,7 +148,7 @@ const Chat = () => {
 
             addMessage({author: "loading", body: "(Thinking...)"})
 
-            const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
+            const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/langChain`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
