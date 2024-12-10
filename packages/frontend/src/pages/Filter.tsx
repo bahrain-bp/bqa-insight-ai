@@ -10,7 +10,7 @@ const Filter = () => {
     "Institute Level": [],
     "Location": [],
     "Institute Name": [],
-    "Report Year": ["2021", "2022", "2023", "2024"],
+    "Report Year": [],
   });
 
  
@@ -38,6 +38,7 @@ const Filter = () => {
         if (selectedOptions["Location"].length) {
           params.append("location", selectedOptions["Location"][0]);
         }
+        
   
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${params.toString()}`);
         const data = await response.json();
@@ -71,6 +72,7 @@ const Filter = () => {
             "Institute Level": [], // Reset level filter
             "Location": [], // Reset location filter
             "Institute Name": [], // Reset institute name filter
+            "Report Year" : []
           });
         } else if (header === "Institute Level") {
           setSelectedOptions({

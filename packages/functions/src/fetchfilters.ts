@@ -6,8 +6,6 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 // Lambda handler
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const tableName = process.env.TABLE_NAME || ''; 
-  const filemetadatatable = process.env.FILE_METADATA_TABLE_NAME;
-
 
   if (!tableName) {
     return {
@@ -39,14 +37,26 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       filteredData = filteredData.filter(item => item.instituteLocation === location);
     }
 
+    // Extract the year from dateOfReview
+    const extractYear = (date: string): string | null => {
+      // Match years from different date formats
+      const match = date.match(/(\d{4})/);
+      return match ? match[1] : null;
+    };
+
     // Transform the filtered data to match the format needed for the frontend
     const filters = {
       "Institute Classification": Array.from(new Set(filteredData.map(item => item.instituteClassification))),
       "Institute Level": Array.from(new Set(filteredData.map(item => item.instituteGradeLevels))),
       "Location": Array.from(new Set(filteredData.map(item => item.instituteLocation))),
       "Institute Name": Array.from(new Set(filteredData.map(item => item.institueName))),
-      "Report Year": ["2021", "2022", "2023", "2024"], // Static or dynamic years
+      "Report Year": Array.from(new Set(filteredData
+        .map(item => extractYear(item.dateOfReview))  // Extract year from date
+        .filter(year => year !== null) // Filter out invalid dates
+      )),
     };
+
+    console.log(filters); // Debugging
 
     return {
       statusCode: 200,
@@ -60,3 +70,4 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
   }
 };
+
