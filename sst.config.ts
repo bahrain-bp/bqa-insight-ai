@@ -11,6 +11,7 @@ import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
+import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
 
 export default {
   config(_input) {
@@ -34,6 +35,7 @@ export default {
     else {
       app.stack(DBStack)
       .stack(FileMetadataStack)
+      .stack(InstituteMetadataStack)
       .stack(S3Stack)
       .stack(BedrockStack)
       .stack(AmazonLexSolarMapFulfillment)
@@ -41,6 +43,7 @@ export default {
       .stack(ApiStack) 
       .stack(FrontendStack)
       .stack(AuthStack);
+     
     }
   }
 } satisfies SSTConfig; 

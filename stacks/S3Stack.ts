@@ -1,9 +1,10 @@
 import { StackContext, Bucket, Function, Queue, use, toCdkDuration } from "sst/constructs";
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
-
+import { InstituteMetadataStack } from "./InstituteMetadataStack";
 export function S3Stack({ stack }: StackContext) {
     const { fileMetadataTable } = use(FileMetadataStack);
+    const {instituteMetadata} = use (InstituteMetadataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -107,6 +108,7 @@ export function S3Stack({ stack }: StackContext) {
             events: ["object_created"], 
             filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
         },
+        
     });
 
     const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {
@@ -126,6 +128,18 @@ export function S3Stack({ stack }: StackContext) {
                 maxAge: "3000 seconds",
             },
         ],
+    });
+
+    const llamaExtractReportMetadata = new Function(stack, "llamaExtractReportMetadata", {
+        handler: "packages/functions/src/bedrock/llamaExtractReportMetadata.llamaExtractReportMetadata",
+        timeout: "300 seconds",
+        permissions: [
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata
+        ],
+        environment: {
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+        }
     });
 
     // Add outputs for the bucket
