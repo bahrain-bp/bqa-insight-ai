@@ -68,20 +68,6 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable],
                 },
             },
-            "POST /textract": {
-                function: {
-                    handler: "packages/functions/src/textract.extractTextFromPDF",
-                    permissions: ["textract", "s3"],
-                    timeout: "60 seconds",
-                }
-            },
-            "POST /comprehend": {
-                function: {
-                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
-                    permissions: ["comprehend"],
-                    timeout: "60 seconds"
-                }
-            },
             "POST /lex/start_session": {
                 function: {
                     handler: "packages/functions/src/startLexSession.handler",
@@ -128,13 +114,14 @@ export function ApiStack({stack}: StackContext) {
             
             "POST /invokeBedrock": {
                 function: {
-                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    handler: "packages/functions/src/bedrock/invokeBedrockLlama.invokeBedrockLlama",
                     permissions: ["bedrock", bedrockOutputBucket],
                     timeout: "60 seconds",
                     environment: {
-                        AGENT_ID: cfnAgent?.attrAgentId || "",
-                        AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                        // AGENT_ID: cfnAgent?.attrAgentId || "",
+                        // AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                         BUCKET_NAME: bedrockOutputBucket.bucketName,
+                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
                     },
                 }
             },
