@@ -2,20 +2,20 @@ import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
 import {ChatContext} from "../../layout/DefaultLayout";
-import {Line} from "react-chartjs-2";
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
-    Legend
-} from "chart.js";
+// import {Line} from "react-chartjs-2";
+// import {
+//     Chart as ChartJS,
+//     CategoryScale,
+//     LinearScale,
+//     LineElement,
+//     PointElement,
+//     Title,
+//     Tooltip,
+//     Legend
+// } from "chart.js";
 import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
 
-ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
+// ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
 type Message = {
     author: "human" | "bot" | "loading";
@@ -31,7 +31,7 @@ type Message = {
     };
     //TODO: maybe u will need to check chart type if there is no general chart type
     chartType?: "line" | "bar"; // Optional chart type
-    dynamicChart?: React.FC<any>;
+    dynamicChartData?: string; // New field to store raw chart data
     timeout?: number; // Optional timeout
 };
 
@@ -124,10 +124,10 @@ const Chat = () => {
     };
     const replaceLastMessageGraph = (item: Message) => {
         let dataBody = item.body;
-        item.body = "";
-        item.dynamicChart = new DynamicChart();
-        const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
-        setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
+        item.body = "Generated Chart Displayed on Home Page";
+        // item.dynamicChart = new DynamicChart();
+        // const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
+        // setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
 
         // Check if the body contains a graph message (in JSON format)
         try {
@@ -141,40 +141,51 @@ const Chat = () => {
 
             // Extract labels (reviewYears) and data (scores) from the parsed data
             //todo: change the keys to match the keys in the json dynamic
-            const labels = data.map((item: { reviewYear: string }) => item.reviewYear);
-            const scores = data.map((item: { score: string }) => parseInt(item.score));
+            // const labels = data.map((item: { reviewYear: string }) => item.reviewYear);
+            // const scores = data.map((item: { score: string }) => parseInt(item.score));
 
-            // Create the message with both body text and chart data
-            const messageWithDefaults = {
+            // // Create the message with both body text and chart data
+            // const messageWithDefaults = {
+            //     timeout: 0,
+            //     ...item,
+            //     chartData: {
+            //         labels,
+            //         datasets: [
+            //             {
+            //                 label: "Review Scores",
+            //                 data: scores,
+            //                 borderColor: "rgba(75,192,192,1)",
+            //                 tension: 0.1,
+            //             },
+            //         ],
+            //     }
+            // };
+
+            // setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
+
+            // // Update chart data state (if you're still using it)
+            // setChartData({
+            //     labels,
+            //     datasets: [
+            //         {
+            //             label: "Review Scores",
+            //             data: scores,
+            //             borderColor: "rgba(75,192,192,1)",
+            //             tension: 0.1,
+            //         },
+            //     ],
+            // });
+            // Prepare message with both body text and raw chart data
+            const messageWithDefaults: Message = {
                 timeout: 0,
                 ...item,
-                chartData: {
-                    labels,
-                    datasets: [
-                        {
-                            label: "Review Scores",
-                            data: scores,
-                            borderColor: "rgba(75,192,192,1)",
-                            tension: 0.1,
-                        },
-                    ],
-                }
+                body: "Generated Chart Displayed on Home Page",
+                dynamicChartData: validJson  // Store raw JSON for DynamicChart
             };
 
-            setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
-
-            // Update chart data state (if you're still using it)
-            setChartData({
-                labels,
-                datasets: [
-                    {
-                        label: "Review Scores",
-                        data: scores,
-                        borderColor: "rgba(75,192,192,1)",
-                        tension: 0.1,
-                    },
-                ],
-            });
+            setMessages((prev) => prev.map((msg, i) => 
+                i === prev.length - 1 ? messageWithDefaults : msg
+            ));
         } catch (error) {
             console.error("Error parsing graph data:", error);
         }
@@ -305,7 +316,7 @@ const Chat = () => {
                             )}
 
                             {/* Render chart if chartData exists */}
-                            {message.chartData && (
+                            {/* {message.chartData && (
                                 <div className="mt-2">
                                     <Line
                                         data={message.chartData}
@@ -322,6 +333,20 @@ const Chat = () => {
                                             }
                                         }}
                                     />
+                                </div>
+                            )} */}
+                            {/* Render Dynamic Chart if dynamicChartData exists */}
+                            {message.dynamicChartData && (
+                                <div className="mt-2">
+                                    {(() => {
+                                        try {
+                                            const parsedData = JSON.parse(message.dynamicChartData);
+                                            return <DynamicChart jsonData={parsedData} />;
+                                        } catch (error) {
+                                            console.error('Error parsing chart data:', error);
+                                            return null;
+                                        }
+                                    })()}
                                 </div>
                             )}
                         </div>
