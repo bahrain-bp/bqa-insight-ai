@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './css/style.css';
-import './css/satoshi.css';
+import './fonts/stylesheet.css';
 import { Amplify } from "aws-amplify";
 // import 'jsvectormap/dist/css/jsvectormap.css';
 import 'flatpickr/dist/flatpickr.min.css';

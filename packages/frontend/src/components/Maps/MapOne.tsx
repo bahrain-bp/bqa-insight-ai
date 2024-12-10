@@ -21,7 +21,7 @@
 //       },
 //       regionLabelStyle: {
 //         initial: {
-//           fontFamily: 'Satoshi',
+//           fontFamily: 'Graphik Arabic',
 //           fontWeight: 'semibold',
 //           fill: '#fff',
 //         },
