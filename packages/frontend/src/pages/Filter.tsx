@@ -1,41 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
-  const [submittedMessage, setSubmittedMessage] = useState<string | null>(null); // For message
-  const [messageType, setMessageType] = useState<"success" | "error" | null>(null); // For styling
-  const [isFilterActive, setIsFilterActive] = useState(false); // Tracks filter activity
-
-
-  const filterOptions: Record<string, string[]> = {
-    "Institute Classification": ["Government", "Private"],
-    "Institute Level": ["Primary", "Secondary", "Higher Secondary"],
-    "Location": [
-      "Capital Governorate",
-      "Northern Governorate",
-      "Southern Governorate",
-      "Muharraq Governorate",
-    ],
-    "Institute Name": [
-      "Al Noor International School",
-      "Ibn Khuldoon National School",
-      "Abdulrahman Kanoo International School",
-      "Bahrain Bayan School",
-      "Riffa Views International School",
-      "Al Hekma International School",
-      "Al Hidd Secondary Girls School",
-      "Al Raja School",
-    ],
+  const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
+  const [isFilterActive, setIsFilterActive] = useState(false);
+  const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
+    "Institute Classification": [],
+    "Institute Level": [],
+    "Location": [],
+    "Institute Name": [],
     "Report Year": ["2021", "2022", "2023", "2024"],
-  };
+  });
+
+  useEffect(() => {
+    // Fetch the filter options from your API
+    const fetchFilterOptions = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters`);
+        const data = await response.json();
+        console.log("Fetched filter options:", data.filters); // Log data to check
+        setFilterOptions(data.filters);
+      } catch (error) {
+        console.error("Error fetching filter options:", error);
+      }
+    };
+
+    fetchFilterOptions();
+  }, []); // Empty dependency array to run only once after the component mounts
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
     Object.keys(filterOptions).reduce((acc, header) => {
-      acc[header] = []; 
+      acc[header] = [];
       return acc;
     }, {} as Record<string, string[]>)
   );
-  
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
@@ -44,23 +43,19 @@ const Filter = () => {
       setSelectedOptions((prevState) => {
         const previousValues = prevState[header];
 
-        // Activate filters
         if (!isFilterActive) {
           setIsFilterActive(true);
         }
 
-        // Validation for "Institute Name" based on mode
-        if (header === "Institute Name") {
-          if (mode === "Analyze" && previousValues.length === 1) {
-            showMessage("You can select only one school in Analyze mode.", "error");
-            return prevState;
-          }
+        if (header === "Institute Name" && mode === "Analyze" && previousValues.length === 1) {
+          showMessage("You can select only one school in Analyze mode.", "error");
+          return prevState;
         }
 
         return {
           ...prevState,
           [header]: previousValues.includes(value)
-            ? previousValues // Prevent duplicates
+            ? previousValues
             : [...previousValues, value],
         };
       });
@@ -73,99 +68,71 @@ const Filter = () => {
         ...prevState,
         [header]: prevState[header].filter((v) => v !== value),
       };
-
-      // Deactivate filters if all selections are cleared
-      const hasSelections = Object.values(updatedOptions).some(
-        (selections) => selections.length > 0
-      );
-      setIsFilterActive(hasSelections);
-
+      setIsFilterActive(Object.values(updatedOptions).some((selections) => selections.length > 0));
       return updatedOptions;
     });
   };
 
   const generateSentence = () => {
     const parts: string[] = [];
-  
-    if (mode) {
-      parts.push(`${mode} insights for`);
-    }
-    if (selectedOptions["Institute Classification"]?.length > 0) {
+    if (mode) parts.push(`${mode} insights for`);
+    if (selectedOptions["Institute Classification"]?.length > 0)
       parts.push(`classification ${selectedOptions["Institute Classification"].join(", ")}`);
-    }
-    if (selectedOptions["Institute Level"]?.length > 0) {
+    if (selectedOptions["Institute Level"]?.length > 0)
       parts.push(`institute level is ${selectedOptions["Institute Level"].join(", ")}`);
-    }
-    if (selectedOptions["Location"]?.length > 0) {
+    if (selectedOptions["Location"]?.length > 0)
       parts.push(`location is in ${selectedOptions["Location"].join(", ")}`);
-    }
-    if (selectedOptions["Institute Name"]?.length > 0) {
+    if (selectedOptions["Institute Name"]?.length > 0)
       parts.push(`institute name is ${selectedOptions["Institute Name"].join(", ")}`);
-    }
-    if (selectedOptions["Report Year"]?.length > 0) {
+    if (selectedOptions["Report Year"]?.length > 0)
       parts.push(`report year is ${selectedOptions["Report Year"].join(", ")}`);
-    }
-  
     return parts.length > 0 ? `Insights for: ${parts.join(", ")}.` : "";
   };
-  
-   
 
   const showMessage = (message: string, type: "success" | "error") => {
     setSubmittedMessage(message);
     setMessageType(type);
-
-    // Automatically close the message after 3 seconds
     setTimeout(() => {
       setSubmittedMessage(null);
       setMessageType(null);
     }, 3000);
   };
 
-const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-  e.preventDefault();
-  const sentence = generateSentence();
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const sentence = generateSentence();
 
-  // Check if 'Institute Name' is selected based on the mode
-  if (mode === "Compare" && selectedOptions["Institute Name"].length < 2) {
-    showMessage("Please select at least two schools in Compare mode.", "error");
-    return;
-  }
-
-  // Check if any required filters are missing
-  const requiredFilters = ["Institute Level", "Institute Name"];
-  const missingFilters = requiredFilters.filter(
-    (filter) => selectedOptions[filter].length === 0
-  );
-
-  if (missingFilters.length > 0) {
-    showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
-    return;
-  }
-
-  if (sentence) {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt: sentence }),
-      });
-
-      const body = await response.json();
-      console.log(body);
-
-      showMessage("Data successfully sent to the server!", "success");
-    } catch (error) {
-      console.error("Error sending data to Bedrock:", error);
-      showMessage("An error occurred. Please try again.", "error");
+    if (mode === "Compare" && selectedOptions["Institute Name"].length < 2) {
+      showMessage("Please select at least two schools in Compare mode.", "error");
+      return;
     }
-  } else {
-    showMessage("Please select options.", "error");
-  }
-};
 
+    const requiredFilters = ["Institute Level", "Institute Name"];
+    const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
+
+    if (missingFilters.length > 0) {
+      showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
+      return;
+    }
+
+    if (sentence) {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: sentence }),
+        });
+        const body = await response.json();
+        console.log(body);
+        showMessage("Data successfully sent to the server!", "success");
+      } catch (error) {
+        console.error("Error sending data to Bedrock:", error);
+        showMessage("An error occurred. Please try again.", "error");
+      }
+    } else {
+      showMessage("Please select options.", "error");
+    }
+  };
 
   const handleClear = () => {
     setSelectedOptions(
@@ -174,8 +141,8 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
         return acc;
       }, {} as Record<string, string[]>)
     );
-    setMode(""); // Reset mode
-    setIsFilterActive(false); // Deactivate filter
+    setMode("");
+    setIsFilterActive(false);
   };
 
   return (
@@ -284,6 +251,5 @@ const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     </div>
   );
 };
-
 
 export default Filter;
