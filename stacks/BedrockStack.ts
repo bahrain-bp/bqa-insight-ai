@@ -128,29 +128,29 @@ export function BedrockStack({ stack, app }: StackContext) {
         //   },
         // },
       });
-      var cfnAgent = undefined
-      // if (app.stage == "prod" || app.stage == "hasan") {
-        cfnAgent = new bedrock.CfnAgent(stack, "BQACfnAgent", {
-          agentName: "BQAInsightAIModel-"+app.stage,
-          // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',
-          agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
-          foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-premier-v1:0',
-          idleSessionTtlInSeconds: 600,
-          instruction: 'Analyze All reports and produce powerful insights based on that data. Generate data in tables if prompted to as well.',
-          knowledgeBases: [{
-            description: 'Use the newest data as default, unless it is specified otherwise',
-            knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
-            knowledgeBaseState: 'ENABLED',
-            }],
-          }
-        );
-        stack.addOutputs({Agent: cfnAgent.agentName})
+      // var cfnAgent = undefined
+      // // if (app.stage == "prod" || app.stage == "hasan") {
+      //   cfnAgent = new bedrock.CfnAgent(stack, "BQACfnAgent", {
+      //     agentName: "BQAInsightAIModel-"+app.stage,
+      //     // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',
+      //     agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
+      //     foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-premier-v1:0',
+      //     idleSessionTtlInSeconds: 600,
+      //     instruction: 'Analyze All reports and produce powerful insights based on that data. Generate data in tables if prompted to as well.',
+      //     knowledgeBases: [{
+      //       description: 'Use the newest data as default, unless it is specified otherwise',
+      //       knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
+      //       knowledgeBaseState: 'ENABLED',
+      //       }],
+      //     }
+      //   );
+      //   stack.addOutputs({Agent: cfnAgent.agentName})
       // }
 
-      const cfnAgentAlias = new bedrock.CfnAgentAlias(stack, 'BQACfnAgentAlias', {
-        agentAliasName: 'BQACfnAgentAlias-'+app.stage,
-        agentId: cfnAgent?.attrAgentId || "",
-      });
+      // const cfnAgentAlias = new bedrock.CfnAgentAlias(stack, 'BQACfnAgentAlias', {
+      //   agentAliasName: 'BQACfnAgentAlias-'+app.stage,
+      //   agentId: cfnAgent?.attrAgentId || "",
+      // });
           
 
     stack.addOutputs({
@@ -158,5 +158,5 @@ export function BedrockStack({ stack, app }: StackContext) {
         DataSource: cfnDataSource.name,
     });
 
-    return { cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias };
+    return { cfnKnowledgeBase, cfnDataSource };
 }      
