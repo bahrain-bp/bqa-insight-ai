@@ -21,8 +21,14 @@ export async function handler(event: any) {
     for (const file of files) {
         const { fileName, fileType, fileSize } = file;
         const uniqueId = uuidv4(); 
-        const fileKey = `Files/${uniqueId}`;
+        // Set the fileKey with the uniqueId
+        let fileKey = `Files/${uniqueId}`;
 
+        // If the file is a PDF, ensure the key ends with .pdf
+        if (fileType === "application/pdf" && !fileKey.endsWith(".pdf")) {
+            fileKey = `Files/${uniqueId}.pdf`;
+        }
+        
         const params = {
             Bucket: bucketName,
             Key: fileKey,
