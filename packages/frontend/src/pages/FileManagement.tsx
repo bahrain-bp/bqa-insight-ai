@@ -64,7 +64,7 @@ const FileManagement: React.FC = () => {
     setUploading(true);
     try {
       const fileDetails = filesToUpload.map((file) => ({
-        fileName: file.webkitRelativePath ?? file.name,
+        fileName: file.webkitRelativePath || file.name,
         fileType: file.type,
         fileSize: file.size,
       }));

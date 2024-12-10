@@ -114,14 +114,14 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
       console.error("Error invoking Bedrock agent:", err);
       return {
         statusCode: 500,
-       // body: JSON.stringify({ message: "Error invoking Bedrock agent", error: err.message }),
+      // body: JSON.stringify({ message: "Error invoking Bedrock agent", error: err.message }),
       };
     }
   } catch (error) {
     console.error("Error parsing input or processing request:", error);
     return {
       statusCode: 400,
-     // body: JSON.stringify({ message: "Invalid request", error: error.message }),
+      //body: JSON.stringify({ message: "Invalid request", error: error.message }),
     };
   }
 };

@@ -6,12 +6,14 @@ import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
 import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
+import { BedrockExpressStack } from "./BedrockExpressStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket, bedrockOutputBucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
-    const {bot, alias} = use(BotStack);
+    // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
+    const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
 
     // Create the HTTP API
@@ -112,6 +114,7 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+            
             "POST /invokeBedrock": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
@@ -123,11 +126,33 @@ export function ApiStack({stack}: StackContext) {
                         BUCKET_NAME: bedrockOutputBucket.bucketName,
                     },
                 }
+            },
+            "POST /invokeExpressLambda": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
+                    permissions: ["bedrock", "s3", "textract"],
+                    timeout: "60 seconds",
+                    // environment: {
+                    //     AGENT_ID : extractReportMetadataAgent.attrAgentId,
+                    //     AGENT_ALIAS_ID : becrockExtractAgentAlias.attrAgentAliasId,
+                    // }
+                }
+            },
+            "POST /fetchfilters": {
+                function: {
+                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    environment: {
+                        TABLE_NAME: table.tableName, // Pass the table name to the Lambda function
+                    },
+                    permissions: [table], // Grant permissions to the table
+                },
+            },
+        
+              
+              
             }
-        },
+
     });
-
-
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
     const apiCachePolicy = new CachePolicy(stack, "CachePolicy", {
