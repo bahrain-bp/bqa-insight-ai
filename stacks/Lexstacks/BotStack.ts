@@ -1,6 +1,9 @@
 import { Function, Bucket, Queue, StackContext, use } from "sst/constructs";
 import * as cdk from "aws-cdk-lib";
-import * as iam from "aws-cdk-lib/aws-iam";
+import { aws_lambda as lambda } from 'aws-cdk-lib';
+import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
+import { Duration, aws_iam as iam } from "aws-cdk-lib";
+
 import {
     LexCustomResource,
     LexBotDefinition,
@@ -207,16 +210,33 @@ export function BotStack({stack}: StackContext) {
     // create a version that automatically is built when the bot changes
     const version = bot.automaticVersion();
 
-    const fulfillmentFunction = new Function(stack, "FulfillmentFunction", {
-        handler: "packages/functions/src/LexBot/intentAmazonLexFulfillment.lambda_handler",
-        runtime: "python3.11", // SST automatically maps this
-        memorySize: 512,
-        timeout: 60,
-        environment: {
-        },
-        permissions: ["lex"], // SST automatically configures IAM permissions
+    // const fulfillmentFunction = new Function(stack, "FulfillmentFunction", {
+    //     handler: "packages/functions/src/LexBot/intentAmazonLexFulfillment.lambda_handler",
+    //     runtime: "python3.11", // SST automatically maps this
+    //     memorySize: 512,
+    //     timeout: 60,
+    //     environment: {
+    //     },
+    //     permissions: ["lex"], // SST automatically configures IAM permissions
+    //
+    // });
+    const fulfillmentFunction = new lambda.Function(stack, 'Fulfillment-Lambda', {
+        functionName: stack.stage + '-fulfillment-lambda-for-lex-bot',
+        runtime: lambda.Runtime.PYTHON_3_11,
+        handler: 'intentAmazonLexFulfillment.lambda_handler',
+        memorySize: 512, 
+        timeout: Duration.seconds(60),
+        // code: lambda.Code.fromInline('print("Hello World")'),
+        code: lambda.Code.fromAsset('packages/functions/src/LexBot/'),
+    }); 
 
-    });
+    // Grant permission for the Lambda function to interact with Amazon Lex
+    fulfillmentFunction.grantInvoke(new ServicePrincipal('lex.amazonaws.com'));
+
+    fulfillmentFunction.addPermission('lex-fulfillment', {
+        action: 'lambda:InvokeFunction',
+        principal: new iam.ServicePrincipal('lex.amazonaws.com')
+    })
 
     const communicationFunction = new Function(stack, "CommunicationFunction", {
         handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
