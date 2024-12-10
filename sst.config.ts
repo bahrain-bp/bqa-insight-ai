@@ -15,14 +15,6 @@ import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
 
 export default {
   config(_input) {
-    // Restrict stages to dev or prod
-    // const allowedStages = ["dev", "devops-coca","devops-gh","prod"];
-    // if (!allowedStages.includes(_input.stage ?? "")) {
-    //   throw new Error(
-    //       `Invalid stage: ${_input.stage}. Allowed stages are ${allowedStages.join(", ")}.
-    //       \n To deploy to a new stage, use "sst deploy --stage dev"`
-    //   );
-    // }
     return {
       name: "insight-ai",
       region: "us-east-1",

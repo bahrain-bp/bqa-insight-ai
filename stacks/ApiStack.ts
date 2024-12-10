@@ -12,8 +12,8 @@ import { InstituteMetadataStack } from "./InstituteMetadataStack";
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
-    const {bucket, bedrockOutputBucket} = use(S3Stack);
-    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
+    const {bucket} = use(S3Stack);
+    const {cfnKnowledgeBase, cfnDataSource} = use(BedrockStack);
     // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
@@ -71,8 +71,12 @@ export function ApiStack({stack}: StackContext) {
             "POST /textract": {
                 function: {
                     handler: "packages/functions/src/textract.extractTextFromPDF",
-                    permissions: ["textract", "s3"],
+                    permissions: ["textract", "s3", "bedrock"],
                     timeout: "60 seconds",
+                    environment: {
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
                 }
             },
             "POST /comprehend": {
@@ -128,13 +132,14 @@ export function ApiStack({stack}: StackContext) {
             
             "POST /invokeBedrock": {
                 function: {
-                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
-                    permissions: ["bedrock", bedrockOutputBucket],
+                    handler: "packages/functions/src/bedrock/invokeBedrockLlama.invokeBedrockLlama",
+                    permissions: ["bedrock"],
                     timeout: "60 seconds",
                     environment: {
-                        AGENT_ID: cfnAgent?.attrAgentId || "",
-                        AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                        BUCKET_NAME: bedrockOutputBucket.bucketName,
+                        // AGENT_ID: cfnAgent?.attrAgentId || "",
+                        // AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                        // BUCKET_NAME: bedrockOutputBucket.bucketName,
+                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
                     },
                 }
             },
