@@ -70,16 +70,7 @@ const Chat = () => {
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
-    const [setChartData] = useState({
-        labels: [],
-        datasets: [
-            {
-                data: [],
-                borderColor: "rgba(75,192,192,1)",
-                tension: 0.1,
-            },
-        ],
-    });
+
     // const initialMessages: Message[] = [
     //     {author: "loading", body: "...", timeout: 0},
     //     {author: "bot", body: "Hello", timeout: 800},
@@ -161,18 +152,6 @@ const Chat = () => {
 
             setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
 
-            // Update chart data state (if you're still using it)
-            setChartData({
-                labels,
-                datasets: [
-                    {
-                        label: "Review Scores",
-                        data: scores,
-                        borderColor: "rgba(75,192,192,1)",
-                        tension: 0.1,
-                    },
-                ],
-            });
         } catch (error) {
             console.error("Error parsing graph data:", error);
         }
