@@ -111,24 +111,24 @@ export function S3Stack({ stack }: StackContext) {
         
     });
 
-    const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {
-        cdk: {
-            bucket: {
-                versioned: true, // Enable versioning
-                removalPolicy: stack.stage === "prod" ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-                publicReadAccess: true,
-            },
-        },
-        cors: [
-            {
-                allowedHeaders: ["*"],
-                allowedMethods: ["GET", "PUT", "POST"], // Allowed HTTP methods
-                allowedOrigins: ["*"], // TODO: Replace "*" with your frontend's domain for production
-                exposedHeaders: ["ETag"],
-                maxAge: "3000 seconds",
-            },
-        ],
-    });
+    // const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {
+    //     cdk: {
+    //         bucket: {
+    //             versioned: true, // Enable versioning
+    //             removalPolicy: stack.stage === "prod" ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
+    //             publicReadAccess: true,
+    //         },
+    //     },
+    //     cors: [
+    //         {
+    //             allowedHeaders: ["*"],
+    //             allowedMethods: ["GET", "PUT", "POST"], // Allowed HTTP methods
+    //             allowedOrigins: ["*"], // TODO: Replace "*" with your frontend's domain for production
+    //             exposedHeaders: ["ETag"],
+    //             maxAge: "3000 seconds",
+    //         },
+    //     ],
+    // });
 
     const llamaExtractReportMetadata = new Function(stack, "llamaExtractReportMetadata", {
         handler: "packages/functions/src/bedrock/llamaExtractReportMetadata.llamaExtractReportMetadata",
@@ -145,9 +145,9 @@ export function S3Stack({ stack }: StackContext) {
     // Add outputs for the bucket
     stack.addOutputs({
         BucketName: bucket.bucketName,
-        BedrockOutputBucket: bedrockOutputBucket.bucketName,
+        // BedrockOutputBucket: bedrockOutputBucket.bucketName,
         QueueURL: splitPDFqueue.queueUrl,
     });
 
-    return { bucket, bedrockOutputBucket, queue: splitPDFqueue };
+    return { bucket, queue: splitPDFqueue };
 }
