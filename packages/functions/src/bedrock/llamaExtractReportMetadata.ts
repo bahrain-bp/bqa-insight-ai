@@ -5,6 +5,7 @@ import { DynamoDB } from "aws-sdk";
 const dynamoDb = new DynamoDB.DocumentClient();
 const client = new BedrockRuntimeClient({region: "us-east-1"});
 
+//Using Llama model to extract metadata about reports and institutes
 export const llamaExtractReportMetadata = async (event: any) =>{
 
     for (const record of event.Records) {
