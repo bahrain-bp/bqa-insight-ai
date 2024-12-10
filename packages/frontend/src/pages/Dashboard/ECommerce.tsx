@@ -8,8 +8,9 @@
 // import MapOne from '../../components/Maps/MapOne';
 // import TableOne from '../../components/Tables/TableOne';
 
-import { ChartJsonData } from "./dynamicChart";
-import React, { useEffect, useState } from "react";
+import { ChartContext } from "../../components/RouterRoot";
+import DynamicChart from "./dynamicChart";
+import React, {useContext, useEffect} from "react";
 
 const ECommerce: React.FC = () => {
   //   return (
@@ -121,18 +122,19 @@ const ECommerce: React.FC = () => {
   // };
 
 
-  const [jsonDataList, setJsonDataList] = useState<ChartJsonData[]>([]);
+  //const [jsonDataList, setJsonDataList] = useState<ChartJsonData[]>([]);
+  const {chartJson} = useContext(ChartContext)
 
   useEffect(() => {
 
-  }, []);
+  }, [chartJson]);
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>Charts generated on home page</h2>
-      {jsonDataList.length > 0 ? (
+      {chartJson.length > 0 ? (
         <div>
-          {jsonDataList.map((jsonData, index) => (
+          {chartJson.map((jsonData, index) => (
             <div key={index} style={{ marginBottom: "20px" }}>
               <DynamicChart jsonData={jsonData} />
             </div>

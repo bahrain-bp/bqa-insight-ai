@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
-import { ChatContext } from "../../layout/DefaultLayout";
+import {ChatContext} from "../../layout/DefaultLayout";
 
 import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
+//import {ChartContext} from "../RouterRoot.tsx";
 
 
 type Message = {
@@ -15,7 +16,7 @@ type Message = {
 };
 
 const ChatBot = () => {
-    const { isChatOpen, setIsChatOpen } = useContext(ChatContext);
+    const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
 
     const toggleChat = () => {
         setIsChatOpen(!isChatOpen);
@@ -27,7 +28,7 @@ const ChatBot = () => {
             <img
                 src={rebotIcon}
                 className={`fixed bottom-4 right-4  text-white p-3  cursor-pointer z-20 ${isChatOpen ? 'b-chat--closed' : 'b-chat--open'}`}
-                style={{ transition: "opacity 0.5s ease, transform 0.5s ease" }}
+                style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
                 alt="Open Chat"
                 onClick={toggleChat}
                 width={120}
@@ -40,7 +41,7 @@ const ChatBot = () => {
                     <span>ChatBot</span>
                     <button onClick={toggleChat}>Close</button>
                 </div>
-                <Chat />
+                <Chat/>
             </div>
         </div>
     );
@@ -51,31 +52,41 @@ const Chat = () => {
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
-    const [chartData, setChartData] = useState({
-        labels: [],
-        datasets: [
-            {
-                data: [],
-                borderColor: "rgba(75,192,192,1)",
-                tension: 0.1,
-            },
-        ],
-    });
+    // const [chartData, setChartData] = useState([{
+    //     labels: [],
+    //     datasets: [
+    //         {
+    //             data: [],
+    //             borderColor: "rgba(75,192,192,1)",
+    //             tension: 0.1,
+    //         },
+    //     ],
+    // }]);
+    //const {chartJson, setChartJson} = useContext(ChartContext)
 
     const addMessage = (item: Message) => {
-        const messageWithDefaults = { timeout: 0, ...item }; // Ensure default timeout is applied
+        const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
         setMessages((prev) => [...prev, messageWithDefaults]);
     };
 
     const replaceLastMessage = (item: Message) => {
-        const messageWithDefaults = { timeout: 0, ...item }; // Ensure default timeout is applied
+        const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
         setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
     };
     const replaceLastMessageGraph = (item: Message) => {
         try {
             // Use the hardcoded JSON or your dynamic JSON data
-            const validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}";
 
+            //const validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}";
+            //setChartJson([...chartJson, JSON.parse(validJson)])
+
+            debugger;
+
+            if (typeof item.body !== "string") {
+                return;
+            }
+
+            const validJson = JSON.parse(item.body);
             // Modify the message to accumulate chart data
             const messageWithDefaults: Message = {
                 timeout: 0,
@@ -122,7 +133,7 @@ const Chat = () => {
             "input"
         ) as HTMLInputElement;
         var message = input.value;
-        addMessage({ author: "human", body: message });
+        addMessage({author: "human", body: message});
         var hasGraph = true;//message.includes("graph");
 
         const inputPlaceholder = input.placeholder
@@ -135,28 +146,28 @@ const Chat = () => {
             input.disabled = true;
             input.placeholder = "Waiting for response..."
 
-            addMessage({ author: "loading", body: "(Thinking...)" })
+            addMessage({author: "loading", body: "(Thinking...)"})
 
             const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ userMessage: message }),
+                body: JSON.stringify({userMessage: message}),
             });
             const body = await bedrockResponse.json()
             // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
             if (hasGraph) {
-                replaceLastMessageGraph({ author: "bot", body: body.response })
+                replaceLastMessageGraph({author: "bot", body: body.response})
             } else {
-                replaceLastMessage({ author: "bot", body: body.response })
+                replaceLastMessage({author: "bot", body: body.response})
 
             }
 
 
         } catch (error) {
             console.error(error)
-            replaceLastMessage({ author: "bot", body: "An error has occurred. Please try again." })
+            replaceLastMessage({author: "bot", body: "An error has occurred. Please try again."})
         } finally {
             input.disabled = false;
             input.placeholder = inputPlaceholder
@@ -189,7 +200,7 @@ const Chat = () => {
                     <li
                         key={index}
                         className={`c-chat__item ${message.author === "human" ? "c-chat__item--human" : ""
-                            }`}
+                        }`}
                     >
                         <div className={`c-chat__message`}>
                             {typeof message.body === "string" ? (
@@ -215,7 +226,7 @@ const Chat = () => {
                                     {(() => {
                                         try {
                                             const parsedData = JSON.parse(message.dynamicChartData);
-                                            return <DynamicChart jsonData={parsedData} />;
+                                            return <DynamicChart jsonData={parsedData}/>;
                                         } catch (error) {
                                             console.error('Error parsing chart data:', error);
                                             return null;
