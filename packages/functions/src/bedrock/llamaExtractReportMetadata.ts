@@ -35,7 +35,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, only if you detect the word private it means private school, otherwise keep it as Government.
             Date of Review: String// The date of the review.
             Overall Effectiveness: String // The institute overall effectiveness is either 1 which means outsanding, if 2 means Good, if 3 means Satisfactory, if 4 means Inadequate.
-            Location: String// The institute location including Town - Governate.
+            Location: String// The institute location ONLY including Governate, without town.
             Institute Type: String// The institute type is it a school or university.
             Grades In School: String // The Grades in school by checking the primary, middle, and high columns excluding 'Grades e.g. 1 to 12'.
             }
@@ -53,7 +53,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             "Institute Classification": "Private",
             "Date of Review": "30 April and 2-3 May 2018",
             "Overall Effectiveness": "3: Satisfactory",
-            "Location": "Sehla - Northern Governorate",
+            "Location": "Northern Governorate",
             "Institute Type": "School",
             "Grades In School": "1-9"
             }
@@ -64,7 +64,7 @@ export const llamaExtractReportMetadata = async (event: any) =>{
             "School Classification": "Government School",
             "Date of Review": "30 April and 2-3 May 2018",
             "Overall Effectiveness": "3: Satisfactory",
-            "School Location": "Jidhafs - Capital Governorate",
+            "School Location": "Capital Governorate",
             "School Type": "School",
             "Grades In School": "10-12"
             }
