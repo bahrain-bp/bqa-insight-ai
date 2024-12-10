@@ -1,6 +1,30 @@
 import json
 import random
 from decimal import Decimal
+import boto3
+from botocore.exceptions import ClientError
+
+def add_lex_permission(lambda_function_arn):
+    # Create a Lambda client
+    lambda_client = boto3.client('lambda')
+
+    try:
+        # Add permission to invoke the function
+        response = lambda_client.add_permission(
+            FunctionName=lambda_function_arn,
+            StatementId='lex-fulfillment',
+            Action='lambda:InvokeFunction',
+            Principal='lexv2.amazonaws.com'
+        )
+        
+        print(f"Permission added successfully. Statement ID: {response['StatementId']}")
+        
+    except ClientError as e:
+        print(f"An error occurred while adding permission: {e}")
+
+# Usage
+lambda_function_arn = 'arn:aws:lambda:region:account-id:function:function-name'
+add_lex_permission(lambda_function_arn)
 
 def dispatch(event):
     print('Event:', json.dumps(event, indent=2))
@@ -84,4 +108,5 @@ def dispatch(event):
     return response
 
 def lambda_handler(event, context):
-    return dispatch(event)
+    return {"message": "Hello"}
+

@@ -171,7 +171,7 @@ export function BotStack({stack}: StackContext) {
             enabled: true,
         },
     });
-
+ 
     const handleNoResponse = locale.addIntent({
         intentName: 'HandleNoResponse',
         description: 'Manage user response when they say no',
@@ -228,6 +228,8 @@ export function BotStack({stack}: StackContext) {
         },
         permissions: ["lex"], // SST automatically configures IAM permissions
     });
+
+
     // create an alias and assign it to the latest bot version
     const alias = bot.addAlias({
         botAliasName: 'liveAlias',
