@@ -1,4 +1,3 @@
-// fetchfilters.ts
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import AWS from 'aws-sdk';
 
@@ -15,26 +14,41 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
   }
 
+  const { classification, level, location } = event.queryStringParameters || {}; // Getting filters from query parameters
+
   const params = {
     TableName: tableName,
   };
 
-  try { 
+  try {
     const data = await dynamoDB.scan(params).promise();
-    console.log(data)
-    // Transform the data to match the format needed for the frontend
+    console.log(data);
+
+    // Filter the data based on user selections
+    let filteredData = data.Items || [];
+
+    if (classification) {
+      filteredData = filteredData.filter(item => item.instituteClassification === classification);
+    }
+    if (level) {
+      filteredData = filteredData.filter(item => item.instituteGradeLevels === level);
+    }
+    if (location) {
+      filteredData = filteredData.filter(item => item.instituteLocation === location);
+    }
+
+    // Transform the filtered data to match the format needed for the frontend
     const filters = {
-      "Institute Classification": Array.from(new Set(data.Items?.map(item => item.instituteClassification))),
-      "Institute Level": Array.from(new Set(data.Items?.map(item => item.instituteGradeLevels))),
-      "Location": Array.from(new Set(data.Items?.map(item => item.instituteLocation))),
-      "Institute Name": Array.from(new Set(data.Items?.map(item => item.institueName))),
-      "Report Year": ["2021", "2022", "2023", "2024"], // You can keep this static or fetch dynamically if needed
+      "Institute Classification": Array.from(new Set(filteredData.map(item => item.instituteClassification))),
+      "Institute Level": Array.from(new Set(filteredData.map(item => item.instituteGradeLevels))),
+      "Location": Array.from(new Set(filteredData.map(item => item.instituteLocation))),
+      "Institute Name": Array.from(new Set(filteredData.map(item => item.institueName))),
+      "Report Year": ["2021", "2022", "2023", "2024"], // Static or dynamic years
     };
+
     return {
       statusCode: 200,
       body: JSON.stringify({ filters }),
-
-      
     };
   } catch (error) {
     console.error('Error fetching items:', error);

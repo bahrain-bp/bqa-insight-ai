@@ -13,21 +13,7 @@ const Filter = () => {
     "Report Year": ["2021", "2022", "2023", "2024"],
   });
 
-  useEffect(() => {
-    // Fetch the filter options from your API
-    const fetchFilterOptions = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters`);
-        const data = await response.json();
-        console.log("Fetched filter options:", data.filters); // Log data to check
-        setFilterOptions(data.filters);
-      } catch (error) {
-        console.error("Error fetching filter options:", error);
-      }
-    };
-
-    fetchFilterOptions();
-  }, []); // Empty dependency array to run only once after the component mounts
+ 
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
     Object.keys(filterOptions).reduce((acc, header) => {
@@ -36,31 +22,77 @@ const Filter = () => {
     }, {} as Record<string, string[]>)
   );
 
+
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        // Construct the query string based on selected filters
+        const params = new URLSearchParams();
+  
+        if (selectedOptions["Institute Classification"].length) {
+          params.append("classification", selectedOptions["Institute Classification"][0]);
+        }
+        if (selectedOptions["Institute Level"].length) {
+          params.append("level", selectedOptions["Institute Level"][0]);
+        }
+        if (selectedOptions["Location"].length) {
+          params.append("location", selectedOptions["Location"][0]);
+        }
+  
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${params.toString()}`);
+        const data = await response.json();
+        console.log("Fetched filter options:", data.filters); // Log data to check
+        setFilterOptions(data.filters);
+      } catch (error) {
+        console.error("Error fetching filter options:", error);
+      }
+    };
+  
+    fetchFilterOptions();
+  }, [selectedOptions]); // Refetch when selectedOptions change
+  
+
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
-
+  
     if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
         const previousValues = prevState[header];
-
+  
         if (!isFilterActive) {
           setIsFilterActive(true);
         }
-
-        if (header === "Institute Name" && mode === "Analyze" && previousValues.length === 1) {
-          showMessage("You can select only one school in Analyze mode.", "error");
-          return prevState;
+  
+        // Reset dependent filter options when classification, level, or location changes
+        if (header === "Institute Classification") {
+          setSelectedOptions({
+            ...prevState,
+            "Institute Classification": [value], // Keep only the selected classification
+            "Institute Level": [], // Reset level filter
+            "Location": [], // Reset location filter
+            "Institute Name": [], // Reset institute name filter
+          });
+        } else if (header === "Institute Level") {
+          setSelectedOptions({
+            ...prevState,
+            "Institute Level": [value], // Keep only the selected level
+            "Institute Name": [], // Reset institute name filter
+          });
+        } else if (header === "Location") {
+          setSelectedOptions({
+            ...prevState,
+            "Location": [value], // Keep only the selected location
+          });
         }
-
+  
         return {
           ...prevState,
-          [header]: previousValues.includes(value)
-            ? previousValues
-            : [...previousValues, value],
+          [header]: previousValues.includes(value) ? previousValues : [...previousValues, value],
         };
       });
     }
   };
+  
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
