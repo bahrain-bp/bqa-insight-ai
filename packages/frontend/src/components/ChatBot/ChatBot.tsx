@@ -3,7 +3,7 @@ import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
 import {ChatContext} from "../../layout/DefaultLayout";
 
-import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
+// import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
 import {ChartContext} from "../RouterRoot.tsx";
 
 

@@ -27,12 +27,12 @@ interface DynamicChartProps {
     jsonData: string | ChartJsonData;
 }
 
-function generateRandomColor(alpha = 1) {
-    const r = Math.floor(Math.random() * 256); // Random red value
-    const g = Math.floor(Math.random() * 256); // Random green value
-    const b = Math.floor(Math.random() * 256); // Random blue value
-    return `rgba(${r},${g},${b},${alpha})`; // Combine with alpha transparency
-}
+// function generateRandomColor(alpha = 1) {
+//     const r = Math.floor(Math.random() * 256); // Random red value
+//     const g = Math.floor(Math.random() * 256); // Random green value
+//     const b = Math.floor(Math.random() * 256); // Random blue value
+//     return `rgba(${r},${g},${b},${alpha})`; // Combine with alpha transparency
+// }
 
 const DynamicChart: React.FC<DynamicChartProps> = ({jsonData}) => {
     // Parse JSON if it's a string
