@@ -95,14 +95,14 @@ const FileManagement: React.FC = () => {
       fetchFiles(); // Refresh file list after uploading
 
       // this is job syncing for bedrock knowledgebase
-      const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
-        method: "POST",                
-      });
+      // const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
+      //   method: "POST",                
+      // });
 
-      const syncJobData = await syncJobResponse.json();
-      if (syncJobData.statusCode == 200) {
-          console.log("Job started successfully!")
-      }
+      // const syncJobData = await syncJobResponse.json();
+      // if (syncJobData.statusCode == 200) {
+      //     console.log("Job started successfully!")
+      // }
       setAlertMessage("Files uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);
@@ -239,8 +239,8 @@ const FileManagement: React.FC = () => {
           <div className="text-center mb-4">
             <label
               htmlFor="fileUpload"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
-                style={{backgroundColor: '#003366'}}
+              className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+                // style={{backgroundColor: '#003366'}}
             >
               <FaUpload size={16} /> {/* Upload Icon */}
               <input
@@ -257,8 +257,8 @@ const FileManagement: React.FC = () => {
           <div className="text-center mb-4">
             <label
               htmlFor="folderUpload"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
-                style={{backgroundColor: '#003366'}}
+              className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+                // style={{backgroundColor: '#003366'}}
             >
               <FaUpload size={16} /> {/* Upload Icon */}
               <input
@@ -277,7 +277,7 @@ const FileManagement: React.FC = () => {
           {/* Action Buttons */}
           <div className="flex justify-between mb-4">
             <button
-              className="flex items-center gap-2 rounded bg-red-500 py-1 px-3 text-white disabled:bg-gray-300"
+              className="flex items-center gap-2 rounded bg-danger py-1 px-3 text-white disabled:bg-gray-300"
               onClick={() => setDeletePrompt(true)}
               disabled={deleting || selectedFiles.length === 0}
             >
@@ -285,7 +285,7 @@ const FileManagement: React.FC = () => {
               Delete Selected
             </button>
             <button
-              className="flex items-center gap-2 rounded bg-green-500 py-1 px-3 text-white disabled:bg-gray-300"
+              className="flex items-center gap-2 rounded bg-secondary py-1 px-3 text-white disabled:bg-gray-300"
               onClick={handleDownload}
               disabled={selectedFiles.length === 0 || downloading}
             >

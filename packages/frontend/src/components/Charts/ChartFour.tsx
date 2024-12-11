@@ -20,7 +20,7 @@ const ChartFour: React.FC = () => {
               <div className="flex justify-center">
                 <button
                   onClick={() => setIsChatOpen(true)}
-                  className="px-30 py-3 text-lg  bg-[#003366] text-white border-none rounded-lg hover:bg-[#002244] transition duration-300"
+                  className="px-30 py-3 text-lg  bg-primary text-white border-none rounded-lg hover:bg-lightblue transition duration-300"
                 >
                   Start Insighting
                 </button>

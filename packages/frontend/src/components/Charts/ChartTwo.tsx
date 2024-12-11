@@ -5,7 +5,7 @@ import ReactApexChart from 'react-apexcharts';
 const options: ApexOptions = {
   colors: ['#FF8E8E', '#009999'],
   chart: {
-    fontFamily: 'Satoshi, sans-serif',
+    fontFamily: 'Graphik Arabic, sans-serif',
     type: 'bar',
     height: 335,
     stacked: true,
@@ -49,7 +49,7 @@ const options: ApexOptions = {
   legend: {
     position: 'top',
     horizontalAlign: 'left',
-    fontFamily: 'Satoshi',
+    fontFamily: 'Graphik Arabic',
     fontWeight: 500,
     fontSize: '14px',
 

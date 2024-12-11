@@ -70,7 +70,7 @@ export function BedrockStack({ stack, app }: StackContext) {
       
             // the properties below are optional
             bucketOwnerAccountId: stack.account,
-            inclusionPrefixes: ['Files/'],
+            inclusionPrefixes: ['TextFiles/'],
           },
         },
         knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,

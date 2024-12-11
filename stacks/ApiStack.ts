@@ -7,6 +7,8 @@ import {Duration} from "aws-cdk-lib/core";
 import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
+import { InstituteMetadataStack } from "./InstituteMetadataStack";
+
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
@@ -15,6 +17,7 @@ export function ApiStack({stack}: StackContext) {
     // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
     const {bot , alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
+    const {instituteMetadata} = use (InstituteMetadataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -56,20 +59,6 @@ export function ApiStack({stack}: StackContext) {
                     },
                     permissions: [bucket, fileMetadataTable],
                 },
-            },
-            "POST /textract": {
-                function: {
-                    handler: "packages/functions/src/textract.extractTextFromPDF",
-                    permissions: ["textract", "s3"],
-                    timeout: "60 seconds",
-                }
-            },
-            "POST /comprehend": {
-                function: {
-                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
-                    permissions: ["comprehend"],
-                    timeout: "60 seconds"
-                }
             },
             "POST /lex/start_session": {
                 function: {
@@ -117,13 +106,14 @@ export function ApiStack({stack}: StackContext) {
             
             "POST /invokeBedrock": {
                 function: {
-                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    handler: "packages/functions/src/bedrock/invokeBedrockLlama.invokeBedrockLlama",
                     permissions: ["bedrock", bedrockOutputBucket],
                     timeout: "60 seconds",
                     environment: {
-                        AGENT_ID: cfnAgent?.attrAgentId || "",
-                        AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                        // AGENT_ID: cfnAgent?.attrAgentId || "",
+                        // AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                         BUCKET_NAME: bedrockOutputBucket.bucketName,
+                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
                     },
                 }
             },
@@ -142,16 +132,23 @@ export function ApiStack({stack}: StackContext) {
                 function: {
                     handler: "packages/functions/src/fetchfilters.handler", // Your new handler
                     environment: {
-                        TABLE_NAME: table.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
                     },
-                    permissions: [table], // Grant permissions to the table
+                    permissions: [instituteMetadata], // Grant permissions to the table
                 },
             },
+            "GET /fetchfilters": {
+                function: {
+                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    environment: {
+                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                    },
+                    permissions: [instituteMetadata], // Grant permissions to the table
         
-              
+                }
               
             }
-
+        }
     });
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
