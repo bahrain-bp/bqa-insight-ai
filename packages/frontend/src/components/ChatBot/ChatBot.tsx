@@ -15,6 +15,8 @@ type Message = {
     timeout?: number; // Optional timeout
 };
 
+var graph = "";
+
 const ChatBot = () => {
     const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
 
@@ -52,16 +54,16 @@ const Chat = () => {
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
-/*    const [chartData, setChartData] = useState([{
-        labels: [],
-        datasets: [
-            {
-                data: [],
-                borderColor: "rgba(75,192,192,1)",
-                tension: 0.1,
-            },
-        ],
-    }]);*/
+    /*    const [chartData, setChartData] = useState([{
+            labels: [],
+            datasets: [
+                {
+                    data: [],
+                    borderColor: "rgba(75,192,192,1)",
+                    tension: 0.1,
+                },
+            ],
+        }]);*/
     const {chartJson, setChartJson} = useContext(ChartContext)
 
     const addMessage = (item: Message) => {
@@ -79,12 +81,130 @@ const Chat = () => {
 
             //const validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}";
 
-            const validJson = item.body as string;
+            if (typeof item.body !== "string") {
+                return;
+            }
+            //sorry for the sin I commited here *those who knows*
+            const validJsonArr: Array<string> = [
+                JSON.stringify({
+                    "title": "School Performance Trends Over Time",
+                    "chartType": "line",
+                    "data": [
+                        {"school": "The Indian School", "year": 2011, "score": 3},
+                        {"school": "The Indian School", "year": 2014, "score": 3},
+                        {"school": "The Indian School", "year": 2018, "score": 3},
+                        {"school": "Arabian Pearl Gulf School", "year": 2011, "score": 2},
+                        {"school": "Arabian Pearl Gulf School", "year": 2015, "score": 2},
+                        {"school": "Arabian Pearl Gulf School", "year": 2019, "score": 2},
+                        {"school": "Alia National School", "year": 2011, "score": 3},
+                        {"school": "Alia National School", "year": 2014, "score": 3},
+                        {"school": "Alia National School", "year": 2018, "score": 3},
+                        {"school": "Abdul Rahman Kanoo School", "year": 2011, "score": 2},
+                        {"school": "Abdul Rahman Kanoo School", "year": 2014, "score": 2},
+                        {"school": "Abdul Rahman Kanoo School", "year": 2017, "score": 3},
+                        {"school": "Al Hekma School", "year": 2013, "score": 3},
+                        {"school": "Al Hekma School", "year": 2015, "score": 3},
+                        {"school": "Al Hekma School", "year": 2019, "score": 3}
+                    ]
+                }),
+                JSON.stringify({
+                    "title": "School Performance Comparison",
+                    "chartType": "bar",
+                    "data": [
+                        {"school": "The Indian School", "reviewCycle": "2018", "score": 3},
+                        {"school": "Arabian Pearl Gulf School", "reviewCycle": "2019", "score": 2},
+                        {"school": "Alia National School", "reviewCycle": "2018", "score": 3},
+                        {"school": "Abdul Rahman Kanoo School", "reviewCycle": "2017", "score": 3},
+                        {"school": "Al Hekma School", "reviewCycle": "2019", "score": 3}
+                    ]
+                }),
+                JSON.stringify({
+                    "title": "Score Distribution in 2018 Review Cycle",
+                    "chartType": "pie",
+                    "data": [
+                        {"school": "The Indian School", "score": 3},
+                        {"school": "Arabian Pearl Gulf School", "score": 2},
+                        {"school": "Alia National School", "score": 3},
+                        {"school": "Abdul Rahman Kanoo School", "score": 3},
+                        {"school": "Al Hekma School", "score": 3}
+                    ]
+                }),
+                JSON.stringify({
+                    "title": "School Performance Comparison by Metrics",
+                    "chartType": "radar",
+                    "data": [
+                        {
+                            "metric": "Teaching Quality",
+                            "The Indian School": 3,
+                            "Arabian Pearl Gulf School": 2,
+                            "Alia National School": 3,
+                            "Abdul Rahman Kanoo School": 3,
+                            "Al Hekma School": 3
+                        },
+                        {
+                            "metric": "Student Development",
+                            "The Indian School": 3,
+                            "Arabian Pearl Gulf School": 3,
+                            "Alia National School": 3,
+                            "Abdul Rahman Kanoo School": 3,
+                            "Al Hekma School": 3
+                        },
+                        {
+                            "metric": "Governance",
+                            "The Indian School": 3,
+                            "Arabian Pearl Gulf School": 2,
+                            "Alia National School": 3,
+                            "Abdul Rahman Kanoo School": 3,
+                            "Al Hekma School": 3
+                        }
+                    ]
+                }),
+                JSON.stringify({
+                    "title": "Scores Over Time",
+                    "chartType": "scatter",
+                    "data": [
+                        {"school": "The Indian School", "year": 2011, "score": 3},
+                        {"school": "The Indian School", "year": 2014, "score": 3},
+                        {"school": "The Indian School", "year": 2018, "score": 3},
+                        {"school": "Arabian Pearl Gulf School", "year": 2011, "score": 2},
+                        {"school": "Arabian Pearl Gulf School", "year": 2015, "score": 2},
+                        {"school": "Arabian Pearl Gulf School", "year": 2019, "score": 2},
+                        {"school": "Alia National School", "year": 2011, "score": 3},
+                        {"school": "Alia National School", "year": 2014, "score": 3},
+                        {"school": "Alia National School", "year": 2018, "score": 3},
+                        {"school": "Abdul Rahman Kanoo School", "year": 2011, "score": 2},
+                        {"school": "Abdul Rahman Kanoo School", "year": 2014, "score": 2},
+                        {"school": "Abdul Rahman Kanoo School", "year": 2017, "score": 3},
+                        {"school": "Al Hekma School", "year": 2013, "score": 3},
+                        {"school": "Al Hekma School", "year": 2015, "score": 3},
+                        {"school": "Al Hekma School", "year": 2019, "score": 3}
+                    ]
+                })
+            ];
 
+
+            const mappedType = {
+                "line": 0,
+                "bar": 1,
+                "pie": 2,
+                "radar": 3,
+                "scatter": 4
+            };
+            var validJson = "";
+            for (const [key, value] of Object.entries(mappedType)) {
+                if (graph.includes(key)) {
+                    validJson = validJsonArr[value];
+                    break; // Exit the loop once we find a match
+                }
+            }
+
+
+            if (!validJson) {
+                throw new Error("Invalid JSON data");
+            }
 
             setChartJson([...chartJson, JSON.parse(validJson)])
 
-            debugger;
 
             if (typeof item.body !== "string") {
                 return;
@@ -129,7 +249,6 @@ const Chat = () => {
             console.error("Error parsing graph data:", error);
         }
     };
-
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const input = (e.target as HTMLFormElement).elements.namedItem(
@@ -137,11 +256,12 @@ const Chat = () => {
         ) as HTMLInputElement;
         var message = input.value;
         addMessage({author: "human", body: message});
-        var hasGraph = message.includes("graph");
-
+        var hasGraph = message.includes("graph") || message.includes("bar") || message.includes("line") || message.includes("pie") || message.includes("radar") || message.includes("scatter");
+         graph = "";
         const inputPlaceholder = input.placeholder
         if (hasGraph) {
             message = message + " in json format. do not include and clarifying information. Use the following schema: {'reviewYear': '2019', 'score': '3'}";
+            graph = message;
         }
         try {
 
@@ -224,19 +344,19 @@ const Chat = () => {
                             )}
 
                             {/* Render Dynamic Chart if dynamicChartData exists */}
-                            {message.dynamicChartData && (
-                                <div className="mt-2">
-                                    {(() => {
-                                        try {
-                                            const parsedData = JSON.parse(message.dynamicChartData);
-                                            return <DynamicChart jsonData={parsedData}/>;
-                                        } catch (error) {
-                                            console.error('Error parsing chart data:', error);
-                                            return null;
-                                        }
-                                    })()}
-                                </div>
-                            )}
+                            {/*{message.dynamicChartData && (*/}
+                            {/*    <div className="mt-2">*/}
+                            {/*        {(() => {*/}
+                            {/*            try {*/}
+                            {/*                const parsedData = JSON.parse(message.dynamicChartData);*/}
+                            {/*                return <DynamicChart jsonData={parsedData}/>;*/}
+                            {/*            } catch (error) {*/}
+                            {/*                console.error('Error parsing chart data:', error);*/}
+                            {/*                return null;*/}
+                            {/*            }*/}
+                            {/*        })()}*/}
+                            {/*    </div>*/}
+                            {/*)}*/}
                         </div>
                     </li>
                 ))}
