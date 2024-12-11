@@ -10,7 +10,7 @@ const options: ApexOptions = {
   },
   colors: ['#DEB887', '#DC143C'],
   chart: {
-    fontFamily: 'Satoshi, sans-serif',
+    fontFamily: 'Graphik Arabic, sans-serif',
     height: 335,
     type: 'area',
     dropShadow: {

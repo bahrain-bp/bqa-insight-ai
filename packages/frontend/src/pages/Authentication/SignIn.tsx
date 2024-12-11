@@ -135,7 +135,7 @@ const SignIning = ({
                   e.preventDefault();
                   handleSignIn(email, password);
                 }}
-                className="w-full cursor-pointer rounded-lg border border-primary bg-[#014064] p-4 text-white transition hover:bg-opacity-90"
+                className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
               />
             </div>
 

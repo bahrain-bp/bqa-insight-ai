@@ -64,7 +64,7 @@ const ModifyPassword = () => {
           />
         </div>
         <div>
-          <button type="submit">
+          <button type="submit" className="bg-primary">
             Change Password
           </button>
         </div>

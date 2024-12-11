@@ -1,9 +1,10 @@
 import { StackContext, Bucket, Function, Queue, use, toCdkDuration } from "sst/constructs";
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
-
+import { InstituteMetadataStack } from "./InstituteMetadataStack";
 export function S3Stack({ stack }: StackContext) {
     const { fileMetadataTable } = use(FileMetadataStack);
+    const {instituteMetadata} = use (InstituteMetadataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -26,6 +27,34 @@ export function S3Stack({ stack }: StackContext) {
     });
 
 
+    const extractMetadataQueue = new Queue(stack, "extractMetadataQueue", {
+        cdk: {
+            queue: {
+                fifo: true,
+                contentBasedDeduplication: true,
+                visibilityTimeout: toCdkDuration("301 seconds"),
+            },
+        },
+    });
+
+    const extractReportMetadata = new Function(stack, "llamaExtractReportMetadata", {
+        handler: "packages/functions/src/bedrock/llamaExtractReportMetadata.handler",
+        timeout: "300 seconds",
+        permissions: [
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue
+        ],
+        environment: {
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+        EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        }
+    });
+
+    extractMetadataQueue.addConsumer(stack, {
+        function: extractReportMetadata,
+    });
+
+
     // Create the SQS Queue for Textract processing
     const textractQueue = new Queue(stack, "TextractQueue", {
         cdk: {
@@ -43,13 +72,14 @@ export function S3Stack({ stack }: StackContext) {
         environment: {
             FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName, 
             BUCKET_NAME: bucket.bucketName,                         
-            TEXTRACT_QUEUE_URL: textractQueue.queueUrl,            
+            TEXTRACT_QUEUE_URL: textractQueue.queueUrl,
+            EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,            
         },
         permissions: [
             fileMetadataTable,    
             bucket,                
             textractQueue,
-            fileMetadataTable,        
+            extractMetadataQueue,        
             "textract:StartDocumentTextDetection", 
             "textract:StartDocumentAnalysis",     
             "textract:GetDocumentTextDetection", 
@@ -63,7 +93,7 @@ export function S3Stack({ stack }: StackContext) {
     });
 
     // Create an SQS Queue for PDF splitting
-    const splitPDFqueue = new Queue(stack, "PDFSplitQueue", {
+    const splitPDFQueue = new Queue(stack, "PDFSplitQueue", {
         cdk: {
             queue: {
                 fifo: true,
@@ -78,14 +108,14 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/lambda/splitPDF.handler",
         environment: {
             FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
-            SPLIT_QUEUE_URL: splitPDFqueue.queueUrl,
+            SPLIT_QUEUE_URL: splitPDFQueue.queueUrl,
             TEXTRACT_QUEUE_URL: textractQueue.queueUrl,
         },
-        permissions: [fileMetadataTable, bucket, splitPDFqueue, textractQueue], 
+        permissions: [fileMetadataTable, bucket, splitPDFQueue, textractQueue], 
     });
 
     // Set the consumer for the queue
-    splitPDFqueue.addConsumer(stack, {
+    splitPDFQueue.addConsumer(stack, {
         function: splitPDFHandler,
     });
 
@@ -94,9 +124,9 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/lambda/splitPDF.sendMessage",
         environment: {
             FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
-            SPLIT_QUEUE_URL: splitPDFqueue.queueUrl, 
+            SPLIT_QUEUE_URL: splitPDFQueue.queueUrl, 
         },
-        permissions: [fileMetadataTable, bucket, splitPDFqueue], 
+        permissions: [fileMetadataTable, bucket, splitPDFQueue], 
     });
 
 
@@ -107,6 +137,7 @@ export function S3Stack({ stack }: StackContext) {
             events: ["object_created"], 
             filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
         },
+        
     });
 
     const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {
@@ -128,12 +159,13 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
+
     // Add outputs for the bucket
     stack.addOutputs({
         BucketName: bucket.bucketName,
         BedrockOutputBucket: bedrockOutputBucket.bucketName,
-        QueueURL: splitPDFqueue.queueUrl,
+        QueueURL: splitPDFQueue.queueUrl,
     });
 
-    return { bucket, bedrockOutputBucket, queue: splitPDFqueue };
+    return { bucket, bedrockOutputBucket, queue: splitPDFQueue };
 }

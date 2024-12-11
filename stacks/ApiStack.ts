@@ -6,13 +6,18 @@ import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
 import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
+import { BedrockExpressStack } from "./BedrockExpressStack";
+import { InstituteMetadataStack } from "./InstituteMetadataStack";
+
 
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket, bedrockOutputBucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
+    // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
+    const {instituteMetadata} = use (InstituteMetadataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -62,24 +67,6 @@ export function ApiStack({stack}: StackContext) {
                     },
                     permissions: [bucket, fileMetadataTable],
                 },
-            },
-            "POST /textract": {
-                function: {
-                    handler: "packages/functions/src/lambda/textract.extractTextFromPDF",
-                    permissions: ["textract", "s3", "bedrock"],
-                    timeout: "60 seconds",
-                    environment: {
-                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
-                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
-                    }
-                }
-            },
-            "POST /comprehend": {
-                function: {
-                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
-                    permissions: ["comprehend"],
-                    timeout: "60 seconds"
-                }
             },
             "POST /lex/start_session": {
                 function: {
@@ -138,28 +125,38 @@ export function ApiStack({stack}: StackContext) {
                     },
                 }
             },
+            "POST /invokeExpressLambda": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
+                    permissions: ["bedrock", "s3", "textract"],
+                    timeout: "60 seconds",
+                    // environment: {
+                    //     AGENT_ID : extractReportMetadataAgent.attrAgentId,
+                    //     AGENT_ALIAS_ID : becrockExtractAgentAlias.attrAgentAliasId,
+                    // }
+                }
+            },
             "POST /fetchfilters": {
                 function: {
                     handler: "packages/functions/src/fetchfilters.handler", // Your new handler
                     environment: {
-                        TABLE_NAME: table.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
                     },
-                    permissions: [table], // Grant permissions to the table
+                    permissions: [instituteMetadata], // Grant permissions to the table
                 },
             },
-            "POST /langChain": {
+            "GET /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/bedrock/langChain.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
                     environment: {
-                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
                     },
-                    permissions: ["bedrock", "s3"], // Grant permissions to the table
-                },
-            },
-              
+                    permissions: [instituteMetadata], // Grant permissions to the table
+        
+                }
               
             }
-
+        }
     });
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
