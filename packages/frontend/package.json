@@ -18,6 +18,7 @@
     "chart.js": "^4.4.7",
     "codecatalyst-sst-app": "file:../..",
     "csv-parser": "^3.0.0",
+    "esbuild": "^0.24.0",
     "flatpickr": "^4.6.13",
     "headlessui": "^0.0.0",
     "jsvectormap": "^1.5.3",

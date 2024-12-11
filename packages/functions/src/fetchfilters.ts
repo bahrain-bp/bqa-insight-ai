@@ -39,6 +39,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     // Extract the year from dateOfReview
     const extractYear = (date: string): string | null => {
+      if (!date) return null;
       // Match years from different date formats
       const match = date.match(/(\d{4})/);
       return match ? match[1] : null;
