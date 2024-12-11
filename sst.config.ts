@@ -10,6 +10,7 @@ import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
+import { AfterDeployStack } from "./stacks/AfterDeployStack";
 
 export default {
   config(_input) {
@@ -38,7 +39,8 @@ export default {
       .stack(BotStack)
       .stack(ApiStack) 
       .stack(FrontendStack)
-      .stack(AuthStack);
+      .stack(AuthStack)
+      .stack(AfterDeployStack);
     }
   }
 } satisfies SSTConfig; 
