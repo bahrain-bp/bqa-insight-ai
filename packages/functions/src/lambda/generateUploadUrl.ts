@@ -28,6 +28,18 @@ export async function handler(event: any) {
         if (fileType === "application/pdf" && !fileKey.endsWith(".pdf")) {
             fileKey = `Files/${uniqueId}.pdf`;
         }
+
+        if (fileType === "text/csv") {
+            if (validateCSVFileName(fileName)){
+                fileKey = `CSVFiles/${fileName}`;
+            } else {
+                console.error("Invalid CSV file name:", fileName);
+                return {
+                    statusCode: 400,
+                    body: JSON.stringify({ error: `Invalid file name: ${fileName}` }),
+                };
+            }
+        }
         
         const params = {
             Bucket: bucketName,
@@ -73,3 +85,14 @@ async function insertFileMetadata(file: { fileKey: string; fileName: string; fil
     return await dynamoDb.put(params).promise();
 }
 
+
+function validateCSVFileName(fileName: string): boolean {
+    const allowedFileNames = new Set<string>([
+        'Results of Government Schools Reviews.csv',
+        'Results of Higher Education Reviews.csv',
+        'Results of National Framework Operations.csv',
+        'Results of Private Schools Reviews.csv',
+        'Results of Vocational Reviews.csv'
+    ]);
+    return allowedFileNames.has(fileName);
+}

@@ -8,6 +8,7 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { OpenDataStack } from "./OpenDataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -18,6 +19,7 @@ export function ApiStack({stack}: StackContext) {
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    const { governmentSchoolsTable, privateSchoolsTable, higherEducationReviewsTable, nationalFrameworkOperationsTable, vocationalReviewsTable } = use(OpenDataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -154,8 +156,17 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [instituteMetadata], // Grant permissions to the table
         
                 }
-              
+            },
+            "GET /fetchGovernmentSchools": {
+                function: {
+                    handler: "packages/functions/src/lambda/retrieveGovernmentSchools.handler", 
+                    environment: {
+                        GOVERNMENT_SCHOOLS_TABLE_NAME: governmentSchoolsTable.tableName,
+                    },
+                    permissions: [governmentSchoolsTable], 
+                }
             }
+
         }
     });
 

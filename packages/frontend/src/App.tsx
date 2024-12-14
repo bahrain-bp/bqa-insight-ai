@@ -11,6 +11,7 @@ import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
 import Filter from "./pages/Filter.tsx";
+import { TestGraphs } from './pages/testGraphs.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,7 +83,7 @@ function App() {
                 }
             />
 
-<Route
+          <Route
           path="/Filter"
           element={
             <>
@@ -90,6 +91,15 @@ function App() {
               <Filter/>
             </>
           }
+        />
+        <Route
+          path="/graphs"
+          element={
+              <>
+                  <PageTitle title="graphs" />
+                  <TestGraphs />
+              </>
+              }
         />
       </Routes>
       
