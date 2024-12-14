@@ -155,6 +155,14 @@ export function ApiStack({stack}: StackContext) {
         
                 }
               
+            },
+            "POST /invokeBedrockClaude": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeBedrockClaude.handler", // Your new handler
+                    permissions: ["bedrock"], // Grant permissions to the table
+        
+                }
+              
             }
         }
     });
