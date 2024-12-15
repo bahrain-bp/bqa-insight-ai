@@ -1,81 +1,184 @@
-import json
+# --- Helpers that build all of the responses ---
 
-def dispatch(event):
-    print('Event:', json.dumps(event, indent=2))
+def create_message(message):
+    return {
+        'contentType': 'PlainText',
+        'content': message,
+    }
+def get_slots(intent_request):
+    return intent_request['sessionState']['intent']['slots']
 
-    response = None
+def get_session_attributes(intent_request):
+    sessionState = intent_request['sessionState']
+    if 'sessionAttributes' not in sessionState:
+        return {}
+    return sessionState['sessionAttributes']
 
-    intent_name = event.get('sessionState', {}).get('intent', {}).get('name')
+def get_slot(intent_request, slotName):
+    slots = get_slots(intent_request)
+    if slots is None or slotName not in slots or slots[slotName] is None:
+        return None
+    if len(slots[slotName]['value']['resolvedValues']) == 0:
+        return slots[slotName]['value']['originalValue']
+    return slots[slotName]['value']['resolvedValues'][0]
 
-    if intent_name == 'WelcomeIntent':
-        bqa_slot = event.get('sessionState', {}).get('intent', {}).get('slots', {}).get('BQASlot', {}).get('value', {}).get('interpretedValue')
+def elicit_slot(intent_request, slot_to_elicit, message = None, slots = {}, session_attributes = {}):
+    if session_attributes == {}:
+        session_attributes = get_session_attributes(intent_request)
 
-        if bqa_slot:
-            response = {
-                "sessionState": {
-                    "dialogAction": {"type": "Close"},
-                    "intent": {
-                        "name": intent_name,
-                        "state": "Fulfilled"
-                    }
+    result = {
+        'sessionState':
+            {'dialogAction':
+                {'type': 'ElicitSlot',
+                    'slotToElicit': slot_to_elicit,
                 },
-                "messages": [
+                'intent':
                     {
-                        "contentType": "PlainText",
-                        "content": f"You chose {bqa_slot}. Please confirm by saying 'Confirm'."
-                    }
-                ]
-            }
+                        'name': intent_request['sessionState']['intent']['name'],
+                        'slots': slots,
+                        'state': 'InProgress',
+                    },
+                'sessionAttributes': session_attributes,
+                'originatingRequestId': 'REQUESTID'
+            },
+        'sessionId': intent_request['sessionId'],
+        'requestAttributes': intent_request['requestAttributes']
+        if 'requestAttributes' in intent_request else None
+    }
+    if message is not None:
+        result['messages'] = [message]
+    return result
+
+def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, slots = {}, session_attributes = {}):
+    if session_attributes == {}:
+        session_attributes = get_session_attributes(intent_request)
+    return {
+        'sessionState': {
+            'dialogAction': {
+                'type': 'ElicitSlot',
+                'slotToElicit': slot_to_elicit,
+            },
+            'intent': {
+                'confirmationState': 'None',
+                'name': intent_to_elicit,
+                'slots': slots,
+                'state': 'InProgress',
+            },
+            'sessionAttributes': session_attributes,
+            'originatingRequestId': 'REQUESTID'
+            # 'originatingRequestId': intent_request['sessionState']['originatingRequestId']
+        },
+        'sessionId': intent_request['sessionId'],
+        # 'messages': [ message ],
+        'requestAttributes': intent_request['requestAttributes']
+        if 'requestAttributes' in intent_request else None
+    }
+
+def close(intent_request, fulfillment_state, message, session_attributes = {}):
+    if session_attributes == {}:
+        session_attributes = get_session_attributes(intent_request)
+    intent_request['sessionState']['intent']['state'] = fulfillment_state
+    return {
+        'sessionState': {
+            'sessionAttributes': session_attributes,
+            'dialogAction': {
+                'type': 'Close'
+            },
+            'intent': intent_request['sessionState']['intent'],
+            'originatingRequestId': intent_request['sessionState']['originatingRequestId']
+            # 'originatingRequestId': 'xxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+        },
+        'messages': [ message ],
+        'sessionId': intent_request['sessionId'],
+        'requestAttributes': intent_request['requestAttributes'] if 'requestAttributes' in intent_request else None
+    }
+
+def dispatch(intent_request):
+    response = None
+    intent_name = intent_request['sessionState']['intent']['name']
+
+    if intent_name == 'BQAIntent':
+        bqa_slot = get_slot(intent_request, 'BQASlot')
+
+        if bqa_slot == 'Analyze':
+            response = elicit_intent(
+                intent_request,
+                'InstituteSlot',
+                "AnalyzingIntent"
+            )
+        elif bqa_slot == 'Compare':
+            response = elicit_intent(
+                intent_request,
+                'InstituteSlot',
+                "ComparingIntent"
+            )
+        elif bqa_slot == 'Other':
+            response = elicit_intent(
+                intent_request,
+                'InstituteSlot',
+                "OtherIntent"
+            )
         else:
             response = {
                 "sessionState": {
-                    "dialogAction": {"type": "ElicitSlot", "slotToElicit": "BQASlot"},
+                    "dialogAction": {
+                        "type": "ElicitSlot",
+                        "slotToElicit": "BQASlot",
+                    },
                     "intent": {
                         "name": intent_name,
                         "state": "InProgress"
                     }
                 },
-                "messages": [
-                    {
-                        "contentType": "PlainText",
-                        "content": "Please choose an option by clicking one of the buttons."
-                    }
-                ]
             }
-
+            # return close(
+            #     intent_request,
+            #     get_session_attributes(intent_request),
+            #     "Fulfilled",
+            #     {
+            #         "contentType": "PlainText",
+            #         "content":  "What would you like help with?"
+            #     }
+            # )
     elif intent_name == 'AnalyzingIntent':
-        response = {
-            "sessionState": {
-                "dialogAction": {"type": "Close"},
-                "intent": {
-                    "name": intent_name,
-                    "state": "Fulfilled"
-                }
-            },
-            "messages": [
-                {
-                    "contentType": "PlainText",
-                    "content": "Which educational institute would you like to analyze? Please mention one educational institute."
-                }
-            ]
-        }
+        slots = get_slots(intent_request)
+        if 'InstituteSlot' not in slots:
+            return elicit_slot(
+                intent_request,
+                'InstituteSlot',
+                slots = get_slots(intent_request),
+            )
+        if 'MetricSlot' not in slots:
+            return elicit_slot(
+                intent_request,
+                'MetricSlot',
+                slots = get_slots(intent_request),
+            )
 
+        response = "invoke bedrock and put text response in this variable. "
+        # these are the slot values
+        institute = get_slot(intent_request, 'InstituteSlot')
+        metric = get_slot(intent_request, 'MetricSlot')
+        if institute is not None and metric is not None:
+            response += institute + ", " + metric
+        message = create_message(response)
+
+        session_attributes = get_session_attributes(intent_request)
+        session_attributes['chartData'] = 'replace this with chart data'
+
+        return close(
+            intent_request,
+            'Fulfilled',
+            message,
+            session_attributes,
+        )
     else:
-        response = {
-            "sessionState": {
-                "dialogAction": {"type": "Close"},
-                "intent": {
-                    "name": intent_name,
-                    "state": "Failed"
-                }
-            },
-            "messages": [
-                {
-                    "contentType": "PlainText",
-                    "content": "I am sorry, I did not understand what you said. Please try again."
-                }
-            ]
-        }
+        return close(
+            intent_request,
+            "Fulfilled",
+            create_message("What would you like help with?")
+        )
+
 
     return response
 
