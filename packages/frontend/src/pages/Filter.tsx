@@ -124,7 +124,7 @@ const Filter = () => {
     setIsEditing(true);
   };
 
-  const handleSentenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSentenceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditableSentence(e.target.value);
   };
 
@@ -270,10 +270,10 @@ const Filter = () => {
                 <>
                   <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
                     {isEditing ? (
-                      <input
-                        type="text"
+                      <textarea
                         value={editableSentence}
                         onChange={handleSentenceChange}
+                        rows={4}  // Make the textarea bigger
                         className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
                       />
                     ) : (
