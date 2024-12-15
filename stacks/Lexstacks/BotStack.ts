@@ -1,5 +1,4 @@
-import {Function, Bucket, Queue, StackContext, use} from "sst/constructs";
-import * as cdk from "aws-cdk-lib";
+import { StackContext } from "sst/constructs";
 import { aws_lambda as lambda } from 'aws-cdk-lib';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration, aws_iam as iam } from "aws-cdk-lib";
@@ -47,19 +46,44 @@ export function BotStack({stack}: StackContext) {
     });
 
 
-    // Welcome Intent 
+    // Slot to select type of analysis
 
     locale.addSlotType({
-        slotTypeName: 'BQASlot',
+        slotTypeName: 'BQASlotType',
         description: 'This is compare Slot type',
         valueSelectionSetting: {
             resolutionStrategy: 'OriginalValue'
         },
         slotTypeValues: [
-            {sampleValue: {value: 'compare between Bahrain Polytechnic and UOB '}},
-            {sampleValue: {value: 'analyze'}},
+            {sampleValue: {value: 'Analyze'}},
+            {sampleValue: {value: 'Compare'}},
+            {sampleValue: {value: 'Other'}},
         ],
     });
+
+    locale.addSlotType({
+        slotTypeName: 'InstituteSlotType',
+        description: 'Slot for institute name',
+        valueSelectionSetting: {
+            resolutionStrategy: 'OriginalValue'
+        },
+        slotTypeValues: [
+            {sampleValue: {value: 'School'}},
+            {sampleValue: {value: 'Institute'}},
+        ],
+    })
+
+    locale.addSlotType({
+        slotTypeName: 'MetricSlotType',
+        description: 'Slot for choosing a metric for the analysis',
+        valueSelectionSetting: {
+            resolutionStrategy: 'OriginalValue'
+        },
+        slotTypeValues: [
+            {sampleValue: {value: 'Overall Performance'}},
+            {sampleValue: {value: 'Other'}},
+        ],
+    })
 
     const BQAIntent = locale.addIntent({
         intentName: 'BQAIntent',
@@ -82,37 +106,37 @@ export function BotStack({stack}: StackContext) {
         fulfillmentCodeHook: {
             enabled: true,
         },
-        intentConfirmationSetting: {
-            promptSpecification: {
-                messageGroups: [
-                    {
-                        message: {
-                            plainTextMessage: {
-                                value: 'Okay, your selected category is "{BQASlot}", please type "Confirm".',
-                            },
-                        },
-                    },
-                ],
-                maxRetries: 2,
-            },
-            declinationResponse: {
-                messageGroups: [
-                    {
-                        message: {
-                            plainTextMessage: {
-                                value: 'Okay, please choose another category.',
-                            },
-                        },
-                    },
-                ],
-            },
-        },
+        // intentConfirmationSetting: {
+        //     promptSpecification: {
+        //         messageGroups: [
+        //             {
+        //                 message: {
+        //                     plainTextMessage: {
+        //                         value: 'Okay, your selected category is "{BQASlot}", please type "Confirm".',
+        //                     },
+        //                 },
+        //             },
+        //         ],
+        //         maxRetries: 2,
+        //     },
+        //     declinationResponse: {
+        //         messageGroups: [
+        //             {
+        //                 message: {
+        //                     plainTextMessage: {
+        //                         value: 'Okay, please choose another category.',
+        //                     },
+        //                 },
+        //             },
+        //         ],
+        //     },
+        // },
 
     });
 
     BQAIntent.addSlot({
         slotName: 'BQASlot',
-        slotTypeName: 'BQASlot',
+        slotTypeName: 'BQASlotType',
         description: 'The type of category to learn about',
         valueElicitationSetting: {
             slotConstraint: 'Required',
@@ -123,20 +147,19 @@ export function BotStack({stack}: StackContext) {
                             imageResponseCard: { 
                                 buttons: [ 
                                    { 
-                                      text: "Analyzing",
-                                      value: "Analyzing"
+                                      text: "Analyze",
+                                      value: "Analyze"
                                    },
                                    { 
-                                      text: "Comparing",
-                                      value: "Comparing"
+                                      text: "Compare",
+                                      value: "Compare"
                                    },
                                    { 
                                       text: "Other",
                                       value: "Other"
                                    },
                                 ],
-                                imageUrl: "https://example.com/educational-institutes.jpg",
-                                subtitle: "Please pick a category to get started or say More for additional support",
+                                subtitle: "What would you like me to do for you?",
                                 title: "Learn About Educational Institutes"
                              },
                           },
@@ -151,16 +174,66 @@ export function BotStack({stack}: StackContext) {
     const analyzingIntent = locale.addIntent({
         intentName: 'AnalyzingIntent',
         description: 'Provide information about analyzing educational institutes',
-        sampleUtterances: [{ utterance: 'Tell me more about analyzing' }],
+        sampleUtterances: [
+            { utterance: 'Tell me more about analyzing' },
+            { utterance: 'Analyze' },
+            { utterance: 'Analyzing' },
+        ],
         fulfillmentCodeHook: {
             enabled: true,
         },
     });
 
+    analyzingIntent.addSlot({
+        slotName: 'InstituteSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Name of the institute to analyze',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What school or university would you like to analyze?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    analyzingIntent.addSlot({
+        slotName: 'MetricSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Metric to analyze',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What aspect would you like to analyze?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
     const comparingIntent = locale.addIntent({
         intentName: 'ComparingIntent',
         description: 'Provide information about comparing educational institutes',
-        sampleUtterances: [{ utterance: 'Tell me more about comparing' }],
+        sampleUtterances: [
+            { utterance: 'Tell me more about comparing' },
+            { utterance: 'Compare' },
+            { utterance: 'Comparing' },
+        ],
         fulfillmentCodeHook: {
             enabled: true,
         },
@@ -169,7 +242,10 @@ export function BotStack({stack}: StackContext) {
     const otherIntent = locale.addIntent({
         intentName: 'OtherIntent',
         description: 'Handle other inquiries about educational institutes',
-        sampleUtterances: [{ utterance: 'I have another question' }],
+        sampleUtterances: [
+            { utterance: 'I have another question' },
+            { utterance: 'Other' },
+        ],
         fulfillmentCodeHook: {
             enabled: true,
         },
@@ -219,6 +295,12 @@ export function BotStack({stack}: StackContext) {
     //     permissions: ["lex"], // SST automatically configures IAM permissions
     //
     // });
+
+    const fulfillmentPermission = {
+        action: 'lambda:InvokeFunction',
+        principal: new iam.ServicePrincipal('lex.amazonaws.com')
+    }
+    const fulfillmentPrincipal = new ServicePrincipal('lex.amazonaws.com')
     const fulfillmentFunction = new lambda.Function(stack, 'Fulfillment-Lambda', {
         functionName: stack.stage + '-fulfillment-lambda-for-lex-bot',
         runtime: lambda.Runtime.PYTHON_3_11,
@@ -230,14 +312,9 @@ export function BotStack({stack}: StackContext) {
     }); 
 
     // Grant permission for the Lambda function to interact with Amazon Lex
-    fulfillmentFunction.grantInvoke(new ServicePrincipal('lex.amazonaws.com'));
+    fulfillmentFunction.grantInvoke(fulfillmentPrincipal);
 
-    fulfillmentFunction.addPermission('lex-fulfillment', {
-        action: 'lambda:InvokeFunction',
-        principal: new iam.ServicePrincipal('lex.amazonaws.com')
-    })
-
-    // const communicationFunction = new Function(stack, "CommunicationFunction", {
+    fulfillmentFunction.addPermission('lex-fulfillment', fulfillmentPermission)    // const communicationFunction = new Function(stack, "CommunicationFunction", {
     //     handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
     //     runtime: "python3.11",
     //     memorySize: 512,
