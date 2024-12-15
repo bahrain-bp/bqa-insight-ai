@@ -8,6 +8,7 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+// import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -18,6 +19,7 @@ export function ApiStack({stack}: StackContext) {
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    // const {UniversityProgramMetadataStack} = use(UniversityProgramMetadataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
