@@ -135,9 +135,8 @@ export function BotStack({stack}: StackContext) {
                                       value: "Other"
                                    },
                                 ],
-                                imageUrl: "https://example.com/educational-institutes.jpg",
-                                subtitle: "Please pick a category to get started or say More for additional support",
-                                title: "Learn About Educational Institutes"
+                                subtitle: "BQA - InightAI",
+                                title: "Please choose which service you want to pick"
                              },
                           },
                       },
