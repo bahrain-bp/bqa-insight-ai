@@ -13,8 +13,6 @@ const Filter = () => {
     "Report Year": [],
   });
 
- 
-
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
     Object.keys(filterOptions).reduce((acc, header) => {
       acc[header] = [];
@@ -22,13 +20,14 @@ const Filter = () => {
     }, {} as Record<string, string[]>)
   );
 
+  const [editableSentence, setEditableSentence] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        // Construct the query string based on selected filters
         const params = new URLSearchParams();
-  
+
         if (selectedOptions["Institute Classification"].length) {
           params.append("classification", selectedOptions["Institute Classification"][0]);
         }
@@ -38,55 +37,52 @@ const Filter = () => {
         if (selectedOptions["Location"].length) {
           params.append("location", selectedOptions["Location"][0]);
         }
-        
-  
+
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${params.toString()}`);
         const data = await response.json();
-        console.log("Fetched filter options:", data.filters); // Log data to check
+        console.log("Fetched filter options:", data.filters);
         setFilterOptions(data.filters);
       } catch (error) {
         console.error("Error fetching filter options:", error);
       }
     };
-  
+
     fetchFilterOptions();
-  }, [selectedOptions]); // Refetch when selectedOptions change
-  
+  }, [selectedOptions]);
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
-  
+
     if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
         const previousValues = prevState[header];
-  
+
         if (!isFilterActive) {
           setIsFilterActive(true);
         }
-  
-        // Reset dependent filter options when classification, level, or location changes
+
         if (header === "Institute Classification") {
           setSelectedOptions({
             ...prevState,
-            "Institute Classification": [value], // Keep only the selected classification
-            "Institute Level": [], // Reset level filter
-            "Location": [], // Reset location filter
-            "Institute Name": [], // Reset institute name filter
-            "Report Year" : []
+            "Institute Classification": [value],
+            "Institute Level": [],
+            "Location": [],
+            "Institute Name": [],
+            "Report Year": []
           });
         } else if (header === "Institute Level") {
           setSelectedOptions({
             ...prevState,
-            "Institute Level": [value], // Keep only the selected level
-            "Institute Name": [], // Reset institute name filter
+            "Institute Level": [value],
+            "Institute Name": [],
           });
         } else if (header === "Location") {
           setSelectedOptions({
             ...prevState,
-            "Location": [value], // Keep only the selected location
+            "Location": [value],
           });
         }
-  
+
         return {
           ...prevState,
           [header]: previousValues.includes(value) ? previousValues : [...previousValues, value],
@@ -94,7 +90,6 @@ const Filter = () => {
       });
     }
   };
-  
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
@@ -123,6 +118,21 @@ const Filter = () => {
     return parts.length > 0 ? `Insights for: ${parts.join(", ")}.` : "";
   };
 
+  const handleSentenceEdit = () => {
+    // Ensure the sentence retains the previously modified sentence if any
+    setEditableSentence((prevEditableSentence) => prevEditableSentence || generateSentence());
+    setIsEditing(true);
+  };
+
+  const handleSentenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditableSentence(e.target.value);
+  };
+
+  const handleSentenceSave = () => {
+    setIsEditing(false);
+    showMessage("Sentence updated successfully", "success");
+  };
+
   const showMessage = (message: string, type: "success" | "error") => {
     setSubmittedMessage(message);
     setMessageType(type);
@@ -134,7 +144,7 @@ const Filter = () => {
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const sentence = generateSentence();
+    const sentence = editableSentence;
 
     if (mode === "Compare" && selectedOptions["Institute Name"].length < 2) {
       showMessage("Please select at least two schools in Compare mode.", "error");
@@ -259,8 +269,29 @@ const Filter = () => {
               {isFilterActive && (
                 <>
                   <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
-                    {generateSentence()}
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editableSentence}
+                        onChange={handleSentenceChange}
+                        className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
+                      />
+                    ) : (
+                      <span onClick={handleSentenceEdit} className="cursor-pointer">
+                        {editableSentence || generateSentence()}
+                      </span>
+                    )}
                   </div>
+                  {isEditing && (
+                    <div className="mt-4 text-center">
+                      <button
+                        onClick={handleSentenceSave}
+                        className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  )}
                   <div className="mt-6 text-center">
                     <button
                       onClick={handleSubmit}
