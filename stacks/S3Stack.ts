@@ -6,7 +6,7 @@ import { OpenDataStack } from "./OpenDataStack";
 export function S3Stack({ stack }: StackContext) {
     const { fileMetadataTable } = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
-    const { governmentSchoolsTable, privateSchoolsTable, higherEducationReviewsTable, nationalFrameworkOperationsTable, vocationalReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, higherEducationReviewsTable, nationalFrameworkOperationsTable, vocationalReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -146,13 +146,12 @@ export function S3Stack({ stack }: StackContext) {
     const processCSVHandler = new Function(stack, "ProcessCSVHandler", {
         handler: "packages/functions/src/lambda/processCSV.handler",
         environment: {
-            GOVERNMENT_SCHOOLS_TABLE_NAME: governmentSchoolsTable.tableName,
-            PRIVATE_SCHOOLS_TABLE_NAME: privateSchoolsTable.tableName,
+            SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
             HIGHER_EDUCATION_REVIEWS_TABLE_NAME: higherEducationReviewsTable.tableName,
             NATIONAL_FRAMEWORK_OPERATIONS_TABLE_NAME: nationalFrameworkOperationsTable.tableName,
             VOCATIONAL_REVIEWS_TABLE_NAME: vocationalReviewsTable.tableName,
         },
-        permissions: [governmentSchoolsTable, privateSchoolsTable, higherEducationReviewsTable, nationalFrameworkOperationsTable, vocationalReviewsTable], 
+        permissions: [SchoolReviewsTable, higherEducationReviewsTable, nationalFrameworkOperationsTable, vocationalReviewsTable], 
     });
 
     // S3 Notification for CSV files

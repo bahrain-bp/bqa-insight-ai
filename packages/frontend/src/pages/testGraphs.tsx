@@ -49,6 +49,7 @@ export function TestGraphs() {
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
           setData(json.data);
+          console.log(json.data);
         } else {
           console.error("Invalid data format from API.");
         }

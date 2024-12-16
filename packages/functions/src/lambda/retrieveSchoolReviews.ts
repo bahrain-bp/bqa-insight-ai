@@ -4,10 +4,10 @@ const client = new DynamoDBClient();
 
 export const handler = async () => {
   try {
-    const tableName = process.env.GOVERNMENT_SCHOOLS_TABLE_NAME;
+    const tableName = process.env.SCHOOL_REVIEWS_TABLE_NAME;
 
     if (!tableName) {
-      throw new Error("Government schools table name is not defined in environment variables");
+      throw new Error("schools table name is not defined in environment variables");
     }
 
     // Scan the table for all attributes
@@ -25,7 +25,6 @@ export const handler = async () => {
       Reviews: item.Reviews ? parseReviews(item.Reviews) : [],
     }));
 
-    console.log("Retrieved items:", items);
     return {
       statusCode: 200,
       body: JSON.stringify({

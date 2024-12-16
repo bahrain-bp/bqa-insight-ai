@@ -2,20 +2,12 @@ import { StackContext, Table } from "sst/constructs";
 
 export function OpenDataStack({ stack }: StackContext) {
   // Existing GovernmentSchools and PrivateSchools tables
-  const governmentSchoolsTable = new Table(stack, "GovernmentSchools", {
+  const SchoolReviewsTable = new Table(stack, "GovernmentSchools", {
     fields: {
       InstitutionCode: "string",
       EnglishSchoolName: "string",
       ArabicSchoolName: "string",
-    },
-    primaryIndex: { partitionKey: "InstitutionCode" },
-  });
-
-  const privateSchoolsTable = new Table(stack, "PrivateSchools", {
-    fields: {
-      InstitutionCode: "string",
-      EnglishSchoolName: "string",
-      ArabicSchoolName: "string",
+      SchoolType: "string",
     },
     primaryIndex: { partitionKey: "InstitutionCode" },
   });
@@ -46,16 +38,14 @@ export function OpenDataStack({ stack }: StackContext) {
 
   // Output table names
   stack.addOutputs({
-    GovernmentSchoolsTableName: governmentSchoolsTable.tableName,
-    PrivateSchoolsTableName: privateSchoolsTable.tableName,
+    SchoolReviewsTable: SchoolReviewsTable.tableName,
     HigherEducationReviewsTableName: higherEducationReviewsTable.tableName,
     NationalFrameworkOperationsTableName: nationalFrameworkOperationsTable.tableName,
     VocationalReviewsTableName: vocationalReviewsTable.tableName,
   });
 
   return {
-    governmentSchoolsTable,
-    privateSchoolsTable,
+    SchoolReviewsTable,
     higherEducationReviewsTable,
     nationalFrameworkOperationsTable,
     vocationalReviewsTable,
