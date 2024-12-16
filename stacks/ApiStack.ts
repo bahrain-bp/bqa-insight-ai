@@ -103,6 +103,17 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+            "POST /deleteSync": {
+                function: {
+                    handler: "packages/functions/src/bedrock/deleteSync.syncKnowlegeBase",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    environment: {
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
+                }
+            },
             
             "POST /invokeBedrock": {
                 function: {
