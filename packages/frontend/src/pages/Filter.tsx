@@ -164,7 +164,7 @@ const Filter = () => {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt: sentence }),
+          body: JSON.stringify({ userMessage: sentence }),
         });
         const body = await response.json();
         console.log(body);
