@@ -2,7 +2,7 @@ import { StackContext, Table } from "sst/constructs";
 
 export function OpenDataStack({ stack }: StackContext) {
   // Existing GovernmentSchools and PrivateSchools tables
-  const SchoolReviewsTable = new Table(stack, "GovernmentSchools", {
+  const SchoolReviewsTable = new Table(stack, "SchoolReviews", {
     fields: {
       InstitutionCode: "string",
       EnglishSchoolName: "string",

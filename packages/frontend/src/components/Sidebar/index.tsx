@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import Logo from '../../images/logo/logo.svg';
 import Dashboard from '../../images/logo/dashboard.svg';
+import Analysis from '../../images/logo/icons-analysis.png';
 import Upload from '../../images/logo/upload.svg';
 import { getCurrentUser } from '@aws-amplify/auth';
 
@@ -154,6 +155,20 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 </NavLink>
               </li>
 
+              {/* <!-- Menu Item School Reviews --> */}
+              <li>
+                <NavLink
+                  to="/schoolReviews"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
+                    pathname.includes('schoolReviewsDashboard') && 'bg-lightblue dark:bg-meta-4'
+                  
+                  }`}
+                >
+                  <img src={Analysis} alt="Analysis" width="18" height="18" />
+                  School Reviews 
+                </NavLink>
+              </li>
+
               {/* <!-- Menu Item File Management --> */}
               {loggedIn && (
               <li>
@@ -171,14 +186,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               )}
                {/* <!-- Menu Item File Management --> */}
 
-            
             </ul>
           </div>
 
-         
-
-            
-          
         </nav>
         {/* <!-- Sidebar Menu --> */}
       </div>

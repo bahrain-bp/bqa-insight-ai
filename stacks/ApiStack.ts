@@ -157,7 +157,7 @@ export function ApiStack({stack}: StackContext) {
         
                 }
             },
-            "GET /fetchGovernmentSchools": {
+            "GET /fetchSchoolReviews": {
                 function: {
                     handler: "packages/functions/src/lambda/retrieveSchoolReviews.handler", 
                     environment: {

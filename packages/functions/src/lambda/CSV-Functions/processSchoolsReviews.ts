@@ -34,7 +34,6 @@ export async function processSchoolsReviews(bucket: string, key: string, tableNa
     s3Stream
       .pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
       .on('data', (data: any) => {
-        console.log('Headers:', Object.keys(data));
         const institutionCode = data['Institution Code']?.trim();
         if (!institutionCode) {
           return;
@@ -76,8 +75,8 @@ export async function processSchoolsReviews(bucket: string, key: string, tableNa
                     InstitutionCode: school.InstitutionCode,
                     EnglishSchoolName: school.EnglishSchoolName,
                     ArabicSchoolName: school.ArabicSchoolName,
-                    Reviews: school.Reviews,
                     SchoolType: schoolType,
+                    Reviews: school.Reviews,
                   },
                 },
               })),
@@ -85,9 +84,8 @@ export async function processSchoolsReviews(bucket: string, key: string, tableNa
           };
 
           try {
-            console.log(JSON.stringify(chunk, null, 2));
+            console.log(`Writing ${chunk.length} items to ${tableName}`);
             await dynamoDb.batchWrite(writeParams).promise();
-            console.log(`Inserted ${chunk.length} ${schoolType} into ${tableName}`);
           } catch (error) {
             console.error(`Error inserting ${schoolType} into ${tableName}:`, error);
           }

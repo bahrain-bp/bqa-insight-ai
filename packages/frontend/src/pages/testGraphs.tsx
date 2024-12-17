@@ -42,7 +42,7 @@ export function TestGraphs() {
     // Fetch data from the API
     const fetchData = async () => {
       try {
-        const response = await fetch(`${API_URL}/fetchGovernmentSchools`);
+        const response = await fetch(`${API_URL}/fetchSchoolReviews`);
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
