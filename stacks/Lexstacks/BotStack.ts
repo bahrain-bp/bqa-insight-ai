@@ -407,6 +407,16 @@ export function BotStack({stack}: StackContext) {
     //
     // });
 
+    // const lexInvokeBedrock = new iam.Role(stack, 'LexInvokeBedrock', {
+    //     assumedBy: new iam.ArnPrincipal('arn_for_trusted_principal'),
+    //   });
+    //   lexInvokeBedrock.addToPolicy(new iam.PolicyStatement({
+    //     actions: [
+    //       'bedrock:invokeModel',
+    //   ],
+    //     resources: [ "anthropic.claude-3-sonnet-20240229-v1:0" ],
+    //   }));
+
     const fulfillmentPermission = {
         action: 'lambda:InvokeFunction',
         principal: new iam.ServicePrincipal('lex.amazonaws.com')
@@ -421,6 +431,16 @@ export function BotStack({stack}: StackContext) {
         // code: lambda.Code.fromInline('print("Hello World")'),
         code: lambda.Code.fromAsset('packages/functions/src/LexBot/'),
     }); 
+
+    fulfillmentFunction.addToRolePolicy(new iam.PolicyStatement(
+        {
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "bedrock:invokeModel"
+            ],
+            resources: ["arn:aws:bedrock:*::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"]
+        }
+    ))
 
     // Grant permission for the Lambda function to interact with Amazon Lex
     fulfillmentFunction.grantInvoke(fulfillmentPrincipal);
