@@ -6,6 +6,9 @@ export function UniversityProgramMetadataStack({ stack }: StackContext) {
         institueName: "string",
         programName: "string",
         finalJudgment: "string",
+        location: "string",
+        numOfPrograms: "number",
+        numOfQualifications: "number",
     },
     primaryIndex: { partitionKey: "institueName" },
   });
