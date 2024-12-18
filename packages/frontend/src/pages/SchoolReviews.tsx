@@ -17,6 +17,8 @@ interface SchoolData {
   SchoolType: string; 
   Reviews: Review[];
   AverageGrade: number | null;
+  SchoolLevel?: string;   // Optional: "Primary", "Intermediate", "Secondary"
+  SchoolGender?: string;  // Optional: "Boys", "Girls"
 }
 
 export function SchoolReviews() {
