@@ -24,6 +24,11 @@ export function S3Stack({ stack }: StackContext) {
                 maxAge: "3000 seconds",
             },
         ],
+        defaults: {
+            function: {
+                permissions: ["lambda"]
+            }
+        }
     });
 
 
@@ -131,14 +136,14 @@ export function S3Stack({ stack }: StackContext) {
 
 
     // Add S3 event notification to trigger the SQS queue on object creation
-    bucket.addNotifications(stack, {
-        objectCreatedNotification: {
-            function: sendSplitMessage, 
-            events: ["object_created"], 
-            filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
-        },
+    // bucket.addNotifications(stack, {
+    //     objectCreatedNotification: {
+    //         function: sendSplitMessage, 
+    //         events: ["object_created"], 
+    //         filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
+    //     },
         
-    });
+    // });
 
     const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {
         cdk: {
@@ -159,13 +164,16 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
+    bucket.attachPermissions(["s3", "lambda"])
+
 
     // Add outputs for the bucket
     stack.addOutputs({
         BucketName: bucket.bucketName,
         BedrockOutputBucket: bedrockOutputBucket.bucketName,
         QueueURL: splitPDFQueue.queueUrl,
+        SplitFunction: sendSplitMessage.functionArn
     });
 
-    return { bucket, bedrockOutputBucket, queue: splitPDFQueue };
+    return { bucket, bedrockOutputBucket, queue: splitPDFQueue, splitFunction: sendSplitMessage };
 }
