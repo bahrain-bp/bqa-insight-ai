@@ -148,6 +148,14 @@ export async function handler(event: SQSEvent){
     
             await insertInstituteMetadata(extractedOutput);
             console.log("IT SHOULD BE INSERTED to instituiteMetaData");
+
+
+
+
+//hereeee is the insert from here 
+
+
+
     
             await deleteSQSMessage(record.receiptHandle);
             return extractedOutput;
