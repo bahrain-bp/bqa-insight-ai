@@ -109,7 +109,7 @@ def dispatch(intent_request):
         elif bqa_slot == 'Compare':
             response = elicit_intent(
                 intent_request,
-                'InstituteSlot',
+                'CompareInstituteSlot',
                 "ComparingIntent"
             )
         elif bqa_slot == 'Other':
@@ -154,6 +154,7 @@ def dispatch(intent_request):
                 'MetricSlot',
                 slots = get_slots(intent_request),
             )
+        
 
         response = "invoke bedrock and put text response in this variable. "
         # these are the slot values
@@ -172,6 +173,93 @@ def dispatch(intent_request):
             message,
             session_attributes,
         )
+    
+    elif intent_name == 'ComparingIntent':
+        slots = get_slots(intent_request)
+        if 'CompareInstituteSlot' not in slots:
+            return elicit_slot(
+                intent_request,
+                'CompareInstituteSlot',
+                slots = get_slots(intent_request),
+            )
+        
+        compare_type = get_slot(intent_request, 'CompareInstituteSlot')
+        if compare_type == 'Governorate':
+            return elicit_intent(
+                intent_request,
+                'GovernorateSlot',
+                'CompareGovernorateIntent',
+            )
+        
+        elif compare_type == 'Specific Institutes':
+            return elicit_intent(
+                intent_request,
+                'CompareInstitutesSlot',
+                'CompareInstitutesIntent',
+            )
+        
+        return close(
+            intent_request,
+            'Fulfilled',
+            message,
+            session_attributes,
+        )
+    
+    elif intent_name == 'CompareGovernorateIntent':
+        slots = get_slots(intent_request)
+        if 'GovernorateSlot' not in slots:
+            return elicit_slot(
+                intent_request,
+                'GovernorateSlot',
+                slots=get_slots(intent_request),
+            )
+
+        response = "invoke bedrock and put text response in this variable. "
+        # these are the slot values
+        governorate = get_slot(intent_request, 'GovernorateSlot')
+        if governorate is not None:
+            response += governorate
+
+        message = create_message(response)
+
+        session_attributes = get_session_attributes(intent_request)
+        session_attributes['governorateComparisonData'] = 'replace this with governorate comparison data'
+
+        return close(
+            intent_request,
+            'Fulfilled',
+            message,
+            session_attributes,
+        )
+    
+    elif intent_name == 'CompareInstitutesIntent':
+        slots = get_slots(intent_request)
+        if 'CompareInstitutesSlot' not in slots:
+            return elicit_slot(
+                intent_request,
+                'CompareInstitutesSlot',
+                slots=get_slots(intent_request),
+            )
+
+        # Process the comparison of specific institutes
+        compare_institutes = get_slot(intent_request, 'CompareInstitutesSlot')
+        if compare_institutes is not None:
+            # Invoke Bedrock and get the response
+            response = "Comparison of institutes: " + compare_institutes
+
+        message = create_message(response)
+        session_attributes = get_session_attributes(intent_request)
+        session_attributes['instituteComparisonData'] = 'replace this with institute comparison data'
+
+        return close(
+            intent_request,
+            'Fulfilled',
+            message,
+            session_attributes,
+        )
+
+    
+    
     else:
         return close(
             intent_request,

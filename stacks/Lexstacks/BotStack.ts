@@ -239,6 +239,76 @@ export function BotStack({stack}: StackContext) {
         },
     });
 
+    comparingIntent.addSlot({
+        slotName: 'CompareInstituteSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Compare 2 or more institutes',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "Do you want to compare based on governorate or specific institute's?",
+                                buttons: [
+                                    {
+                                        text: "Governorate",
+                                        value: "Governorate"
+                                    },
+                                    {
+                                        text: "Specific Institutes",
+                                        value: "Specific Institutes"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    const compareInstitutesIntent = {
+        name: 'CompareInstitutesIntent',
+        slots: [
+          {
+            name: 'CompareInstitutesSlot',
+            type: 'AMAZON.FreeFormInput',
+            elicitationRequired: true,
+            prompts: {
+              elicitation: {
+                messageGroups: [
+                  {
+                    message: {
+                      plainTextMessage: {
+                        value: "What are the names of institutes you would like to compare?"
+                      }
+                    }
+                  }
+                ],
+                maxRetries: 2
+              }
+            }
+          }
+        ]
+      };
+      
+
+    const comparedGovernorateIntent = locale.addIntent({
+        intentName: 'CompareGovernorateIntent',
+        description: 'Provide comparison of educational institutes based on governorate',
+        sampleUtterances: [
+            { utterance: 'Compare by governorate' },
+            { utterance: 'Governorate comparison' },
+            { utterance: 'Compare governorates' },
+        ],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    })
+
     const otherIntent = locale.addIntent({
         intentName: 'OtherIntent',
         description: 'Handle other inquiries about educational institutes',
@@ -250,6 +320,47 @@ export function BotStack({stack}: StackContext) {
             enabled: true,
         },
     });
+
+    comparedGovernorateIntent.addSlot({
+        slotName: 'GovernorateSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Select the governorate to compare institutes',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "Which governorate institutes would you like to compare?",
+                                buttons: [
+                                    {
+                                        text: "Capital Governorate",
+                                        value: "Capital Governorate"
+                                    },
+                                    {
+                                        text: "Muharraq Governorate",
+                                        value: "Muharraq Governorate"
+                                    },
+                                    {
+                                        text: "Northern Governorate",
+                                        value: "Northern Governorate"
+                                    },
+                                    {
+                                        text: "Southern Governorate",
+                                        value: "Southern Governorate"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    
  
     const handleNoResponse = locale.addIntent({
         intentName: 'HandleNoResponse',
