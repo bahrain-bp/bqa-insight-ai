@@ -1,6 +1,8 @@
 import { S3Event, Context } from 'aws-lambda';
 import { processSchoolsReviews } from './CSV-Functions/processSchoolsReviews';
 import { emptySchoolTable } from './CSV-Functions/emptySchoolTable';
+import { processVocationalReviews } from './CSV-Functions/processVocationalReviews';
+import { emptyTable } from './CSV-Functions/emptyTable';
 
 export async function handler(event: S3Event, context: Context): Promise<void> {
     for (const record of event.Records) {
@@ -24,7 +26,8 @@ export async function handler(event: S3Event, context: Context): Promise<void> {
                 await processNationalFrameworkOperations(bucketName, objectKey);
                 break;
             case 'CSVFiles/Results of Vocational Reviews.csv':
-                await processVocationalReviews(bucketName, objectKey);
+                await emptyTable(process.env.VOCATIONAL_REVIEWS_TABLE_NAME!);
+                await processVocationalReviews(bucketName, objectKey, process.env.VOCATIONAL_REVIEWS_TABLE_NAME!);
                 break;
             default:
                 console.warn(`No processing function defined for file: ${objectKey}`);
@@ -44,7 +47,3 @@ async function processNationalFrameworkOperations(bucket: string, key: string): 
     // Implement specific processing logic here
 }
 
-async function processVocationalReviews(bucket: string, key: string): Promise<void> {
-    console.log(`Processing Vocational Reviews from ${bucket}/${key}`);
-    // Implement specific processing logic here
-}

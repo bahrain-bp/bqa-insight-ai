@@ -19,7 +19,7 @@ export function ApiStack({stack}: StackContext) {
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
-    const { SchoolReviewsTable, higherEducationReviewsTable, nationalFrameworkOperationsTable, vocationalReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, HigherEducationReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -159,11 +159,20 @@ export function ApiStack({stack}: StackContext) {
             },
             "GET /fetchSchoolReviews": {
                 function: {
-                    handler: "packages/functions/src/lambda/retrieveSchoolReviews.handler", 
+                    handler: "packages/functions/src/api/retrieveSchoolReviews.handler", 
                     environment: {
                         SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
                     },
                     permissions: [SchoolReviewsTable], 
+                }
+            },
+            "GET /fetchVocationalReviews": {
+                function: {
+                    handler: "packages/functions/src/api/retrieveVocationalReviews.handler", 
+                    environment: {
+                        VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
+                    },
+                    permissions: [VocationalReviewsTable], 
                 }
             }
 

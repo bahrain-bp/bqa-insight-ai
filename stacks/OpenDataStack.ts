@@ -12,7 +12,7 @@ export function OpenDataStack({ stack }: StackContext) {
     primaryIndex: { partitionKey: "InstitutionCode" },
   });
 
-  const higherEducationReviewsTable = new Table(stack, "HigherEducationReviews", {
+  const HigherEducationReviewsTable = new Table(stack, "HigherEducationReviews", {
     fields: {
       RecordId: "string",
     },
@@ -20,7 +20,7 @@ export function OpenDataStack({ stack }: StackContext) {
   });
 
   // New NationalFrameworkOperations table
-  const nationalFrameworkOperationsTable = new Table(stack, "NationalFrameworkOperations", {
+  const NationalFrameworkOperationsTable = new Table(stack, "NationalFrameworkOperations", {
     fields: {
       RecordId: "string",
     },
@@ -28,26 +28,29 @@ export function OpenDataStack({ stack }: StackContext) {
   });
 
   // New VocationalReviews table
-  const vocationalReviewsTable = new Table(stack, "VocationalReviews", {
+  const VocationalReviewsTable = new Table(stack, "VocationalReviews", {
     fields: {
-      RecordId: "string",
+      InstitutionCode: "string",
+      EnglishInstituteName: "string",
+      ArabicInstituteName: "string",
+      SchoolType: "string",
     },
-    primaryIndex: { partitionKey: "RecordId" },
+    primaryIndex: { partitionKey: "InstitutionCode" },
   });
 
 
   // Output table names
   stack.addOutputs({
     SchoolReviewsTable: SchoolReviewsTable.tableName,
-    HigherEducationReviewsTableName: higherEducationReviewsTable.tableName,
-    NationalFrameworkOperationsTableName: nationalFrameworkOperationsTable.tableName,
-    VocationalReviewsTableName: vocationalReviewsTable.tableName,
+    HigherEducationReviewsTableName: HigherEducationReviewsTable.tableName,
+    NationalFrameworkOperationsTableName: NationalFrameworkOperationsTable.tableName,
+    VocationalReviewsTableName: VocationalReviewsTable.tableName,
   });
 
   return {
     SchoolReviewsTable,
-    higherEducationReviewsTable,
-    nationalFrameworkOperationsTable,
-    vocationalReviewsTable,
+    HigherEducationReviewsTable,
+    NationalFrameworkOperationsTable,
+    VocationalReviewsTable,
   };
 }
