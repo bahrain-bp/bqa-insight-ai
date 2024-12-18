@@ -8,6 +8,7 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+// import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -18,6 +19,7 @@ export function ApiStack({stack}: StackContext) {
     const {bot , alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    // const {UniversityProgramMetadataStack} = use(UniversityProgramMetadataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -56,8 +58,9 @@ export function ApiStack({stack}: StackContext) {
                     environment: {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                        INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
                     },
-                    permissions: [bucket, fileMetadataTable],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata],
                 },
             },
             "POST /lex/start_session": {
