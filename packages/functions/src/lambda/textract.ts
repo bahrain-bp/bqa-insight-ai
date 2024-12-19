@@ -7,11 +7,13 @@ import {
   StartDocumentAnalysisCommand,
   GetDocumentAnalysisCommand,
 } from "@aws-sdk/client-textract";
+import { PublishCommand, SNSClient } from "@aws-sdk/client-sns"
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { syncKnowlegeBase } from "src/bedrock/sync";
+import { Topic } from "sst/node/topic";
 
 // Initialize the SQS client from AWS SDK v2
 const sqs = new AWS.SQS();
+const snsClient = new SNSClient();
 const s3Client = new S3Client({ region: "us-east-1" });
 const textractClient = new TextractClient({ region: "us-east-1" });
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
@@ -189,9 +191,11 @@ async function getMessageInQueue() {
     console.log(numberOfMessages, ": numbder")
     if (numberOfMessages === "0") {
       console.log("Syncing starting now");
-
-      syncKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "");
-      
+      // call SNS topic to sync knowledge base
+      await snsClient.send(new PublishCommand({
+        Message: "Sync",
+        TopicArn: Topic.SyncTopic.topicArn,
+      }))
     }
 
     

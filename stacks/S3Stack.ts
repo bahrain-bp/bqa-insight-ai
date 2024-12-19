@@ -1,4 +1,4 @@
-import { StackContext, Bucket, Function, Queue, use, toCdkDuration } from "sst/constructs";
+import { StackContext, Bucket, Function, Queue, use, toCdkDuration, Topic } from "sst/constructs";
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
@@ -26,6 +26,11 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
+    // create SNS topic to sync knowledgebase
+    const syncTopic = new Topic(stack, "SyncTopic", {
+        subscribers: {
+        }
+    })
 
     const extractMetadataQueue = new Queue(stack, "extractMetadataQueue", {
         cdk: {
@@ -85,6 +90,7 @@ export function S3Stack({ stack }: StackContext) {
             "textract:GetDocumentTextDetection", 
             "textract:GetDocumentAnalysis",     
         ],
+        bind: [syncTopic],
     });
 
     // Set the consumer for the Textract queue
@@ -165,7 +171,8 @@ export function S3Stack({ stack }: StackContext) {
         BucketName: bucket.bucketName,
         BedrockOutputBucket: bedrockOutputBucket.bucketName,
         QueueURL: splitPDFQueue.queueUrl,
+        SyncTopic: syncTopic.topicName,
     });
 
-    return { bucket, bedrockOutputBucket, queue: splitPDFQueue };
+    return { bucket, bedrockOutputBucket, queue: splitPDFQueue, syncTopic };
 }
