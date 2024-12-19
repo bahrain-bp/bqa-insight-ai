@@ -7,7 +7,7 @@ const dynamodb = new DynamoDB.DocumentClient();
 
 const BUCKET_NAME = process.env.BUCKET_NAME || "";
 const TABLE_NAME = process.env.FILE_METADATA_TABLE_NAME || "";
-const INSTITUTE_METADATA_TABLE  = process.env. INSTITUTE_METADATA_TABLE || "";
+const INSTITUTE_METADATA_TABLE  = process.env.INSTITUTE_METADATA_TABLE || "";
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -32,16 +32,19 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const uniqueKey = fileKey.replace(/^Files\//, ""); // Extract unique key
         const splitDirectory = `SplitFiles/${uniqueKey}`;
         const txtFileKey = `TextFiles/${uniqueKey}.txt`; // Construct the corresponding .txt file key
-    
+
+        // Remove .pdf from the uniqueKey and create a new key for .metadata.json file
+        const metadataFileKey = `TextFiles/${uniqueKey.replace('.pdf', '')}.metadata.json`; // Removes .pdf if present
+
         // Delete the main file from S3
         await s3.deleteObject({ Bucket: BUCKET_NAME, Key: fileKey }).promise();
         console.log(`Deleted file from S3: ${fileKey}`);
-    
+
         // Delete all objects in the SplitFiles directory
         const listObjectsResponse = await s3
           .listObjectsV2({ Bucket: BUCKET_NAME, Prefix: splitDirectory })
           .promise();
-    
+
         if (listObjectsResponse.Contents && listObjectsResponse.Contents.length > 0) {
           await s3
             .deleteObjects({
@@ -57,12 +60,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         } else {
           console.log(`No files found in directory: ${splitDirectory}`);
         }
-    
+
         // Delete the corresponding .txt file
         const txtFileResponse = await s3
           .listObjectsV2({ Bucket: BUCKET_NAME, Prefix: txtFileKey })
           .promise();
-    
+
         if (
           txtFileResponse.Contents &&
           txtFileResponse.Contents.some((object) => object.Key === txtFileKey)
@@ -74,10 +77,27 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         } else {
           console.log(`No corresponding txt file found for key: ${txtFileKey}`);
         }
-    
+
+        // Delete the corresponding metadata.json file (after removing .pdf if present)
+        const metadataFileResponse = await s3
+          .listObjectsV2({ Bucket: BUCKET_NAME, Prefix: metadataFileKey })
+          .promise();
+
+        if (
+          metadataFileResponse.Contents &&
+          metadataFileResponse.Contents.some((object) => object.Key === metadataFileKey)
+        ) {
+          await s3
+            .deleteObject({ Bucket: BUCKET_NAME, Key: metadataFileKey })
+            .promise();
+          console.log(`Deleted metadata.json file from S3: ${metadataFileKey}`);
+        } else {
+          console.log(`No corresponding metadata.json file found for key: ${metadataFileKey}`);
+        }
+
         // Delete the metadata from DynamoDB
         await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
-        await dynamodb.delete({ TableName: INSTITUTE_METADATA_TABLE, Key: { fileKey } }).promise();
+        // await dynamodb.delete({ TableName: INSTITUTE_METADATA_TABLE, Key: { fileKey } }).promise();
         console.log(`Deleted metadata from DynamoDB: ${fileKey}`);
       } catch (err) {
         console.error(`Failed to delete fileKey: ${fileKey}`, err);
@@ -88,12 +108,9 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       await syncDeleteKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "", uri);
       console.log("Successful sync deleting...");
     });
-    
 
     // Wait for all deletion promises to resolve
     await Promise.all(deletePromises);
-
-    
 
     return {
       statusCode: 200,

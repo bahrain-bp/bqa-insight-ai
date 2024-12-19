@@ -47,6 +47,7 @@ export function S3Stack({ stack }: StackContext) {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
         INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        BUCKET_NAME: bucket.bucketName
         }
     });
 
