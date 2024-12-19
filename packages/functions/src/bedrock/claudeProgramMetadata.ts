@@ -72,7 +72,7 @@ export async function handler(event: SQSEvent){
                 // "Univeristy Classification": "",
                 // }`;
                 // const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
-                // When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
+                // When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do not forget them.
                 // These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
                 // "Institute Name", "Program Name", "Program Judgment"
                 
@@ -101,7 +101,7 @@ export async function handler(event: SQSEvent){
                 // Input: ` + text + `
                 // Output: {
                 // "Institute Name": "",
-                // "Program Name: "",
+                // "Program Name": "",
                 // "Program Judgment": ""
         
                 // }`;

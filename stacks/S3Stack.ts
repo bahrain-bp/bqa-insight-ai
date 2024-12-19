@@ -37,8 +37,8 @@ export function S3Stack({ stack }: StackContext) {
         },
     });
 
-    const extractReportMetadata = new Function(stack, "claudeProgramMetadata", {
-        handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
+    const extractReportMetadata = new Function(stack, "claudeUniversityMetadata", {
+        handler: "packages/functions/src/bedrock/claudeUniversityMetadata.handler",
         timeout: "300 seconds",
         permissions: [
             bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue
