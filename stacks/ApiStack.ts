@@ -19,7 +19,7 @@ export function ApiStack({stack}: StackContext) {
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
-    const { SchoolReviewsTable, HigherEducationReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {

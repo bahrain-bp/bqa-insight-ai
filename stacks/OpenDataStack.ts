@@ -5,18 +5,15 @@ export function OpenDataStack({ stack }: StackContext) {
   const SchoolReviewsTable = new Table(stack, "SchoolReviews", {
     fields: {
       InstitutionCode: "string",
-      EnglishSchoolName: "string",
-      ArabicSchoolName: "string",
-      SchoolType: "string",
     },
     primaryIndex: { partitionKey: "InstitutionCode" },
   });
 
-  const HigherEducationReviewsTable = new Table(stack, "HigherEducationReviews", {
+  const HigherEducationProgrammeReviewsTable = new Table(stack, "HigherEducationProgrammeReviews", {
     fields: {
-      RecordId: "string",
+      Index: "number",
     },
-    primaryIndex: { partitionKey: "RecordId" },
+    primaryIndex: { partitionKey: "Index" },
   });
 
   // New NationalFrameworkOperations table
@@ -31,9 +28,6 @@ export function OpenDataStack({ stack }: StackContext) {
   const VocationalReviewsTable = new Table(stack, "VocationalReviews", {
     fields: {
       InstitutionCode: "string",
-      EnglishInstituteName: "string",
-      ArabicInstituteName: "string",
-      SchoolType: "string",
     },
     primaryIndex: { partitionKey: "InstitutionCode" },
   });
@@ -42,14 +36,14 @@ export function OpenDataStack({ stack }: StackContext) {
   // Output table names
   stack.addOutputs({
     SchoolReviewsTable: SchoolReviewsTable.tableName,
-    HigherEducationReviewsTableName: HigherEducationReviewsTable.tableName,
+    HigherEducationReviewsTableName: HigherEducationProgrammeReviewsTable.tableName,
     NationalFrameworkOperationsTableName: NationalFrameworkOperationsTable.tableName,
     VocationalReviewsTableName: VocationalReviewsTable.tableName,
   });
 
   return {
     SchoolReviewsTable,
-    HigherEducationReviewsTable,
+    HigherEducationProgrammeReviewsTable,
     NationalFrameworkOperationsTable,
     VocationalReviewsTable,
   };

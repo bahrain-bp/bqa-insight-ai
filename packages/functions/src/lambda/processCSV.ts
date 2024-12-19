@@ -2,6 +2,7 @@ import { S3Event, Context } from 'aws-lambda';
 import { processSchoolsReviews } from './CSV-Functions/processSchoolsReviews';
 import { emptySchoolTable } from './CSV-Functions/emptySchoolTable';
 import { processVocationalReviews } from './CSV-Functions/processVocationalReviews';
+import { processHigherEducationProgrammeReviews } from './CSV-Functions/processHigherEducationProgrammeReviews';
 import { emptyTable } from './CSV-Functions/emptyTable';
 
 export async function handler(event: S3Event, context: Context): Promise<void> {
@@ -20,7 +21,7 @@ export async function handler(event: S3Event, context: Context): Promise<void> {
                 await processSchoolsReviews(bucketName, objectKey, process.env.SCHOOL_REVIEWS_TABLE_NAME!, 'Private');
                 break;
             case 'CSVFiles/Results of Higher Education Reviews.csv':
-                await processHigherEducationReviews(bucketName, objectKey);
+                await processHigherEducationProgrammeReviews(bucketName, objectKey, process.env.HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME!);
                 break;
             case 'CSVFiles/Results of National Framework Operations.csv':
                 await processNationalFrameworkOperations(bucketName, objectKey);
@@ -36,11 +37,6 @@ export async function handler(event: S3Event, context: Context): Promise<void> {
 }
 
 
-
-async function processHigherEducationReviews(bucket: string, key: string): Promise<void> {
-    console.log(`Processing Higher Education Reviews from ${bucket}/${key}`);
-    // Implement specific processing logic here
-}
 
 async function processNationalFrameworkOperations(bucket: string, key: string): Promise<void> {
     console.log(`Processing National Framework Operations from ${bucket}/${key}`);
