@@ -1,4 +1,4 @@
-import { StackContext } from "sst/constructs";
+import { StackContext, use } from "sst/constructs";
 import { aws_lambda as lambda } from 'aws-cdk-lib';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration, aws_iam as iam } from "aws-cdk-lib";
@@ -7,8 +7,11 @@ import {
     LexCustomResource,
     LexBotDefinition,
 } from '@amaabca/aws-lex-custom-resources';
+import { BedrockStack } from "../BedrockStack";
 
 export function BotStack({stack}: StackContext) {
+
+    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
 
     const provider = new LexCustomResource(
         stack,
@@ -430,6 +433,11 @@ export function BotStack({stack}: StackContext) {
         timeout: Duration.seconds(60),
         // code: lambda.Code.fromInline('print("Hello World")'),
         code: lambda.Code.fromAsset('packages/functions/src/LexBot/'),
+        environment: {
+            agentId: cfnAgent.attrAgentId,
+            agentAliasId: cfnAgentAlias.attrAgentAliasId
+        },
+        
     }); 
 
     fulfillmentFunction.addToRolePolicy(new iam.PolicyStatement(
@@ -438,7 +446,18 @@ export function BotStack({stack}: StackContext) {
             actions: [
                 "bedrock:invokeModel"
             ],
-            resources: ["arn:aws:bedrock:*::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"]
+            resources: ["arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"]
+        }
+    ))
+
+    fulfillmentFunction.addToRolePolicy(new iam.PolicyStatement(
+        {
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "bedrock:InvokeAgent",
+                "bedrock:*"
+            ],
+            resources: ["*"] // TODO: change it to be dynamic
         }
     ))
 
