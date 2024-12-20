@@ -135,10 +135,8 @@ export async function handler(event: SQSEvent){
             const response = await client.send(command);
             console.log("HERE IS RESPONSE: ", response);
     
-            const modelResponse = response.output?.message?.content?[0]
-            //;
-
-            //console.log("model output: ", modelResponse);
+            const modelResponse = response.output?.message?.content?.[0].text
+            console.log("model output: ", modelResponse);
            
             
           //   console.log("Final output: ",output)
