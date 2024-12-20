@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { SchoolReviewsFacts } from './SchoolReviewsComponents/SchoolReviewsFacts'; // Import the component
+import { SchoolReviewsTable } from './SchoolReviewsComponents/SchoolReviewsTable';
 import { SchoolData } from './SchoolReviewsComponents/types'; // Importing the shared interface
 import { ToggleSection } from './Components/ToggleSection'; // Import the reusable ToggleSection component
 
@@ -66,7 +67,7 @@ export function SchoolReviews() {
           {/* Schools Ranking Section */}
           <ToggleSection title="Schools Ranking Table" ariaControls="school-reviews-ranking">
             {/* Placeholder for Schools Ranking Content */}
-            <p className="text-gray-700">Schools Ranking content will be added here.</p>
+            <SchoolReviewsTable data={data} />
           </ToggleSection>
 
           {/* Graphs Section */}
