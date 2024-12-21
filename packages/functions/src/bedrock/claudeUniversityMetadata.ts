@@ -33,22 +33,44 @@ export async function handler(event: SQSEvent){
             
               // const userMessage =
               //   "Given the following text, Please give me the institute name ending with the word school and give me the institute classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the institute type is it a school or university and give me the grades in school by checking the primary middle high columns excluding 'Grades e.g. 1 to 12'and give me the school location in which town and governate is it and make the column name Location. Please Give it in csv format and csv format only. These are the columns, ensure that they are in the response 'Institute Name','Institute Classification','Date of Review','Overall Effectiveness','Location','Institute Type', 'Grades In School' Exlude the word Education and Training Quality Authority: "+text;
-                const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
-                When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
+                // const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
+                // When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
                
-                request: {
-                "Institution Name": "String", // The institute name, excluding phrases like "Education & Training Quality Authority."
-                "Location": "String", // The institute's location in Kingdom of Bahrain.
-                }
+                // request: {
+                // "Institution Name": "String", // The institute name, excluding phrases like "Education & Training Quality Authority."
+                // "Location": "String", // The institute's location in Kingdom of Bahrain.
+                // }
     
-                Please output the extracted information in JSON format. 
-                Do not output anything except for the extracted information. Do not use the below input output examples as a response. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
+                // Please output the extracted information in JSON format. 
+                // Do not output anything except for the extracted information. Do not use the below input output examples as a response. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
 
-                Input: ` + text + `
-                Output: {
-                "Institution Name": "",
-                "Location": "",
-                `;
+                // Input: ` + text + `
+                // Output: {
+                // "Institution Name": "",
+                // "Location": "",
+                // `;
+
+                const prompt = 
+                `
+                  Your goal is to extract structured information from the user's input that matches the form described below.
+                  Use this data for your report: <data>${text}</data>.
+
+                  <instructions>
+                    1. Ensure that the output is in JSON format.
+                    2. Do not add any clarifying information.
+                  </instructions>
+
+                  Follow this structure:
+                  <formatting_example>
+                  {
+                    "University Name": "Bahrain Polytechnic",
+                    "University Location": "Isa Town - Southern Governorate",
+                    "Number Of Programs": 22,
+                    "Number Of Qualifications" 22,
+                  }
+                  </formatting_example>
+                `
+
                 // const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
                 // When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
                 // These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
@@ -91,6 +113,39 @@ export async function handler(event: SQSEvent){
                 //       },
                 //     ],
                 //   };
+
+                const toolConfig = {
+                  "tools": [
+                    {
+                      "toolSpec": {
+                        "name": "print_entities",
+                        "description": "Prints extract named entities.",
+                        "inputSchema": {
+                          "json": {
+                            "type": "object",
+                            "properties": {
+                              "entities": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "University Name": {"type": "string", "description": "The extracted entity name."},
+                                    "University Location": {"type": "string", "description": "The entity type (LOCATION)."},
+                                    "Number Of Qualifications": {"type": "number", "description": "Total number of qualifications"},
+                                    "Number of Programs": {"type": "number", "description": "Number of programms offered by the university including (Bachelor Degree, Master Degree, PhD Degress)"}
+                                    // "context": {"type": "string", "description": "The context in which the entity appears in the text."}
+                                  },
+                                  "required": ["University Name", "University Location", "Number Of Qualifications", "Number of Programs"]
+                                }
+                              }
+                            },
+                            "required": ["entities"]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
                 
                 const input = {
                   modelId: ModelId,
@@ -99,7 +154,6 @@ export async function handler(event: SQSEvent){
                     content: [{
                       text: prompt,
                     }]
-
                   }],
                   inferenceConfig: { // InferenceConfiguration
                     maxTokens: Number(2000),
@@ -107,7 +161,7 @@ export async function handler(event: SQSEvent){
                     topP: Number(0.999),
                     topK: Number(250),
                   },
-              
+                  toolConfig: toolConfig
                  
                 };
             
