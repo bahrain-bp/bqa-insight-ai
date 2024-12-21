@@ -435,7 +435,8 @@ export function BotStack({stack}: StackContext) {
         code: lambda.Code.fromAsset('packages/functions/src/LexBot/'),
         environment: {
             agentId: cfnAgent.attrAgentId,
-            agentAliasId: cfnAgentAlias.attrAgentAliasId
+            agentAliasId: cfnAgentAlias.attrAgentAliasId,
+            KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
         },
         
     }); 
