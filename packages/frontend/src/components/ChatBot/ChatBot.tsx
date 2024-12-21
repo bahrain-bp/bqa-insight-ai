@@ -5,6 +5,7 @@ import {ChatContext} from "../../layout/DefaultLayout";
 
 // import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
 import {ChartContext} from "../RouterRoot.tsx";
+import { ChartJsonData } from "../../pages/Dashboard/dynamicChart.tsx";
 
 
 type Message = {
@@ -15,7 +16,7 @@ type Message = {
     timeout?: number; // Optional timeout
 };
 
-var graph = "";
+//var graph = "";
 
 const ChatBot = () => {
     const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
@@ -75,7 +76,7 @@ const Chat = () => {
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
         setMessages((prev) => prev.map((msg, i) => i === prev.length - 1 ? messageWithDefaults : msg));
     };
-    const replaceLastMessageGraph = (item: Message) => {
+    /*const replaceLastMessageGraph = (item: Message) => {
         try {
             // Use the hardcoded JSON or your dynamic JSON data
 
@@ -248,7 +249,7 @@ const Chat = () => {
         } catch (error) {
             console.error("Error parsing graph data:", error);
         }
-    };
+    };*/
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const input = (e.target as HTMLFormElement).elements.namedItem(
@@ -256,6 +257,7 @@ const Chat = () => {
         ) as HTMLInputElement;
         var message = input.value;
         addMessage({author: "human", body: message});
+        /*
         var hasGraph = message.includes("graph") || message.includes("bar") || message.includes("line") || message.includes("pie") || message.includes("radar") || message.includes("scatter");
          graph = "";
         const inputPlaceholder = input.placeholder
@@ -263,6 +265,12 @@ const Chat = () => {
             message = message + " in json format. do not include and clarifying information. Use the following schema: {'reviewYear': '2019', 'score': '3'}";
             graph = message;
         }
+            */
+           
+        // Check if the message includes graph/chart keyword
+        const hasGraph = message.toLowerCase().includes("graph") ||
+                         message.toLowerCase().includes("chart") ||
+                         message.toLowerCase().includes("diagram");
         try {
 
             input.value = "";
@@ -270,7 +278,7 @@ const Chat = () => {
             input.placeholder = "Waiting for response..."
 
             addMessage({author: "loading", body: "(Thinking...)"})
-
+            /*
             const bedrockResponse = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
                 method: "POST",
                 headers: {
@@ -286,14 +294,48 @@ const Chat = () => {
                 replaceLastMessage({author: "bot", body: body.response})
 
             }
+        */
+       // Static test data for graph generation
+       const staticGraphData: ChartJsonData =
+        {
+            "title": "Abdul Rahman Kanoo School: Internal Examination Proficiency Rates",
+            "chartType": "pie",
+            "data": [
+              {
+                // "subject": "English",
+                "reviewCycle": "Review Cycle 9",
+                "proficiencyRate": 1
+              },
+              {
+                // "subject": "English",
+                "reviewCycle": "Review Cycle 10",
+                "proficiencyRate": 2
+              },
+              {
+                // "subject": "Science",
+                "reviewCycle": "Review Cycle 2",
+                "proficiencyRate": 4
+              }
+            ]
+          };
 
+          // if graph is required, add chart to context
+          if(hasGraph) {
+            const updateChartJson = [...chartJson, staticGraphData];
+            setChartJson(updateChartJson);
 
+            replaceLastMessage({
+                author: "bot",
+                body: "Chart generated and displayed on home screen",
+                dynamicChartData: JSON.stringify(staticGraphData)
+            });
+          }
         } catch (error) {
             console.error(error)
             replaceLastMessage({author: "bot", body: "An error has occurred. Please try again."})
         } finally {
             input.disabled = false;
-            input.placeholder = inputPlaceholder
+            input.placeholder = "Type your message here...";
             input.focus()
         }
     };
@@ -306,7 +348,7 @@ const Chat = () => {
         //     setTimeout(() => addMessage(msg), msg.timeout || 0); // Use default timeout if undefined
         // });
     }, []);
-
+    
     // Scroll to the bottom when messages change
     useEffect(() => {
         if (chatListRef.current) {
