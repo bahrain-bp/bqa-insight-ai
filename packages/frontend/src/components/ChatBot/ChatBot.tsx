@@ -3,9 +3,15 @@ import "../../css/chatbot.css"; // Ensure to include your CSS here
 import rebotIcon from "../../images/rebot.svg";
 import { ChatContext } from "../../layout/DefaultLayout";
 
+type ImageResponseCard = {
+    title: string,
+    subtitle: string,
+    buttons: {text: string; value: string}[]
+}
+
 type Message = {
-    author: "human" | "bot" | "loading";
-    body: string | { url: string; text: string }[];
+    author: "human" | "bot" | "loading" | "card";
+    body: string | ImageResponseCard;
     timeout?: number; // Optional timeout
 };
 
@@ -134,21 +140,10 @@ const Chat = () => {
             throw error
         }
     }
-    const  handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        const input = (e.target as HTMLFormElement).elements.namedItem(
-            "input"
-        ) as HTMLInputElement;
-        const message = input.value;
-        addMessage({author: "human", body: message});
 
-        const inputPlaceholder = input.placeholder
-
+    const messageLex = async (message: string) => {
         try {
-
-            input.value = "";
-            input.disabled = true;
-            input.placeholder = "Waiting for response..."
+            addMessage({author: "human", body: message});
 
             addMessage({author: "loading", body: "(Thinking...)"})
 
@@ -163,19 +158,41 @@ const Chat = () => {
             if (!lexResponse.ok) {
               throw Error("Could not send request.")
             }
-            const body = await lexResponse.json()
+            const result = await lexResponse.json()
+            const body = result.response
             console.log("lex response: ", body)
-            // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
-            replaceLastMessage({author: "bot", body: body.response})
+            const hasImageResponseCard = body.messages[0].contentType === "ImageResponseCard"
+            if (hasImageResponseCard) {
+                replaceLastMessage({ author: "card", body: body.messages[0].imageResponseCard})
+            } else {
+                // replaceLastMessage({author: "bot", body: body.response.replace(/%.*%/, "")});
+                if (!body.messages[0].content) throw Error("Empty message")
+                replaceLastMessage({ author: "bot", body: body.messages[0].content })
+            }
 
         } catch (error) {
             console.error("error: ", error)
-            replaceLastMessage({author: "bot", body: "An error has occurred. Please try again."})
-        } finally {
-            input.disabled = false;
-            input.placeholder = inputPlaceholder
-            input.focus()
-        }
+            replaceLastMessage({ author: "bot", body: "An error has occurred. Please try again." })
+        } 
+    }
+
+    const  handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const input = (e.target as HTMLFormElement).elements.namedItem(
+            "input"
+        ) as HTMLInputElement;
+        const message = input.value;
+
+        input.value = "";
+        input.disabled = true;
+        input.placeholder = "Waiting for response..."
+        const inputPlaceholder = input.placeholder
+
+        await messageLex(message)
+
+        input.disabled = false;
+        input.placeholder = inputPlaceholder
+        input.focus()
     };
 
     useEffect(() => {
@@ -211,17 +228,17 @@ const Chat = () => {
                             {typeof message.body === "string" ? (
                                 <span className={message.author === "loading" ? "c-chat__item--loading" : ""}>{ message.body }</span>
                             ) : (
-                                message.body.map((link, idx) => (
-                                    <a
-                                        key={idx}
-                                        href={link.url}
-                                        className="c-chat__action"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        {link.text}
-                                    </a>
-                                ))
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-lg">{message.body.title}</span>
+                                    <span className="">{message.body.subtitle}</span>
+                                        <hr className="my-2 border-1 border-black"/>
+                                    <span>{message.body.buttons.map((btn, i) => (
+                                        <input type="button" value={btn.text} key={i} onClick={async () => {
+                                                await messageLex(btn.value)
+                                            }}
+                                            className="bg-primary text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer"/>
+                                    ))}</span>
+                                </div>
                             )}
                         </div>
                     </li>

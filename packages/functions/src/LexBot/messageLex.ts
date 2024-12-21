@@ -29,12 +29,12 @@ export async function handler(event: APIGatewayEvent) {
     const lexResponse: RecognizeTextResponse = await lexClient.send(recognizeTextCommand)
     console.log(lexResponse)
     const messages = lexResponse.messages
-    if (!messages || messages.length == 0 || !messages[0]['content']) throw new Error("No message received")
+    // if (!messages || messages.length == 0 || !messages[0]['content']) throw new Error("No message received")
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Response received successfully",
-        response: messages[0]['content'],
+        response: lexResponse,
       })
     }
   } catch (error) {
