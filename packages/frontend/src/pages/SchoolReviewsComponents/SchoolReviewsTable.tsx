@@ -71,7 +71,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
 
   const showGenderAndLevel = schoolTypeFilter !== 'Private';
 
-  // Filtering
+  // Filtering (without search)
   const filteredData = useMemo(() => {
     let filtered = data;
 
@@ -97,18 +97,10 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
       }
     }
 
-    // Search by EnglishSchoolName
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter((school) =>
-        school.EnglishSchoolName.toLowerCase().includes(query)
-      );
-    }
-
     return filtered;
-  }, [data, schoolTypeFilter, selectedGenders, selectedLevels, searchQuery]);
+  }, [data, schoolTypeFilter, selectedGenders, selectedLevels]);
 
-  // Compute Rank
+  // Compute Rank (based on filtered data, not search)
   const rankedData = useMemo(() => {
     const validSorted = [...filteredData].sort((a, b) => {
       const aGrade = (a.AverageGrade !== null && !isNaN(a.AverageGrade)) ? a.AverageGrade : Infinity;
@@ -212,6 +204,17 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
 
   }, [sortState, rankedData]);
 
+  // The search now only applies at the display stage, not affecting ranking or sorting
+  const displayedData = useMemo(() => {
+    if (searchQuery.trim() === '') {
+      return sortedData;
+    }
+    const query = searchQuery.toLowerCase();
+    return sortedData.filter((school) =>
+      school.EnglishSchoolName.toLowerCase().includes(query)
+    );
+  }, [searchQuery, sortedData]);
+
   const handleSort = (col: string) => {
     setSortState((prev) => {
       if (prev.column === col) {
@@ -308,6 +311,11 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
         </div>
       </div>
 
+      {/* Count of schools returned */}
+      <div className="mb-2 text-gray-700 font-semibold">
+        {displayedData.length} School(s) Returned
+      </div>
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
@@ -353,7 +361,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
             </tr>
           </thead>
           <tbody>
-            {sortedData.map((school, idx) => {
+            {displayedData.map((school, idx) => {
               const avgGrade = (school.AverageGrade !== null && !isNaN(school.AverageGrade))
                 ? school.AverageGrade
                 : 'N/A';
@@ -377,10 +385,10 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
               );
             })}
 
-            {sortedData.length === 0 && (
+            {displayedData.length === 0 && (
               <tr>
                 <td colSpan={baseColumns} className="py-4 text-center text-gray-500">
-                  No schools match the selected filters.
+                  No schools match your search.
                 </td>
               </tr>
             )}

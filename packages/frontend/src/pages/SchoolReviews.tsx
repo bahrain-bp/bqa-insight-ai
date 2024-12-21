@@ -1,10 +1,13 @@
 // ./SchoolReviews.tsx
 
 import { useEffect, useState } from 'react';
-import { SchoolReviewsFacts } from './SchoolReviewsComponents/SchoolReviewsFacts'; // Import the component
+import { SchoolData } from './SchoolReviewsComponents/types';
+import { ToggleSection } from './Components/ToggleSection'; 
+import { SchoolReviewsFacts } from './SchoolReviewsComponents/SchoolReviewsFacts'; 
 import { SchoolReviewsTable } from './SchoolReviewsComponents/SchoolReviewsTable';
-import { SchoolData } from './SchoolReviewsComponents/types'; // Importing the shared interface
-import { ToggleSection } from './Components/ToggleSection'; // Import the reusable ToggleSection component
+import { SchoolGeneralCharts } from './SchoolReviewsComponents/SchoolGeneralCharts';
+import { SchoolSearch } from './SchoolReviewsComponents/SchoolSearch';
+
 
 export function SchoolReviews() {
   const [data, setData] = useState<SchoolData[]>([]);
@@ -66,14 +69,17 @@ export function SchoolReviews() {
 
           {/* Schools Ranking Section */}
           <ToggleSection title="Schools Ranking Table" ariaControls="school-reviews-ranking">
-            {/* Placeholder for Schools Ranking Content */}
             <SchoolReviewsTable data={data} />
           </ToggleSection>
 
           {/* Graphs Section */}
           <ToggleSection title="Graphs" ariaControls="school-reviews-graphs">
-            {/* Placeholder for Graphs Content */}
-            <p className="text-gray-700">Graphs content will be added here.</p>
+            <SchoolGeneralCharts data={data} />
+          </ToggleSection>
+          
+          {/* Search for a School Section */}
+          <ToggleSection title="Search for a School" ariaControls="school-search">
+            <SchoolSearch data={data} />
           </ToggleSection>
         </div>
       )}
