@@ -13,6 +13,7 @@ import { BedrockStack } from "./stacks/BedrockStack";
 import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
 import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
+import { MetadataStack } from "./stacks/MetaDataStack";
 
 
 export default {
@@ -45,8 +46,9 @@ export default {
       .stack(AmazonLexSolarMapFulfillment)
       .stack(BotStack)
       .stack(ApiStack) 
+      .stack(MetadataStack)
       .stack(FrontendStack)
-      .stack(AuthStack);
+      .stack(AuthStack)
      
     }
   }
