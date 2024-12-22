@@ -3,6 +3,7 @@ import DynamicChart, { ChartJsonData } from "./dynamicChart";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import React, { useContext, useEffect, useState } from "react";
+import { Chart } from "react-chartjs-2";
 
 const ECommerce: React.FC = () => {
   const { chartJson } = useContext(ChartContext);
@@ -68,6 +69,65 @@ const ECommerce: React.FC = () => {
        {!isLoading && chartJson.length === 0 && <p>No charts available</p>} {/* Message for no charts */}
 
       <div id="export-content">
+        <Chart
+          type="line"
+          data={{
+            datasets: [
+              {
+                label: "Jidhafs Intermediate Boys School",
+                data: [
+                  {x: 2010, y: 2},
+                  {x: 2012, y: 2},
+                  {x: 2016, y: 2},
+                  {x: 2018, y: 3},
+                  {x: 2024, y: 3},
+                ],
+                borderColor: "#111177",
+                fill: false,
+              },
+              {
+                label: "Al Sehlah Intermediate Boys School",
+                data: [
+                  {x: 2011, y: 3},
+                  {x: 2014, y: 3},
+                  {x: 2016, y: 4},
+                  {x: 2019, y: 3},
+                  {x: 2023, y: 2},
+                ],
+                borderColor: "#771111",
+                fill: false,
+              },
+              {
+                label: "Hamad Town Intermediate Boys School",
+                data: [
+                  {x: 2013, y: 4},
+                  {x: 2018, y: 3},
+                  {x: 2021, y: 3},
+                  {x: 2024, y: 4},
+                ],
+                borderColor: "#117711",
+                fill: false,
+              },
+            ]
+          }}
+          options={{
+            scales: {
+              x: {
+                type: "linear",
+
+              },
+              y: {
+                type: "linear",
+                min: 1,
+                max: 4,
+                reverse: true,
+                ticks: {
+                  stepSize: 1,
+                },
+              }
+            }
+          }}
+        />
         {!isLoading && chartJson.length > 0 && (
           <div id="current-chart">
             {currentChart ? (
