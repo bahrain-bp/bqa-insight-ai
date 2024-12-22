@@ -5,16 +5,35 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 // Lambda handler
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-  const tableName = process.env.TABLE_NAME || ''; 
+  const { instituteType } = event.queryStringParameters || {};  // Get the type of institute from query parameters
+  let tableName = process.env.TABLE_NAME || '';  // Default table name
 
+  // Validate institute type and set the corresponding table
+  if (instituteType) {
+    switch (instituteType.toLowerCase()) {
+      case 'university':
+        tableName = process.env.UNIVERSITY_TABLE_NAME || '';  // Use the environment variable for universities
+        break;
+      case 'vocational':
+        tableName = process.env.VOCATIONAL_TABLE_NAME || '';  // Use the environment variable for vocational institutes
+        break;
+      default:
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'Invalid institute type' }),
+        };
+    }
+  }
+
+  // Check if the table name is provided
   if (!tableName) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'TABLE_NAME environment variable is not set' }),
+      body: JSON.stringify({ error: 'Institute table name is not set' }),
     };
   }
 
-  const { classification, level, location } = event.queryStringParameters || {}; // Getting filters from query parameters
+  const { classification, level, location } = event.queryStringParameters || {};  // Getting filters from query parameters
 
   const params = {
     TableName: tableName,
@@ -40,7 +59,6 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     // Extract the year from dateOfReview
     const extractYear = (date: string): string | null => {
       if (!date) return null;
-      // Match years from different date formats
       const match = date.match(/(\d{4})/);
       return match ? match[1] : null;
     };
@@ -71,4 +89,3 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     };
   }
 };
-
