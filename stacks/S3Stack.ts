@@ -53,7 +53,8 @@ export function S3Stack({ stack }: StackContext) {
         INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         BUCKET_NAME: bucket.bucketName
-        }
+        },
+        bind: [syncTopic],
     });
 
     extractMetadataQueue.addConsumer(stack, {
@@ -91,7 +92,6 @@ export function S3Stack({ stack }: StackContext) {
             "textract:GetDocumentTextDetection", 
             "textract:GetDocumentAnalysis",     
         ],
-        bind: [syncTopic],
     });
 
     // Set the consumer for the Textract queue

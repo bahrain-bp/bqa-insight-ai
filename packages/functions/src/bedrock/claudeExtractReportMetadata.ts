@@ -2,12 +2,15 @@ import * as AWS from "aws-sdk";
 import { InvokeModelCommand, BedrockRuntimeClient } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDB } from "aws-sdk";
 import { SQSEvent } from "aws-lambda";
+import { PublishCommand, SNSClient } from "@aws-sdk/client-sns"
 import { handleDynamoDbInsert } from "src/lambda/fillingJson";
+import { Topic } from "sst/node/topic";
 
 
 const dynamoDb = new DynamoDB.DocumentClient();
 const client = new BedrockRuntimeClient({region: "us-east-1"});
 const sqs = new AWS.SQS();
+const snsClient = new SNSClient();
 const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
 const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
 const bucket = process.env.BUCKET_NAME || "";
@@ -246,9 +249,37 @@ async function insertInstituteMetadata(data :any , fileKey: string) {
       // Insert metadata into S3 JSON file
       
       await handleDynamoDbInsert(data, bucket ,fileKey);
+      if (!extractMetadataQueueUrl) throw Error("No queue url")
+      await getMessageInQueue(extractMetadataQueueUrl)
   } catch (error) {
       console.error("Error inserting institute metadata into DynamoDB:", error);
   }
+}
+
+async function getMessageInQueue(queueUrl: string) {
+  const params = {
+    QueueUrl: queueUrl || "",
+    AttributeNames: ["ApproximateNumberOfMessages"]
+  }
+
+  try {    
+    const data = await sqs.getQueueAttributes(params).promise();
+    const numberOfMessages = data.Attributes?.ApproximateNumberOfMessages;
+    console.log(numberOfMessages, ": numbder")
+    if (numberOfMessages === "0") {
+      console.log("Syncing starting now");
+      // call SNS topic to sync knowledge base
+      await snsClient.send(new PublishCommand({
+        Message: "Sync",
+        TopicArn: Topic.SyncTopic.topicArn,
+      }))
+    }
+
+    
+  } catch (err) {
+    console.error('Error fetching queue attributes:', err);
+  }
+
 }
 
 function parseMetadata(input: string): string {

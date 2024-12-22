@@ -7,13 +7,10 @@ import {
   StartDocumentAnalysisCommand,
   GetDocumentAnalysisCommand,
 } from "@aws-sdk/client-textract";
-import { PublishCommand, SNSClient } from "@aws-sdk/client-sns"
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { Topic } from "sst/node/topic";
 
 // Initialize the SQS client from AWS SDK v2
 const sqs = new AWS.SQS();
-const snsClient = new SNSClient();
 const s3Client = new S3Client({ region: "us-east-1" });
 const textractClient = new TextractClient({ region: "us-east-1" });
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
@@ -178,33 +175,6 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
     console.error("Error deleting SQS message:", error);
   }
 }
-
-async function getMessageInQueue() {
-  const params = {
-    QueueUrl: queueUrl || "",
-    AttributeNames: ["ApproximateNumberOfMessages"]
-  }
-
-  try {    
-    const data = await sqs.getQueueAttributes(params).promise();
-    const numberOfMessages = data.Attributes?.ApproximateNumberOfMessages;
-    console.log(numberOfMessages, ": numbder")
-    if (numberOfMessages === "0") {
-      console.log("Syncing starting now");
-      // call SNS topic to sync knowledge base
-      await snsClient.send(new PublishCommand({
-        Message: "Sync",
-        TopicArn: Topic.SyncTopic.topicArn,
-      }))
-    }
-
-    
-  } catch (err) {
-    console.error('Error fetching queue attributes:', err);
-  }
-
-}
-
 // Function to send a message to the extract metadata queue
 async function sendMessageToExtractMetadataQueue(text: string, fileKey: string): Promise<void> {
   const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL; // Ensure this environment variable is set
@@ -314,7 +284,6 @@ export async function handler(event: SQSEvent) {
 
       // Delete the SQS message after successful processing
       await deleteSQSMessage(record.receiptHandle);
-      await getMessageInQueue();
       await sendMessageToExtractMetadataQueue(resultText, fileKey);
     }
 
