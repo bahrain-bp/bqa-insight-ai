@@ -11,6 +11,7 @@ import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
 import Filter from "./pages/Filter.tsx";
+import BasicView from './pages/BasicView/BasicView.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -87,7 +88,7 @@ function App() {
           element={
             <>
               <PageTitle title="Filter" />
-              <Filter/>
+              <BasicView />
             </>
           }
         />

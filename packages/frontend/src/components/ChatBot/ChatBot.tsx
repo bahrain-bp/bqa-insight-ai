@@ -55,7 +55,7 @@ const ChatBot = () => {
     );
 };
 
-const Chat = () => {
+export const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [sessionId, setSessionId] = useState("");
     // const [responses, setResponses] = useState(0);
@@ -382,7 +382,7 @@ const Chat = () => {
     }, [messages]);
 
     return (
-        <div className="c-chat">
+        <div className="c-chat h-full">
             {/* Chat Message List */}
             <ul ref={chatListRef} className="c-chat__list">
                 {messages.map((message, index) => (
@@ -427,4 +427,4 @@ const Chat = () => {
     );
 };
 
-export default ChatBot;
+export default Chat;
