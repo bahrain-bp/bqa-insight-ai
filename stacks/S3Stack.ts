@@ -2,9 +2,13 @@ import { StackContext, Bucket, Function, Queue, use, toCdkDuration } from "sst/c
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { ProgramMetadataStack } from "./ProgramMetadataStack";
+import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 export function S3Stack({ stack }: StackContext) {
     const { fileMetadataTable } = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    const {programMetadataTable} = use(ProgramMetadataStack);
+    const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -37,16 +41,18 @@ export function S3Stack({ stack }: StackContext) {
         },
     });
 
-    const extractReportMetadata = new Function(stack, "claudeUniversityMetadata", {
-        handler: "packages/functions/src/bedrock/claudeUniversityMetadata.handler",
+    const extractReportMetadata = new Function(stack, "claudeProgramMetadata", {
+        handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
         ],
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
         INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         }
     });
 

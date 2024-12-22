@@ -1,21 +1,21 @@
 import { StackContext, Table } from "sst/constructs";
 export function ProgramMetadataStack({ stack }: StackContext) {
   // Create DynamoDB table to store file metadata
-  const ProgramMetadataStack = new Table(stack, "ProgramMetadataStack", {
+  const programMetadataTable = new Table(stack, "ProgramMetadataStack", {
     fields: {
         universityName: "string",
-        programName: "string",
-        programJudgment: "string"
+        programmeName: "string",
+        programmeJudgment: "string"
       
     },
-    primaryIndex: { partitionKey: "universityName" , sortKey: "programName"},
+    primaryIndex: { partitionKey: "universityName" , sortKey: "programmeName"},
   });
 
   // Output the table name for reference
   stack.addOutputs({
-    ProgramMetadataStack: ProgramMetadataStack.tableName,
+    ProgramMetadataStack: programMetadataTable.tableName,
   });
 
-  return { ProgramMetadataStack };
+  return { programMetadataTable };
 
 }
