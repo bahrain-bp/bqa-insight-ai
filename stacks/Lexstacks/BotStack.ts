@@ -273,31 +273,39 @@ export function BotStack({stack}: StackContext) {
         }
     })
 
-    const compareInstitutesIntent = {
-        name: 'CompareInstitutesIntent',
-        slots: [
-          {
-            name: 'CompareInstitutesSlot',
-            type: 'AMAZON.FreeFormInput',
-            elicitationRequired: true,
-            prompts: {
-              elicitation: {
-                messageGroups: [
-                  {
-                    message: {
-                      plainTextMessage: {
-                        value: "What are the names of institutes you would like to compare?"
-                      }
+      
+      const compareInstitutesIntent = locale.addIntent({
+        intentName: 'CompareInstitutesIntent',
+        description: 'Provide comparison of educational institutes based on governorate',
+        sampleUtterances: [
+            { utterance: 'Specific Institutes' },
+            { utterance: 'Institute comparison' },
+            { utterance: 'Compare Institutes' },
+        ],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+      })
+      compareInstitutesIntent.addSlot(
+        {
+          slotName: 'CompareInstitutesSlot',
+          slotTypeName: 'AMAZON.FreeFormInput',
+          valueElicitationSetting: {
+              slotConstraint: 'Required',
+              promptSpecification: {
+                  messageGroups: [
+                    {
+                        message: {
+                          plainTextMessage: {
+                            value: "What are the names of institutes you would like to compare?"
+                          }
+                        }
                     }
-                  }
                 ],
                 maxRetries: 2
-              }
+                }
             }
-          }
-        ]
-      };
-      
+        })
 
     const comparedGovernorateIntent = locale.addIntent({
         intentName: 'CompareGovernorateIntent',
