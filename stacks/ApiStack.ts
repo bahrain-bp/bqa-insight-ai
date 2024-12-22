@@ -122,6 +122,18 @@ export function ApiStack({stack}: StackContext) {
                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                     }
                 }
+            },
+            "POST /converseBedrock": {
+                function: {
+                    handler: "packages/functions/src/LexBot/Bedrock_Lex/converseBedrock.converse",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    // environment: {
+                    //     AGENT_ID: cfnAgent?.attrAgentId || "",
+                    //     AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                    // },
+                    runtime: "python3.12",
+                }
             }
         },
     });
