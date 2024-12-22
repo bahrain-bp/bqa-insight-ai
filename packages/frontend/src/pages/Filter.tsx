@@ -2,9 +2,6 @@ import React, { useState, useEffect } from "react";
 
 
 const Filter = () => {
-
-
-
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
@@ -76,58 +73,47 @@ const Filter = () => {
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
-  
-    if (header === "Institute Name") {
-      const updatedSelection = Array.from(e.target.selectedOptions, option => option.value);
-  
+
+    if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
+        if (!isFilterActive) {
+          setIsFilterActive(true);
+        }
+
         let updatedState = { ...prevState };
-        updatedState["Institute Name"] = updatedSelection;
+
+        if (header === "Institute Classification") {
+          updatedState = {
+            ...prevState,
+            "Institute Classification": [value],
+            "Institute Level": [],
+            "Location": [],
+            "Institute Name": [],
+            "Report Year": []
+          };
+        } else if (header === "Institute Level") {
+          updatedState = {
+            ...prevState,
+            "Institute Level": [value],
+            "Institute Name": [],
+          };
+        } else if (header === "Location") {
+          updatedState = {
+            ...prevState,
+            "Location": [value],
+          };
+        } else {
+          updatedState = {
+            ...prevState,
+            [header]: [value], // Changed to always set single value
+          };
+        }
+
         return updatedState;
       });
-    } else {
-      // Keep the logic for other filters as before
-      if (value && value !== "Select...") {
-        setSelectedOptions((prevState) => {
-          if (!isFilterActive) {
-            setIsFilterActive(true);
-          }
-  
-          let updatedState = { ...prevState };
-  
-          if (header === "Institute Classification") {
-            updatedState = {
-              ...prevState,
-              "Institute Classification": [value],
-              "Institute Level": [],
-              "Location": [],
-              "Institute Name": [],
-              "Report Year": []
-            };
-          } else if (header === "Institute Level") {
-            updatedState = {
-              ...prevState,
-              "Institute Level": [value],
-              "Institute Name": [],
-            };
-          } else if (header === "Location") {
-            updatedState = {
-              ...prevState,
-              "Location": [value],
-            };
-          } else {
-            updatedState = {
-              ...prevState,
-              [header]: [value],
-            };
-          }
-  
-          return updatedState;
-        });
-      }
     }
   };
-  
+
 
 
   const removeTag = (header: string, value: string) => {
@@ -182,7 +168,6 @@ const Filter = () => {
       parts.push(`report year is ${selectedOptions["Report Year"].join(", ")}`);
     return parts.length > 0 ? `Insights for: ${parts.join(", ")}.` : "";
   };
-  
 
   const handleSentenceEdit = () => {
     if (!editableSentence) {
@@ -219,21 +204,20 @@ const Filter = () => {
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const sentence = editableSentence;
-  
-    // Check if the mode is "Compare" and if fewer than two schools are selected
+
     if (mode === "Compare" && selectedOptions["Institute Name"].length < 2) {
       showMessage("Please select at least two schools in Compare mode.", "error");
       return;
     }
-  
+
     const requiredFilters = ["Institute Level", "Institute Name"];
     const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
-  
+
     if (missingFilters.length > 0) {
       showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
       return;
     }
-  
+
     if (sentence) {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
@@ -251,7 +235,6 @@ const Filter = () => {
       showMessage("Please select options.", "error");
     }
   };
-  
 
   
   const handleClear = () => {
@@ -316,7 +299,6 @@ const Filter = () => {
                       className="p-2 border rounded text-sm w-full"
                       onChange={(e) => handleSelectChange(e, header)}
                       value={selectedOptions[header].length ? selectedOptions[header][0] : "Select..."}
-                      multiple 
                     >
                       <option value="Select...">Select...</option>
                       {filterOptions[header].map((option, idx) => (
