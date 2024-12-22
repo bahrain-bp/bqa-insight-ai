@@ -21,7 +21,7 @@ type Message = {
     timeout?: number; // Optional timeout
 };
 
-var graph = "";
+let graph = "";
 
 const ChatBot = () => {
     const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
@@ -44,10 +44,10 @@ const ChatBot = () => {
             />
 
             {/* Chat UI */}
-            <div className={`b-chat ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
+            <div className={`b-chat bg-boxdark ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
                 <div className="b-chat__header">
-                    <span>ChatBot</span>
-                    <button onClick={toggleChat}>Close</button>
+                    <span>InsightAI</span>
+                    <button className="bg-danger" onClick={toggleChat}>Close</button>
                 </div>
                 <Chat/>
             </div>
@@ -343,9 +343,8 @@ const Chat = () => {
         const input = (e.target as HTMLFormElement).elements.namedItem(
             "input"
         ) as HTMLInputElement;
-        var message = input.value;
-        addMessage({author: "human", body: message});
-        var hasGraph = message.includes("graph") || message.includes("bar") || message.includes("line") || message.includes("pie") || message.includes("radar") || message.includes("scatter");
+        let message = input.value;
+        const hasGraph = message.includes("graph") || message.includes("bar") || message.includes("line") || message.includes("pie") || message.includes("radar") || message.includes("scatter");
          graph = "";
         const inputPlaceholder = input.placeholder
         if (hasGraph) {
@@ -389,10 +388,9 @@ const Chat = () => {
                 {messages.map((message, index) => (
                     <li
                         key={index}
-                        className={`c-chat__item ${message.author === "human" ? "c-chat__item--human" : ""
-                        }`}
+                        className={`c-chat__item ${message.author === "human" ? "c-chat__item--human" : ""}`}
                     >
-                        <div className={`c-chat__message`}>
+                        <div className={`c-chat__message ${message.author === "human" ? "bg-lightblue" : "bg-white"}`}>
                             {typeof message.body === "string" ? (
                                 <span
                                     className={message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
@@ -415,7 +413,7 @@ const Chat = () => {
             </ul>
 
             {/* Chat Input Form */}
-            <form className="c-chat__form" onSubmit={handleSubmit}>
+            <form className="c-chat__form bg-boxdark-2" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     name="input"
