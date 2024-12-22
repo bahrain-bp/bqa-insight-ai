@@ -125,15 +125,15 @@ export function ApiStack({stack}: StackContext) {
                     },
                 }
             },
-            "POST /invokeExpressLambda": {
+            "POST /invokeBedrockAgent": {
                 function: {
-                    handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
+                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
                     permissions: ["bedrock", "s3", "textract"],
                     timeout: "60 seconds",
-                    // environment: {
-                    //     AGENT_ID : extractReportMetadataAgent.attrAgentId,
-                    //     AGENT_ALIAS_ID : becrockExtractAgentAlias.attrAgentAliasId,
-                    // }
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
                 }
             },
             "POST /fetchfilters": {

@@ -31,19 +31,19 @@ const Filter = () => {
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const params = new URLSearchParams();
+        const prompt = new URLSearchParams();
 
         if (selectedOptions["Institute Classification"].length) {
-          params.append("classification", selectedOptions["Institute Classification"][0]);
+          prompt.append("classification", selectedOptions["Institute Classification"][0]);
         }
         if (selectedOptions["Institute Level"].length) {
-          params.append("level", selectedOptions["Institute Level"][0]);
+          prompt.append("level", selectedOptions["Institute Level"][0]);
         }
         if (selectedOptions["Location"].length) {
-          params.append("location", selectedOptions["Location"][0]);
+          prompt.append("location", selectedOptions["Location"][0]);
         }
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${params.toString()}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${prompt.toString()}`);
         const data = await response.json();
         setFilterOptions(data.filters);
       } catch (error) {
@@ -200,41 +200,60 @@ const Filter = () => {
       setMessageType(null);
     }, 3000);
   };
+ 
 
-  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    const sentence = editableSentence;
+const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  e.preventDefault();
+  const sentence = editableSentence;
 
-    if (mode === "Compare" && selectedOptions["Institute Name"].length < 2) {
-      showMessage("Please select at least two schools in Compare mode.", "error");
-      return;
+  if (mode === "Compare" && selectedOptions["Institute Name"].length < 2) {
+    showMessage("Please select at least two schools in Compare mode.", "error");
+    return;
+  }
+
+  const requiredFilters = ["Institute Name"];
+  const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
+
+  if (missingFilters.length > 0) {
+    showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
+    return;
+  }
+
+  if (sentence) {
+    try {
+      // Create an object with all the selected parameters
+      const prompt = {
+        userMessage: sentence,
+        classification: selectedOptions["Institute Classification"],
+        level: selectedOptions["Institute Level"],
+        location: selectedOptions["Location"],
+        instituteName: selectedOptions["Institute Name"],
+        reportYear: selectedOptions["Report Year"]
+      };
+
+      console.log("Request payload:", prompt);  // Debug log the payload
+
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrockAgent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(prompt),
+      });
+
+
+    const body = await response.json();
+    console.log("API Response:", body);  // Log the response body to see the result
+    showMessage("Data successfully sent to the server!", "success");
+    } catch (error) {
+      console.error("Error sending data to Bedrock:", error);
+      showMessage("An error occurred. Please try again.", "error");
     }
+  } else {
+    showMessage("Please select options.", "error");
+  }
+};
 
-    const requiredFilters = ["Institute Level", "Institute Name"];
-    const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
-
-    if (missingFilters.length > 0) {
-      showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
-      return;
-    }
-
-    if (sentence) {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrock`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userMessage: sentence }),
-        });
-        const body = await response.json();
-        showMessage("Data successfully sent to the server!", "success");
-      } catch (error) {
-        console.error("Error sending data to Bedrock:", error);
-        showMessage("An error occurred. Please try again.", "error");
-      }
-    } else {
-      showMessage("Please select options.", "error");
-    }
-  };
+  
 
   
   const handleClear = () => {
