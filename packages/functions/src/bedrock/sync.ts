@@ -1,14 +1,13 @@
 import { APIGatewayEvent } from "aws-lambda";
 import { BedrockAgentClient, StartIngestionJobCommand } from "@aws-sdk/client-bedrock-agent";
-import {BedrockStack} from "../../../../stacks//BedrockStack";
  
 const client = new BedrockAgentClient({region: "us-east-1"});
 
-export async function syncKnowlegeBase(event: APIGatewayEvent) {
+export async function syncKnowlegeBase(knowledgeBaseId: string, dataSourceId: string) {
     try {
         const input = {
-            knowledgeBaseId: process.env.KNOWLEDGE_BASE_ID,
-            dataSourceId: process.env.DATASOURCE_BASE_ID
+            knowledgeBaseId: knowledgeBaseId,
+            dataSourceId: dataSourceId
         };
     
         const command = new StartIngestionJobCommand(input);    
