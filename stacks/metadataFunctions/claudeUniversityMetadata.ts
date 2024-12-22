@@ -10,13 +10,33 @@ const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
 const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
 
 //Using Llama model to extract metadata about reports and institutes
-export async function handler(event: string){
-  
-          
+export async function handler(event: SQSEvent){
+    for (const record of event.Records) {
+        try {
+            let sqsEvent;
+            try {
+                sqsEvent = JSON.parse(record.body); // Parse the SQS message body
+            } catch (error) {
+                console.error("Error parsing SQS message:", record.body, error);
+                continue;
+            }
+            
+            // Destructure `text` and `fileKey` from the parsed SQS message
+            const { text, fileKey } = sqsEvent;
+            
+            if (!text || !fileKey) {
+                console.error("Invalid message content: missing 'text' or 'fileKey'");
+                continue;
+            }
+            
+    
+            
+            
+
                 const prompt = 
                 `
                   Your goal is to extract structured information from the user's input that matches the form described below.
-                  Use this data for your report: <data>${event}</data>.
+                  Use this data for your report: <data>${text}</data>.
 
                   <instructions>
                     1. Ensure that the output is in JSON format.
@@ -106,8 +126,11 @@ export async function handler(event: string){
          
             return parsedResponse;
 
-        
-    
+        } catch (error) {
+            await deleteSQSMessage(record.receiptHandle);
+            console.error("Error processing SQS message:", error);
+        }
+    } 
 }
 
 

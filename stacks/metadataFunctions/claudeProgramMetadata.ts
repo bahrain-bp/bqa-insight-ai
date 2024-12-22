@@ -10,13 +10,29 @@ const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
 const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
 
 //Using Llama model to extract metadata about reports and institutes
-export async function handler(event: string){
-  
-          
+export async function handler(event: SQSEvent){
+    for (const record of event.Records) {
+        try {
+            let sqsEvent;
+            try {
+                sqsEvent = JSON.parse(record.body); // Parse the SQS message body
+            } catch (error) {
+                console.error("Error parsing SQS message:", record.body, error);
+                continue;
+            }
+            
+            // Destructure `text` and `fileKey` from the parsed SQS message
+            const { text, fileKey } = sqsEvent;
+            
+            if (!text || !fileKey) {
+                console.error("Invalid message content: missing 'text' or 'fileKey'");
+                continue;
+            }
+            
                 const prompt = 
                 `
                   Your goal is to extract structured information from the user's input that matches the form described below.
-                  Use this data for your report: <data>${event}</data>.
+                  Use this data for your report: <data>${text}</data>.
 
                   <instructions>
                     1. Ensure that the output is in JSON format.
@@ -27,12 +43,13 @@ export async function handler(event: string){
                   <formatting_example>
                   {
                     "University Name": "Bahrain Polytechnic",
-                    "University Location": "Isa Town - Southern Governorate",
-                    "Number Of Programmes": 22,
-                    "Number Of Qualifications" 22,
+                   "Programme Name": "Information Technology",
+                   "Programme Judgment": "Satisfies",
                   }
                   </formatting_example>
                 `
+
+                
 
                 const toolConfig = {
                   "tools": [
@@ -50,12 +67,11 @@ export async function handler(event: string){
                                   "type": "object",
                                   "properties": {
                                     "University Name": {"type": "string", "description": "The extracted entity name."},
-                                    "University Location": {"type": "string", "description": "The entity type (LOCATION)."},
-                                    "Number Of Qualifications": {"type": "number", "description": "Total number of qualifications"},
-                                    "Number of Programmes": {"type": "number", "description": "Number of programmes offered by the university including (Bachelor Degree, Master Degree, PhD Degress)"}
+                                    "Programme Name": {"type": "string", "description": "The name of the programme."},
+                                    "Programme Judgment": {"type": "string", "description": "The final judgment of the programme"},
                                     // "context": {"type": "string", "description": "The context in which the entity appears in the text."}
                                   },
-                                  "required": ["University Name", "University Location", "Number Of Qualifications", "Number of Programmes"]
+                                  "required": ["University Name", "Programme Name", "Programme Judgment"]
                                 }
                               }
                             },
@@ -84,7 +100,6 @@ export async function handler(event: string){
                   toolConfig: toolConfig
                  
                 };
-            
 
             //@ts-ignore
             const command = new ConverseCommand(input);
@@ -93,21 +108,19 @@ export async function handler(event: string){
             console.log("HERE IS RESPONSE: ", response);
     
             const modelResponse = response.output?.message?.content?.[0].text
-            console.log("model output: ", modelResponse);
-           
-            
-     
-    
             const parsedResponse = JSON.parse(modelResponse || "");
-    
-
-           await insertUniversityMetadata(parsedResponse);
-           console.log("IT SHOULD BE INSERTED TO UNIVERSITY METADATA TABLE");
+            console.log("model output: ", modelResponse);
+           // const extractedOutput = parseMetadata(parsedResponse);
+            await insertProgramMetadata(parsedResponse);
+            console.log("IT SHOULD BE INSERTED TO PROGRAM METADATA TABLE")
          
             return parsedResponse;
 
-        
-    
+        } catch (error) {
+            await deleteSQSMessage(record.receiptHandle);
+            console.error("Error processing SQS message:", error);
+        }
+    } 
 }
 
 
@@ -131,18 +144,27 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
   }
 }
 
-
-
-// Insert University metadata into DynamoDB
-async function insertUniversityMetadata(data :any) {
+// Insert file metadata into DynamoDB
+async function insertProgramMetadata(data :any) {
+   
     const params = {
-        TableName: process.env.UNIVERSITY_METADATA_TABLE_NAME as string,
-                      Item: {
-                        universityName: data["University Name"],
-                        location: data["University Location"],
-                        numOfPrograms: data["Number Of Qualifications"],
-                        numOfQualifications: data["Number of Programmes"],
-                      },
+        TableName: process.env.PROGRAM_METADATA_TABLE_NAME as string,
+        Item: {
+          universityName: data["University Name"],
+          programmeName: data["Programme Name"],
+          programmeJudgment: data["Programme Judgment"]
+          },
+           
     };
     return await dynamoDb.put(params).promise();
 }
+
+
+
+
+
+
+//   // Learn more about the Llama 3 prompt format at:
+//   // https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/#special-tokens-used-with-meta-llama-3
+  
+  
