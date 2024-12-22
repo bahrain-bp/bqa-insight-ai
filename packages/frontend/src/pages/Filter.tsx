@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 
+
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
@@ -22,6 +23,10 @@ const Filter = () => {
 
   const [editableSentence, setEditableSentence] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
+  const [userModifiedSentence, setUserModifiedSentence] = useState(false);
+  const [userAdditions, setUserAdditions] = useState<string>("");
+  const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
+
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -40,7 +45,6 @@ const Filter = () => {
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${params.toString()}`);
         const data = await response.json();
-        console.log("Fetched filter options:", data.filters);
         setFilterOptions(data.filters);
       } catch (error) {
         console.error("Error fetching filter options:", error);
@@ -50,58 +54,105 @@ const Filter = () => {
     fetchFilterOptions();
   }, [selectedOptions]);
 
+
+  useEffect(() => {
+    if (!userModifiedSentence) {
+      const newSentence = generateSentence();
+      setEditableSentence(newSentence + userAdditions);
+      setLastGeneratedSentence(newSentence);
+    } else {
+      // When tags change, we need to update only the tag-related parts
+      const newSentence = generateSentence();
+      // Preserve user additions by replacing the old generated part with the new one
+      const updatedSentence = editableSentence.replace(lastGeneratedSentence, newSentence);
+      setEditableSentence(updatedSentence);
+      setLastGeneratedSentence(newSentence);
+    }
+  }, [selectedOptions, mode]);
+
+
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
 
     if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
-        const previousValues = prevState[header];
-
         if (!isFilterActive) {
           setIsFilterActive(true);
         }
 
+        let updatedState = { ...prevState };
+
         if (header === "Institute Classification") {
-          setSelectedOptions({
+          updatedState = {
             ...prevState,
             "Institute Classification": [value],
             "Institute Level": [],
             "Location": [],
             "Institute Name": [],
             "Report Year": []
-          });
+          };
         } else if (header === "Institute Level") {
-          setSelectedOptions({
+          updatedState = {
             ...prevState,
             "Institute Level": [value],
             "Institute Name": [],
-          });
+          };
         } else if (header === "Location") {
-          setSelectedOptions({
+          updatedState = {
             ...prevState,
             "Location": [value],
-          });
+          };
+        } else {
+          updatedState = {
+            ...prevState,
+            [header]: [value], // Changed to always set single value
+          };
         }
 
-        return {
-          ...prevState,
-          [header]: previousValues.includes(value) ? previousValues : [...previousValues, value],
-        };
+        return updatedState;
       });
     }
   };
 
+
+
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
+      // Create a new state object with the tag removed
       const updatedOptions = {
         ...prevState,
         [header]: prevState[header].filter((v) => v !== value),
       };
-      setIsFilterActive(Object.values(updatedOptions).some((selections) => selections.length > 0));
+
+      // Reset dependent fields based on which header was cleared
+      if (header === "Institute Classification") {
+        updatedOptions["Institute Level"] = [];
+        updatedOptions["Location"] = [];
+        updatedOptions["Institute Name"] = [];
+        updatedOptions["Report Year"] = [];
+      } else if (header === "Institute Level") {
+        updatedOptions["Institute Name"] = [];
+      }
+
+      // Update filter active state
+      const isStillActive = Object.values(updatedOptions).some((selections) => selections.length > 0);
+      setIsFilterActive(isStillActive);
+
+      // Only clear sentence and user modifications if no filters are active
+      if (!isStillActive) {
+        setEditableSentence("");
+        setUserModifiedSentence(false);
+        setUserAdditions("");
+        setLastGeneratedSentence("");
+      }
+
       return updatedOptions;
     });
   };
 
+
+
+  
   const generateSentence = () => {
     const parts: string[] = [];
     if (mode) parts.push(`${mode} insights for`);
@@ -119,17 +170,25 @@ const Filter = () => {
   };
 
   const handleSentenceEdit = () => {
-    // Ensure the sentence retains the previously modified sentence if any
-    setEditableSentence((prevEditableSentence) => prevEditableSentence || generateSentence());
+    if (!editableSentence) {
+      setEditableSentence(generateSentence());
+    }
     setIsEditing(true);
   };
-
   const handleSentenceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setEditableSentence(e.target.value);
+    const newSentence = e.target.value;
+    setEditableSentence(newSentence);
+    setUserModifiedSentence(true);
+    
+    // Store the difference between generated sentence and user's modifications
+    const addition = newSentence.replace(lastGeneratedSentence, "");
+    setUserAdditions(addition);
   };
 
   const handleSentenceSave = () => {
     setIsEditing(false);
+    // Store the current generated sentence for future comparisons
+    setLastGeneratedSentence(generateSentence());
     showMessage("Sentence updated successfully", "success");
   };
 
@@ -167,7 +226,6 @@ const Filter = () => {
           body: JSON.stringify({ userMessage: sentence }),
         });
         const body = await response.json();
-        console.log(body);
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
         console.error("Error sending data to Bedrock:", error);
@@ -178,6 +236,7 @@ const Filter = () => {
     }
   };
 
+  
   const handleClear = () => {
     setSelectedOptions(
       Object.keys(filterOptions).reduce((acc, header) => {
@@ -187,7 +246,13 @@ const Filter = () => {
     );
     setMode("");
     setIsFilterActive(false);
+    setEditableSentence("");
+    setUserModifiedSentence(false);
+    setUserAdditions("");
+    setLastGeneratedSentence("");
   };
+
+  
 
   return (
     <div className="flex flex-col items-center px-8">
