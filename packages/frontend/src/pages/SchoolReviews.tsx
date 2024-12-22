@@ -6,7 +6,7 @@ import { ToggleSection } from './Components/ToggleSection';
 import { SchoolReviewsFacts } from './SchoolReviewsComponents/SchoolReviewsFacts'; 
 import { SchoolReviewsTable } from './SchoolReviewsComponents/SchoolReviewsTable';
 import { SchoolGeneralCharts } from './SchoolReviewsComponents/SchoolGeneralCharts';
-import { SchoolSearch } from './SchoolReviewsComponents/SchoolSearch';
+import { SchoolHistoryGraph } from './SchoolReviewsComponents/SchoolHistoryGraph';
 
 
 export function SchoolReviews() {
@@ -73,13 +73,13 @@ export function SchoolReviews() {
           </ToggleSection>
 
           {/* Graphs Section */}
-          <ToggleSection title="Graphs" ariaControls="school-reviews-graphs">
+          <ToggleSection title="General Graphs" ariaControls="school-reviews-graphs">
             <SchoolGeneralCharts data={data} />
           </ToggleSection>
           
           {/* Search for a School Section */}
-          <ToggleSection title="Search for a School" ariaControls="school-search">
-            <SchoolSearch data={data} />
+          <ToggleSection title="School History Graph" ariaControls="school-search">
+            <SchoolHistoryGraph data={data} />
           </ToggleSection>
         </div>
       )}
