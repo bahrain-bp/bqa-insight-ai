@@ -50,7 +50,7 @@ interface SchoolSearchProps {
 export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [matchingSchools, setMatchingSchools] = useState<SchoolData[]>([]);
-  const [selectedSchool, setSelectedSchool] = useState<SchoolData | null>(null);
+  const [selectedSchools, setSelectedSchools] = useState<SchoolData[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const dropdownRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -72,16 +72,34 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
     setHighlightedIndex(matches.length > 0 ? 0 : -1);
   }, [searchTerm, data]);
 
-  // Extract reviews from selected school
-  const reviews = useMemo<Review[]>(() => {
-    return selectedSchool?.Reviews || [];
-  }, [selectedSchool]);
+  // ----------------------------
+  // 2) Handle Selection of Multiple Schools
+  // ----------------------------
+  const handleSelectSchool = (school: SchoolData) => {
+    setSelectedSchools((prev) => {
+      // Prevent adding duplicates
+      if (prev.find((s) => s.InstitutionCode === school.InstitutionCode)) {
+        return prev;
+      }
+      return [...prev, school];
+    });
+    setSearchTerm('');
+    setMatchingSchools([]);
+    setHighlightedIndex(-1);
+  };
+
+  const removeSchool = (institutionCode: string) => {
+    setSelectedSchools((prev) =>
+      prev.filter((school) => school.InstitutionCode !== institutionCode)
+    );
+  };
 
   // ----------------------------
-  // 2) Build Points for the Chart
+  // 3) Prepare Chart Data for a School
   // ----------------------------
-  const points = useMemo(() => {
-    return reviews.map((r) => {
+  const prepareLineData = (school: SchoolData): ChartData<'line'> => {
+    const reviews = school.Reviews || [];
+    const points = reviews.map((r) => {
       const gradeNum = parseGradeNumber(r.Grade);
       const cycle = r.Cycle || 'N/A';
       return {
@@ -91,32 +109,29 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
         review: r,
       };
     });
-  }, [reviews]);
 
-  // ----------------------------
-  // 3) Prepare Chart Data
-  // ----------------------------
-  const lineData: ChartData<'line', typeof points> = {
-    labels: [], // Not using string labels; relying on data.x
-    datasets: [
-      {
-        type: 'line',
-        label: 'All Reviews',
-        data: points,
-        showLine: false, // Only show points, no connecting lines
-        clip: false, // Allow points and labels to render outside the chart area
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        borderColor: '#999', // Line color (if showLine is true)
-        // Dynamically set point colors based on grade
-        pointBackgroundColor: (ctx) => {
-          const idx = ctx.dataIndex;
-          const item = points[idx];
-          if (!item.y || item.y < 1 || item.y > 4) return '#999';
-          return GRADE_COLORS[item.y] || '#999';
+    return {
+      labels: [], // Not using string labels; relying on data.x
+      datasets: [
+        {
+          type: 'line',
+          label: 'All Reviews',
+          data: points,
+          showLine: false, // Only show points, no connecting lines
+          clip: false, // Allow points and labels to render outside the chart area
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          borderColor: '#999', // Line color (if showLine is true)
+          // Dynamically set point colors based on grade
+          pointBackgroundColor: (ctx) => {
+            const idx = ctx.dataIndex;
+            const item = points[idx];
+            if (!item.y || item.y < 1 || item.y > 4) return '#999';
+            return GRADE_COLORS[item.y] || '#999';
+          },
         },
-      },
-    ],
+      ],
+    };
   };
 
   // ----------------------------
@@ -124,9 +139,9 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
   // ----------------------------
   const tooltipCallback = (ctx: TooltipItem<'line'>) => {
     const idx = ctx.dataIndex;
-    const item = points[idx];
-    if (!item) return '';
-    const r = item.review;
+    const dataset = ctx.dataset.data[idx] as any; // Type assertion
+    if (!dataset) return '';
+    const r = dataset.review as Review;
     return [
       `Grade: ${r.Grade}`,
       `Cycle: ${r.Cycle}`,
@@ -135,12 +150,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
   };
 
   // ----------------------------
-  // 5) Calculate Average Grade
-  // ----------------------------
-  const averageGrade = selectedSchool?.AverageGrade || null;
-
-  // ----------------------------
-  // 6) Chart Options
+  // 5) Chart Options
   // ----------------------------
   const options: ChartOptions<'line'> = {
     responsive: true,
@@ -189,14 +199,14 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
         clip: false, // Allow labels to render outside the chart area
         // We'll do dynamic alignment based on y=1 or y=4
         align: (ctx) => {
-          const item = points[ctx.dataIndex];
+          const item = ctx.chart.data.datasets[0].data[ctx.dataIndex] as any;
           if (!item.y) return 'center';
           if (item.y === 4) return 'end'; // Align above for grade 4
           if (item.y === 1) return 'start'; // Align below for grade 1
           return 'end'; // Default alignment
         },
         anchor: (ctx) => {
-          const item = points[ctx.dataIndex];
+          const item = ctx.chart.data.datasets[0].data[ctx.dataIndex] as any;
           if (!item.y) return 'center';
           if (item.y === 4) return 'end'; // Anchor to end for grade 4
           if (item.y === 1) return 'start'; // Anchor to start for grade 1
@@ -207,9 +217,8 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
         font: {
           size: 10,
         },
-        formatter: (_val, ctx) => {
-          const idx = ctx.dataIndex;
-          const item = points[idx];
+        formatter: (_val: any, ctx: any) => {
+          const item = ctx.chart.data.datasets[0].data[ctx.dataIndex] as any;
           return item.date; // Display the batch release date
         },
       },
@@ -217,7 +226,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
   };
 
   // ----------------------------
-  // 7) Handle Keyboard Navigation
+  // 6) Handle Keyboard Navigation
   // ----------------------------
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (matchingSchools.length === 0) return;
@@ -238,10 +247,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
       e.preventDefault();
       if (highlightedIndex >= 0 && highlightedIndex < matchingSchools.length) {
         const selected = matchingSchools[highlightedIndex];
-        setSelectedSchool(selected);
-        setSearchTerm('');
-        setMatchingSchools([]);
-        setHighlightedIndex(-1);
+        handleSelectSchool(selected);
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
@@ -263,7 +269,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
   };
 
   // ----------------------------
-  // 8) Render the Component
+  // 7) Render the Component
   // ----------------------------
   return (
     <div className="flex flex-col space-y-4">
@@ -278,7 +284,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. 'Saar Primary Boys School'"
+          placeholder="e.g. 'Aamna Bint Wahab Primary Girls School'"
           ref={inputRef}
         />
       </div>
@@ -298,13 +304,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
                   : 'hover:bg-gray-100'
               }`}
               onMouseEnter={() => setHighlightedIndex(idx)}
-              onMouseDown={() => {
-                // Use onMouseDown instead of onClick to handle selection before input loses focus
-                setSelectedSchool(sch);
-                setSearchTerm('');
-                setMatchingSchools([]);
-                setHighlightedIndex(-1);
-              }}
+              onMouseDown={() => handleSelectSchool(sch)} // Use the selection handler
             >
               {sch.EnglishSchoolName}
             </li>
@@ -312,40 +312,51 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
         </ul>
       )}
 
-      {/* === Selected School Information and Chart === */}
-      {selectedSchool && (
-        <div className="p-4 border border-gray-200 rounded bg-white shadow space-y-4">
-          {/* Basic School Information */}
-          <div>
-            <h3 className="text-lg font-bold mb-2">
-              {selectedSchool.EnglishSchoolName}
-            </h3>
-            <p>Arabic Name: {selectedSchool.ArabicSchoolName}</p>
-            <p>Institution Code: {selectedSchool.InstitutionCode}</p>
-            <p>School Type: {selectedSchool.SchoolType}</p>
-            {/* Conditional Rendering: Hide Gender and Level for Private Schools */}
-            {selectedSchool.SchoolType !== 'Private' && (
-              <>
-                <p>School Gender: {selectedSchool.SchoolGender}</p>
-                <p>School Level: {selectedSchool.SchoolLevel}</p>
-              </>
-            )}
-            {/* Display Average Grade */}
-            {averageGrade !== null && (
-              <p className="mt-2 text-md font-semibold">
-                Average Grade: {averageGrade}
-              </p>
-            )}
-          </div>
+      {/* === Selected Schools Information and Charts === */}
+      {selectedSchools.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {selectedSchools.map((school) => (
+            <div key={school.InstitutionCode} className="p-4 border border-gray-200 rounded bg-white shadow space-y-4">
+              {/* Basic School Information */}
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  {school.EnglishSchoolName}
+                </h3>
+                <p>Arabic Name: {school.ArabicSchoolName}</p>
+                <p>Institution Code: {school.InstitutionCode}</p>
+                <p>School Type: {school.SchoolType}</p>
+                {/* Conditional Rendering: Hide Gender and Level for Private Schools */}
+                {school.SchoolType !== 'Private' && (
+                  <>
+                    <p>School Gender: {school.SchoolGender}</p>
+                    <p>School Level: {school.SchoolLevel}</p>
+                  </>
+                )}
+                {/* Display Average Grade */}
+                {school.AverageGrade !== null && (
+                  <p className="mt-2 text-md font-semibold">
+                    Average Grade: {school.AverageGrade}
+                  </p>
+                )}
+                {/* Remove Button */}
+                <button
+                  className="mt-2 text-red-500 underline"
+                  onClick={() => removeSchool(school.InstitutionCode)}
+                >
+                  Remove
+                </button>
+              </div>
 
-          {/* Chart Container with Controlled Width */}
-          <div className="max-w-xl h-96">
-            {reviews.length > 0 ? (
-              <Line data={lineData} options={options} />
-            ) : (
-              <p className="text-gray-500">No reviews found.</p>
-            )}
-          </div>
+              {/* Chart Container */}
+              <div className="max-w-xl h-96">
+                {school.Reviews && school.Reviews.length > 0 ? (
+                  <Line data={prepareLineData(school)} options={options} />
+                ) : (
+                  <p className="text-gray-500">No reviews found.</p>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
