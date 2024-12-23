@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
-  const [educationType, setEducationType] = useState<"schools" | "universities" | "">("");
+  const [educationType, setEducationType] = useState<"schools" | "universities" | "vocational" | "">("");
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
@@ -19,6 +19,8 @@ const Filter = () => {
     "Programme Name": [],
     "Programme Judgment": []
   });
+
+
   interface UniversityFilters {
     "University Name": string[];
     "Programme Name": string[];
@@ -134,17 +136,23 @@ const Filter = () => {
   // Helper function to safely access filter values
   const getFilterValues = (header: string): string[] => {
     const filters = getCurrentFilters();
+  
     if (isSchoolFilters(filters)) {
       if (isSchoolFilterKey(header)) {
         return filters[header];
       }
     } else {
       if (isUniversityFilterKey(header)) {
+        // Exclude selected universities in Compare mode
+        if (header === "University Name" && mode === "Compare") {
+          return filters[header].filter((name) => !selectedOptions[header].includes(name));
+        }
         return filters[header];
       }
     }
     return [];
   };
+  
 
 
   
@@ -152,7 +160,25 @@ const Filter = () => {
   const handleEducationTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const type = e.target.value as "schools" | "universities" | "";
     setEducationType(type);
-    handleClear();
+    
+    // Reset selected options without clearing the mode
+    const currentFilters = type === "universities" 
+      ? universityFilters 
+      : filterOptions;
+      
+    setSelectedOptions(
+      Object.keys(currentFilters).reduce((acc, header) => {
+        acc[header] = [];
+        return acc;
+      }, {} as Record<string, string[]>)
+    );
+    
+    // Reset other state variables except mode
+    setIsFilterActive(false);
+    setEditableSentence("");
+    setUserModifiedSentence(false);
+    setUserAdditions("");
+    setLastGeneratedSentence("");
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
@@ -172,15 +198,14 @@ const Filter = () => {
       }
 
       // Handle Compare mode for both schools and universities for multi-select
-      if (mode === "Compare" && 
-          ((educationType === "schools" && header === "Institute Name") || 
-           (educationType === "universities" && header === "University Name"))) {
-        // Only add if not already present
-        if (!updatedState[header].includes(value)) {
-          updatedState[header] = [...updatedState[header], value];
-        }
-        return updatedState;
+    // Handle multi-select for "Compare" mode
+    if (mode === "Compare" && educationType === "universities" && header === "University Name") {
+      // Add only unique selections
+      if (!updatedState[header].includes(value)) {
+        updatedState[header] = [...updatedState[header], value];
       }
+      return updatedState;
+    }
 
       // Handle all other cases
       if (educationType === "schools") {
@@ -215,7 +240,18 @@ const Filter = () => {
           ...prevState,
           [header]: [value],
         };
-      }
+      } if (header === "University Name" && mode === "Compare" && educationType === "universities") {
+        updatedState = {
+          ...prevState,
+          [header]: [...(prevState[header] || []), value],
+          };
+        } else {
+          updatedState = {
+            ...prevState,
+            [header]: [value],
+          };
+        }
+
 
       return updatedState;
     });
@@ -316,8 +352,24 @@ const Filter = () => {
     e.preventDefault();
     const sentence = editableSentence;
 
+
+    if (mode === "Compare" && educationType === "universities") {
+      const selectedUniversities = selectedOptions["University Name"] || [];
+  
+      if (selectedUniversities.length < 2) {
+        showMessage("Please select at least two universities in Compare mode.", "error");
+        return;
+      }
+  
+      console.log("Comparing the following universities:", selectedUniversities);
+    }
+
+
+
     if (mode === "Compare") {
-      if (educationType === "schools") {
+      const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
+
+      if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
         // Check multi-select for Institute Name in schools table
         if (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2) {
           showMessage("Please select at least two institutes in Compare mode.", "error");
@@ -338,7 +390,7 @@ const Filter = () => {
     
       // Proceed with comparison logic based on selected items
       console.log("Comparison successful for education type:", educationType);
-    }
+    } 
     
 
     const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
@@ -405,20 +457,34 @@ const Filter = () => {
 
   return (
     <div className="flex flex-col items-center px-8">
-      {submittedMessage && (
-        <div className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
-          messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
-        }`}>
-          {submittedMessage}
-        </div>
-      )}
+    {submittedMessage && (
+      <div className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
+        messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
+      }`}>
+        {submittedMessage}
+      </div>
+    )}
 
-      <div className="w-full mt-4">
-        <div className="bg-white p-6 rounded-md shadow-md w-full">
-          <div className="flex items-center mb-4">
-            <label className="block font-semibold text-2xl mr-10">Education Type</label>
+    <div className="w-full mt-4">
+      <div className="bg-white p-6 rounded-md shadow-md w-full">
+        <div className="flex items-center mb-4 space-x-8">
+          <div className="flex items-center flex-1">
+            <label className="block font-semibold text-2xl mr-4">Insighting To</label>
             <select
-              className="p-2 border rounded text-sm w-1/4"
+              className="p-2 border rounded text-sm w-48"
+              value={mode}
+              onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
+            >
+              <option value="">Select...</option>
+              <option value="Compare">Compare</option>
+              <option value="Analyze">Analyze</option>
+            </select>
+          </div>
+
+          <div className="flex items-center flex-1">
+            <label className="block font-semibold text-2xl mr-4">Education Level</label>
+            <select
+              className="p-2 border rounded text-sm w-48"
               value={educationType}
               onChange={handleEducationTypeChange}
             >
@@ -427,61 +493,45 @@ const Filter = () => {
               <option value="universities">Universities</option>
             </select>
           </div>
+        </div>
 
-          {educationType && (
-            <div className="flex items-center mb-4">
-              <label className="block font-semibold text-2xl mr-10">Insighting To</label>
-              <select
-                className="p-2 border rounded text-sm w-1/4"
-                value={mode}
-                onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
-              >
-                <option value="">Select...</option>
-                <option value="Compare">Compare</option>
-                <option value="Analyze">Analyze</option>
-              </select>
-            </div>
-          )}
-
-          {mode && educationType && (
-            <>
-              <div className="grid grid-cols-4 gap-6">
-          {Object.keys(getCurrentFilters()).map((header) => (
-            <div key={header} className="w-full">
-              <label className="block text-sm font-semibold mb-2">{header}</label>
-              
-              {((educationType === "schools" && header === "Institute Name") ||
-                (educationType === "universities" && header === "University Name")) &&
-              mode === "Compare" ? (
-                <select
-                  className="p-2 border rounded text-sm w-full"
-                  onChange={(e) => handleSelectChange(e, header)}
-                  value="Select..."
-                >
-                  <option value="Select...">Select...</option>
-                  {getFilterValues(header)
-                    .filter(option => !selectedOptions[header]?.includes(option))
-                    .map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
-              ) : (
-                <select
-                  className="p-2 border rounded text-sm w-full"
-                  onChange={(e) => handleSelectChange(e, header)}
-                  value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
-                >
-                  <option value="Select...">Select...</option>
-                  {getFilterValues(header).map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-    )}
-  </div>
-))}
-
+        {mode && educationType && (
+          <>
+            <div className="grid grid-cols-4 gap-6">
+              {Object.keys(getCurrentFilters()).map((header) => (
+                <div key={header} className="w-full">
+                  <label className="block text-sm font-semibold mb-2">{header}</label>
                   
-              </div>
+                  {((educationType === "schools" && header === "Institute Name") ||
+                    (educationType === "universities" && header === "University Name")) &&
+                  mode === "Compare" ? (
+                    <select
+                      className="p-2 border rounded text-sm w-full"
+                      onChange={(e) => handleSelectChange(e, header)}
+                      value="Select..."
+                    >
+                      <option value="Select...">Select...</option>
+                      {getFilterValues(header)
+                        .filter(option => !selectedOptions[header]?.includes(option))
+                        .map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                  ) : (
+                    <select
+                      className="p-2 border rounded text-sm w-full"
+                      onChange={(e) => handleSelectChange(e, header)}
+                      value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
+                    >
+                      <option value="Select...">Select...</option>
+                      {getFilterValues(header).map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+              ))}
+            </div>
 
               <div className="mt-4">
                 {Object.keys(selectedOptions).map((header) =>
