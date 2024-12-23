@@ -1,7 +1,8 @@
 import React, { useState, useEffect, ChangeEvent } from "react";
 import Breadcrumb from "../components/Breadcrumbs/Breadcrumb";
 import JSZip from "jszip";
-import { FaUpload, FaTrashAlt, FaDownload } from "react-icons/fa";
+import { FaUpload, FaTrashAlt, FaDownload} from "react-icons/fa"; // Imported FaExclamationCircle
+import { AiOutlineClose } from "react-icons/ai"; // Optional: For closing the disclaimer modal
 
 const API_URL = import.meta.env.VITE_API_URL; // API base URL
 
@@ -25,6 +26,7 @@ const FileManagement: React.FC = () => {
   const [deleting, setDeleting] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [showDisclaimer, setShowDisclaimer] = useState<boolean>(false); // Added state for disclaimer
 
   useEffect(() => {
     fetchFiles();
@@ -60,7 +62,7 @@ const FileManagement: React.FC = () => {
 
   const uploadFiles = async (filesToUpload: File[]) => {
     if (filesToUpload.length === 0) return;
-
+  
     setUploading(true);
     try {
       const fileDetails = filesToUpload.map((file) => ({
@@ -68,7 +70,7 @@ const FileManagement: React.FC = () => {
         fileType: file.type,
         fileSize: file.size,
       }));
-
+  
       const response = await fetch(`${API_URL}/generate-upload-url`, {
         method: "POST",
         headers: {
@@ -76,10 +78,22 @@ const FileManagement: React.FC = () => {
         },
         body: JSON.stringify({ files: fileDetails }),
       });
-
+  
       const data = await response.json();
+  
+      if (!response.ok) {
+        // Backend responded with an error
+        const errorMsg = data.error || "Failed to generate upload URLs.";
+        throw new Error(errorMsg);
+      }
+  
       const uploadURLs = data.uploadURLs;
-
+  
+      // Ensure uploadURLs is an array and has the same length as filesToUpload
+      if (!Array.isArray(uploadURLs) || uploadURLs.length !== filesToUpload.length) {
+        throw new Error("Invalid upload URLs received from the server.");
+      }
+  
       await Promise.all(
         filesToUpload.map((file, index) =>
           fetch(uploadURLs[index].uploadURL, {
@@ -91,32 +105,23 @@ const FileManagement: React.FC = () => {
           })
         )
       );
-
+  
       fetchFiles(); // Refresh file list after uploading
-
-      // this is job syncing for bedrock knowledgebase
-      // const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
-      //   method: "POST",                
-      // });
-
-      // const syncJobData = await syncJobResponse.json();
-      // if (syncJobData.statusCode == 200) {
-      //     console.log("Job started successfully!")
-      // }
+  
       setAlertMessage("Files uploaded successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      setAlertMessage("Failed to upload files. Please try again.");
+      const errorMsg = error?.message || "Failed to upload files.";
+      setAlertMessage(errorMsg);
     } finally {
       setUploading(false);
     }
-  }
+  };
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const filesToUpload = Array.from(event.target.files || []);
 
-    await uploadFiles(filesToUpload)
-
+    await uploadFiles(filesToUpload);
   };
 
   const handleDelete = async () => {
@@ -202,15 +207,14 @@ const FileManagement: React.FC = () => {
   );
 
   // FOLDER UPLOAD //
-  const directoryUploadAttributes = {directory: "true", webkitdirectory: "true", mozdirectory: "true"}
+  const directoryUploadAttributes = { directory: "true", webkitdirectory: "true", mozdirectory: "true" };
 
   const handleFolderUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) return
+    if (!event.target.files) return;
 
-    const files = Array.from(event.target.files)
-    // const folderName = files[0]?.webkitRelativePath.split("/")[0]
-    await uploadFiles(files)
-  }
+    const files = Array.from(event.target.files);
+    await uploadFiles(files);
+  };
 
   return (
     <>
@@ -236,11 +240,10 @@ const FileManagement: React.FC = () => {
         {/* Sticky Header for Buttons and Search */}
         <div className="sticky top-[64px] bg-white z-10 shadow-sm p-4 border-b border-stroke dark:bg-boxdark dark:border-strokedark">
           {/* Upload Section */}
-          <div className="text-center mb-4">
+          <div className="flex items-center justify-center mb-4 space-x-2">
             <label
               htmlFor="fileUpload"
               className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
-                // style={{backgroundColor: '#003366'}}
             >
               <FaUpload size={16} /> {/* Upload Icon */}
               <input
@@ -250,15 +253,13 @@ const FileManagement: React.FC = () => {
                 onChange={handleUpload}
                 multiple
                 disabled={uploading}
+                accept=".pdf,.csv" // Restrict file types
               />
               Upload Files
             </label>
-          </div>
-          <div className="text-center mb-4">
             <label
               htmlFor="folderUpload"
               className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
-                // style={{backgroundColor: '#003366'}}
             >
               <FaUpload size={16} /> {/* Upload Icon */}
               <input
@@ -268,10 +269,19 @@ const FileManagement: React.FC = () => {
                 onChange={handleFolderUpload}
                 disabled={uploading}
                 multiple
-                { ...directoryUploadAttributes }
+                {...directoryUploadAttributes}
+                accept=".pdf,.csv" // Restrict file types
               />
               Upload Folder
             </label>
+            {/* Disclaimer Button */}
+            <button
+              className="flex items-center justify-center w-8 h-8 bg-yellow-500 text-white rounded-full hover:bg-yellow-600"
+              onClick={() => setShowDisclaimer(true)}
+              title="File Upload Guidelines"
+            >
+              !
+            </button>
           </div>
 
           {/* Action Buttons */}
@@ -305,8 +315,6 @@ const FileManagement: React.FC = () => {
             />
           </div>
         </div>
-
-        
 
         {/* Files Table */}
         {loading ? (
@@ -370,12 +378,19 @@ const FileManagement: React.FC = () => {
           <div
             className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 z-50"
             onClick={() => setPreviewFile(null)} // Close modal when clicking outside
-            style={{zIndex: 1002}}
+            style={{ zIndex: 1002 }}
           >
             <div
               className="relative w-[95%] max-w-6xl bg-white rounded-lg shadow-lg overflow-hidden"
               onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the modal
             >
+              {/* Close Button */}
+              <button
+                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+                onClick={() => setPreviewFile(null)}
+              >
+                <AiOutlineClose size={24} />
+              </button>
               {/* File Preview */}
               <iframe
                 src={previewFile}
@@ -385,7 +400,6 @@ const FileManagement: React.FC = () => {
             </div>
           </div>
         )}
-
 
         {/* Delete Confirmation Modal */}
         {deletePrompt && (
@@ -423,6 +437,42 @@ const FileManagement: React.FC = () => {
                 onClick={() => setAlertMessage(null)}
               >
                 OK
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Disclaimer Modal */}
+        {showDisclaimer && (
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md relative">
+              {/* Close Button */}
+              <button
+                className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+                onClick={() => setShowDisclaimer(false)}
+              >
+                <AiOutlineClose size={24} />
+              </button>
+              <h2 className="text-xl font-bold mb-4">File Upload Guidelines</h2>
+              <p className="mb-2">
+                You can only upload two types of files: <strong>PDF</strong> or <strong>CSV</strong>.
+              </p>
+              <p className="mb-2">
+                The "Upload Folder" option does not work for CSV files; it is only intended for uploading PDF files. 
+              </p>
+              <p className="mb-2">
+                For CSV files, please ensure they have the exact names listed below. Otherwise, the data will not load correctly:
+              </p>
+              <ul className="list-disc list-inside mb-4">
+                <li>Results of Government Schools Reviews.csv</li>
+                <li>Results of Private Schools Reviews.csv</li>
+                <li>Results of Vocational Reviews.csv</li>
+              </ul>
+              <button
+                className="mt-2 py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => setShowDisclaimer(false)}
+              >
+                Close
               </button>
             </div>
           </div>

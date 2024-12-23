@@ -11,7 +11,7 @@
     width: 90%;
     max-width: 400px;
     height: 500px;
-    background: #1e1e2f;
+    /*background: #1e1e2f;*/
     color: #fff;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -51,7 +51,7 @@
 }
 
 .b-chat__header button {
-    background: #ff5c5c;
+    /*background: #ff5c5c;*/
     border: none;
     color: white;
     font-size: 0.9rem;
@@ -74,7 +74,7 @@
 }
 
 .c-chat__list {
-    flex: 1;
+    /*flex: 1;*/
     padding: 10px;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -120,13 +120,13 @@
     line-height: 1.4;
     animation: fadeIn 0.3s ease;
 
-    background: #fff;
-    color: #222;;
+    /*background: #fff;*/
+    color: #fff;
     border-top-left-radius: 0;
 }
 
 .c-chat__item--human .c-chat__message {
-    background: #00ac92;
+    /*background: #00ac92;*/
     color: #fff;
     border-top-right-radius: 0;
     border-top-left-radius: 15px;
@@ -134,12 +134,12 @@
 
 /* Input box styling */
 .c-chat__form {
-    position: sticky; /* Sticky to the bottom of .c-chat */
+    position: sticky; /* Sticky to the bottom of .c-chat 
     bottom: 0;
-    background: #1e1e2f;
+    /*background: #1e1e2f;*/
     display: flex;
     padding: 10px;
-    border-top: 1px solid #444;
+    /*border-top: 1px solid #444;*/
     z-index: 10; /* Ensures it stays above other content */
 
 }
@@ -149,8 +149,8 @@
     padding: 10px;
     border: none;
     border-radius: 20px;
-    background: #333;
-    color: #fff;
+    /*background: #333;*/
+    /*color: #fff;*/
     font-size: 0.9rem;
     outline: none;
 }

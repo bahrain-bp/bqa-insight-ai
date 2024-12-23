@@ -4,13 +4,14 @@ import Loader from './Loader';
 import PageTitle from './components/PageTitle';
 import SignIning from './pages/Authentication/SignIn';
 import PasswordResetPage from './pages/Authentication/ForgotPassword';
-import ChatBot from './pages/Chat';
 import ECommerce from './pages/Dashboard/ECommerce';
 import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
-import Filter from "./pages/Filter.tsx";
+import BasicView from './pages/BasicView/BasicView.tsx';
+import { SchoolReviews } from './pages/SchoolReviews.tsx';
+import { VocationalReviews } from './pages/VocationalReviews.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,7 +45,7 @@ function App() {
           element={
             <>
               <PageTitle title="InsightAI" />
-              <ChatBot />
+              {/* <ChatBot /> */}
             </>
           }
         />
@@ -82,14 +83,32 @@ function App() {
                 }
             />
 
-<Route
+          <Route
           path="/Filter"
           element={
             <>
               <PageTitle title="Filter" />
-              <Filter/>
+              <BasicView />
             </>
           }
+        />
+        <Route
+          path="/schoolReviews"
+          element={
+              <>
+                  <PageTitle title="School Reviews" />
+                  <SchoolReviews />
+              </>
+              }
+        />
+        <Route
+          path="/vocationalReviews"
+          element={
+              <>
+                  <PageTitle title="Vocational Reviews" />
+                  <VocationalReviews />
+              </>
+              }
         />
       </Routes>
       

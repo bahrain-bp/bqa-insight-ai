@@ -180,7 +180,7 @@ const Filter = () => {
   };
 
   return (
-    <div className="flex flex-col items-center px-8">
+    <div className="p-6">
       {/* Pop-Up Message */}
       {submittedMessage && (
         <div
@@ -191,9 +191,6 @@ const Filter = () => {
           {submittedMessage}
         </div>
       )}
-
-      <div className="w-full mt-4">
-        <div className="bg-white p-6 rounded-md shadow-md w-full">
           <div className="flex items-center mb-4">
             <label className="block font-semibold text-2xl mr-10">Insighting To</label>
             <select
@@ -279,9 +276,7 @@ const Filter = () => {
               )}
             </>
           )}
-        </div>
       </div>
-    </div>
   );
 };
 
