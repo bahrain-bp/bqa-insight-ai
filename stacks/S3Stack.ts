@@ -4,11 +4,13 @@ import { FileMetadataStack } from "./FileMetadataStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { OpenDataStack } from "./OpenDataStack";
 export function S3Stack({ stack }: StackContext) {
     const {fileMetadataTable } = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
     const {programMetadataTable} = use(ProgramMetadataStack);
     const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -201,6 +203,28 @@ export function S3Stack({ stack }: StackContext) {
             function: sendSplitMessage, 
             events: ["object_created"], 
             filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
+        },
+        
+    });
+
+    //Function to process CSV files and store the data in DynamoDB
+    const processCSVHandler = new Function(stack, "ProcessCSVHandler", {
+        handler: "packages/functions/src/lambda/processCSV.handler",
+        environment: {
+            SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
+            HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME: HigherEducationProgrammeReviewsTable.tableName,
+            NATIONAL_FRAMEWORK_OPERATIONS_TABLE_NAME: NationalFrameworkOperationsTable.tableName,
+            VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
+        },
+        permissions: [SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable], 
+    });
+
+    // S3 Notification for CSV files
+    bucket.addNotifications(stack, {
+        objectCreatedNotification: {
+            function: processCSVHandler, 
+            events: ["object_created"], 
+            filters: [{ prefix: "CSVFiles/" }, { suffix: ".csv" }], 
         },
         
     });

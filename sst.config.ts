@@ -10,6 +10,7 @@ import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
 import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
+import { OpenDataStack } from "./stacks/OpenDataStack";
 import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
 
@@ -40,6 +41,7 @@ export default {
       .stack(InstituteMetadataStack)
       .stack(UniversityProgramMetadataStack)
       .stack(ProgramMetadataStack)
+      .stack(OpenDataStack)
       .stack(S3Stack)
       .stack(BedrockStack)
       .stack(BotStack)
@@ -47,7 +49,6 @@ export default {
       .stack(FrontendStack)
       .stack(AuthStack)
       .stack(AfterDeployStack);
-     
     }
   }
 } satisfies SSTConfig; 
