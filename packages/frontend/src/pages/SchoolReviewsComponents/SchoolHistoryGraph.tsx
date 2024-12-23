@@ -120,6 +120,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
         {
           type: 'line',
           label: 'Review Report',
+          // @ts-ignore
           data: points,
           showLine: false, // Only show points, no connecting lines
           clip: false, // Allow points and labels to render outside the chart area

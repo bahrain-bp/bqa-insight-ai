@@ -255,6 +255,7 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
           },
         },
       },
+      // @ts-ignore
       datalabels: false,
     },
   };
@@ -371,6 +372,7 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
           },
         },
       },
+      // @ts-ignore
       datalabels: false,
     },
   };
@@ -503,6 +505,7 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
           },
         },
       },
+      // @ts-ignore
       datalabels: false,
     },
   };

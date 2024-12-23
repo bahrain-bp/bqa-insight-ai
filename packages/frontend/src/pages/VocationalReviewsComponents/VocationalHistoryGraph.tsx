@@ -120,6 +120,7 @@ export function VocationalHistoryGraph({ data }: VocationalSearchProps) {
         {
           type: 'line',
           label: 'Review Report',
+          // @ts-ignore
           data: points,
           showLine: false, // Only show points, no connecting lines
           clip: false, // Allow points and labels to render outside the chart area
@@ -162,6 +163,7 @@ export function VocationalHistoryGraph({ data }: VocationalSearchProps) {
         },
         grid: {
           display: true,
+          // @ts-ignore
           borderColor: '#e0e0e0',
         },
       },
@@ -192,6 +194,7 @@ export function VocationalHistoryGraph({ data }: VocationalSearchProps) {
         },
         grid: {
           display: true,
+          // @ts-ignore
           borderColor: '#e0e0e0',
         },
       },

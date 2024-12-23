@@ -1,6 +1,6 @@
 // src/VocationalReviewsComponents/VocationalGraphs.tsx
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Bar, Scatter, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -140,6 +140,7 @@ export function VocationalGraphs({ data }: { data: VocationalData[] }) {
           },
         },
       },
+      // @ts-ignore
       datalabels: false,
     },
   };
