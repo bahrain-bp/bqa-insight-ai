@@ -10,6 +10,8 @@ import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
 import BasicView from './pages/BasicView/BasicView.tsx';
+import { SchoolReviews } from './pages/SchoolReviews.tsx';
+import { VocationalReviews } from './pages/VocationalReviews.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -81,7 +83,7 @@ function App() {
                 }
             />
 
-<Route
+          <Route
           path="/Filter"
           element={
             <>
@@ -89,6 +91,24 @@ function App() {
               <BasicView />
             </>
           }
+        />
+        <Route
+          path="/schoolReviews"
+          element={
+              <>
+                  <PageTitle title="School Reviews" />
+                  <SchoolReviews />
+              </>
+              }
+        />
+        <Route
+          path="/vocationalReviews"
+          element={
+              <>
+                  <PageTitle title="Vocational Reviews" />
+                  <VocationalReviews />
+              </>
+              }
         />
       </Routes>
       
