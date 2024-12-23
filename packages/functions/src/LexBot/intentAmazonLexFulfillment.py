@@ -107,7 +107,6 @@ def dispatch(intent_request):
                 intent_request,
                 'MainMenuSlot',  # Replace with your main menu slot if needed
                 'MainMenuIntent',  # Replace with your actual main menu intent name
-                message=create_message("Redirecting to the main menu.")
             )
         else:
             return close(
@@ -118,6 +117,7 @@ def dispatch(intent_request):
 
     # Handle BQAIntent
     elif intent_name == 'BQAIntent':
+        print("doing BQA INTENT")
         bqa_slot = get_slot(intent_request, 'BQASlot')
         if bqa_slot == 'Analyze':
             response = elicit_intent(
@@ -169,43 +169,50 @@ def dispatch(intent_request):
         
         # If University is selected, check AnalysisTypeSlot
         if institute_type == 'University':
-            analysis_type = get_slot(intent_request, 'AnalysisTypeSlot')
-            if not analysis_type:
+            slots = get_slots(intent_request)
+            if "AnalyzeUniversitySlot" not in slots:
                 return elicit_slot(
                     intent_request,
-                    'AnalysisTypeSlot',
+                    'AnalyzeUniversitySlot',
                     slots=get_slots(intent_request),
                 )
+            analysis_type = get_slot(intent_request, 'AnalyzeUniversitySlot')
 
             # If Program is selected, check ProgramNameSlot
             if analysis_type == 'Program':
-                slots = get_slots(intent_request)
-                if "ProgramNameSlot" not in slots :
+                program_name = get_slot(intent_request, 'ProgramNameSlot')
+                if program_name is None :
                     return elicit_slot(
                         intent_request,
                         'ProgramNameSlot',
                         slots=get_slots(intent_request),
                     )
-                program_name = get_slot(intent_request, 'ProgramNameSlot')
 
-                if intent_name == 'UniStandard':
-                    slots = get_slots(intent_request)
-                stand = get_slot(intent_request, 'StandardSlot')
-                if stand:
-                 response = f"You asked: '{stand}'. Processing your request."
-                else:
-                 return elicit_slot(
+                standard = get_slot(intent_request, 'StandardSlot')
+                if standard is None:
+                    return elicit_slot(
                         intent_request,
                         'StandardSlot',
                         slots=get_slots(intent_request),
                     )
 
-        message = create_message(response)
-        return close(
-            intent_request,
-            'Fulfilled',
-            message
-        )
+                message = f"Put hte damn response here bro: {program_name} {standard}"
+                response = create_message(message)
+                session_attributes = get_session_attributes(intent_request)
+                session_attributes['chartData'] = "put chart data here bro"
+                return close(
+                    intent_request,
+                    'Fulfilled',
+                    response,
+                    session_attributes,
+                )
+
+            elif analysis_type == 'Standard':
+                return elicit_intent(
+                    intent_request,
+                    'StandardSlot',
+                    "StandardIntent",
+                )
 
                 # Only if program name is provided, ask for metric
                 # if 'StandardSlot' not in slots :
@@ -226,6 +233,29 @@ def dispatch(intent_request):
                 #     session_attributes,
                 # )
 
+    elif intent_name == 'StandardIntent':
+        print("Standard intent, request:", intent_request)
+        standard = get_slot(
+            intent_request,
+            'StandardSlot',
+        )
+        if standard is not None:
+            print("standard slot not available")
+            return elicit_slot(
+                intent_request,
+                'StandardSlot',
+            )
+        message = f"Put hte damn response here bro: {standard}"
+        response = create_message(message)
+        session_attributes = get_session_attributes(intent_request)
+        session_attributes['chartData'] = "put chart data here bro"
+        return close(
+            intent_request,
+            'Fulfilled',
+            response,
+            session_attributes,
+        )
+        
     # Handle ComparingIntent
     elif intent_name == 'ComparingIntent':
         slots = get_slots(intent_request)
