@@ -11,7 +11,7 @@ import { BedrockStack } from "../BedrockStack";
 
 export function BotStack({stack}: StackContext) {
 
-    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
+    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias, cfnAgentLlama, cfnAgentAliasLlama} = use(BedrockStack);
 
     const provider = new LexCustomResource(
         stack,
@@ -444,7 +444,9 @@ export function BotStack({stack}: StackContext) {
         environment: {
             agentId: cfnAgent.attrAgentId,
             agentAliasId: cfnAgentAlias.attrAgentAliasId,
-            KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
+            KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+            llamaAgentId: cfnAgentLlama.attrAgentId,
+            llamaAgentAliasId: cfnAgentAliasLlama.attrAgentAliasId,
         },
         
     }); 

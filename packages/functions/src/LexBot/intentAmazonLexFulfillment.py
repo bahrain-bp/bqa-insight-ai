@@ -6,9 +6,10 @@ import json
 import os
 
 from botocore.exceptions import ClientError
-# from ..bedrock.bedrock_python.invokeBedrockAgent import invoke_agent
 from Bedrock_Lex.invokeBedrockAgent import invoke_agent
 from Bedrock_Lex.retrieveReports import get_reports
+from Bedrock_Lex.prompts import *
+from Bedrock_Lex.invokeClaudeModel import invoke_model
 
 def create_message(message):
     return {
@@ -104,6 +105,14 @@ def close(intent_request, fulfillment_state, message, session_attributes = {}):
     }
 
 def dispatch(intent_request):
+    
+    # Get Bedrock ageant id and alias id
+    agent_id = os.getenv("agentId")
+    agent_alias_id = os.getenv("agentAliasId")
+
+    llama_agent_id = os.getenv("llamaAgentId")
+    llama_agent_alias_id = os.getenv("llamaAgentAliasId")
+
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
 
@@ -171,17 +180,22 @@ def dispatch(intent_request):
         institute = get_slot(intent_request, 'InstituteSlot')
         metric = get_slot(intent_request, 'MetricSlot')
 
-
-        agent_id = os.getenv("agentId")
-        agent_alias_id = os.getenv("agentAliasId")
+        prompt = create_analyze_prompt(institute, metric)
 
         response = invoke_agent(agent_id, agent_alias_id, "123", prompt)
+        # response = invoke_agent(llama_agent_id, agent_alias_id, "123", prompt)
+        # response = invoke_model(prompt)
         # print(response)
-
 
         message = create_message(response)
 
         session_attributes = get_session_attributes(intent_request)
+
+        # generate chart data
+        json_prompt = create_generate_json_prompt(response)
+        json_response = invoke_agent(agent_id, agent_alias_id, "123", json_prompt)
+        print(json_response)
+
         session_attributes['chartData'] = 'replace this with chart data'
 
         return close(
@@ -231,11 +245,13 @@ def dispatch(intent_request):
                 slots=get_slots(intent_request),
             )
 
-        response = "invoke bedrock and put text response in this variable. "
+        
         # these are the slot values
         governorate = get_slot(intent_request, 'GovernorateSlot')
-        if governorate is not None:
-            response += governorate
+        response = "invoke bedrock and put text response in this variable. "
+        
+        # if governorate is not None:
+        #     response += governorate
 
         message = create_message(response)
 
