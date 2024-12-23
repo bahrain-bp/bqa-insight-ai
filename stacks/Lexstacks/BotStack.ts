@@ -2,12 +2,10 @@ import { StackContext } from "sst/constructs";
 import { aws_lambda as lambda } from 'aws-cdk-lib';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration, aws_iam as iam } from "aws-cdk-lib";
-
 import {
     LexCustomResource,
     LexBotDefinition,
 } from '@amaabca/aws-lex-custom-resources';
-
 export function BotStack({stack}: StackContext) {
 
     const provider = new LexCustomResource(
@@ -36,7 +34,6 @@ export function BotStack({stack}: StackContext) {
     );
 
     // Add a language for our bot to which we can add intents/slots and slot types.
-
     const locale = botDefinition.addLocale({
         localeId: 'en_US',
         nluIntentConfidenceThreshold: 0.40,
@@ -44,9 +41,6 @@ export function BotStack({stack}: StackContext) {
             voiceId: 'Ivy',
         },
     });
-
-
-    // Slot to select type of analysis
 
     locale.addSlotType({
         slotTypeName: 'BQASlotType',
@@ -92,15 +86,6 @@ export function BotStack({stack}: StackContext) {
             {utterance: 'Hello BQA'},
             {utterance: 'compare'},
             { utterance: 'Hi BQA' },
-            { utterance: 'About' },
-            { utterance: 'Tell me more' },
-            { utterance: 'What is this?' },
-            { utterance: 'How can I get started?' },
-            { utterance: 'Good morning' },
-            { utterance: 'Explain' },
-            { utterance: 'Another' },
-            { utterance: 'Next' },
-            { utterance: 'Again' },
             { utterance: 'Help' },
             {utterance: 'Back'},              // Added Back utterance
             {utterance: 'Back to the main menu'}, // Added Back to main menu utterance
@@ -184,7 +169,6 @@ export function BotStack({stack}: StackContext) {
         },
     });
 
-    // New intents for each button option
     const analyzingIntent = locale.addIntent({
         intentName: 'AnalyzingIntent',
         description: 'Provide information about analyzing educational institutes',
@@ -233,7 +217,6 @@ export function BotStack({stack}: StackContext) {
         },
     });
     
-
     analyzingIntent.addSlot({
         slotName: 'AnalyzeUniversitySlot',
         slotTypeName: 'AMAZON.FreeFormInput',
@@ -264,7 +247,6 @@ export function BotStack({stack}: StackContext) {
             }
         }
     })
-
     analyzingIntent.addSlot({
         slotName: 'ProgramNameSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
@@ -285,18 +267,16 @@ export function BotStack({stack}: StackContext) {
             }
         }
     })
-
     const UniStandard = locale.addIntent({
         intentName: 'StandardIntent',
-        description: 'Provide information about analyzing educational institutes',
+        description: 'Provide information about jug jgopo institutes',
         sampleUtterances: [
-            { utterance: 'Tell me more about analyzing' },
+            { utterance: 'Tfhoislghoidj' },
         ],
         fulfillmentCodeHook: {
             enabled: true,
         },
     });
-
     UniStandard.addSlot({
         slotName: 'StandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
@@ -317,30 +297,6 @@ export function BotStack({stack}: StackContext) {
             },
         },
     })
-
-
-
-    // analyzingIntent.addSlot({
-    //     slotName: 'StandardSlot',
-    //     slotTypeName: 'AMAZON.FreeFormInput',
-    //     description: 'Standard to analyze',
-    //     valueElicitationSetting: {
-    //         slotConstraint: 'Optional',
-    //         promptSpecification: {
-    //             messageGroups: [
-    //                 {
-    //                     message: {
-    //                         plainTextMessage: {
-    //                             value: 'what is the standard of the specific program'
-    //                         }
-    //                     },
-    //                 },
-    //             ],
-    //             maxRetries: 2,
-    //         },
-    //     },
-    // })
-
     const comparingIntent = locale.addIntent({
         intentName: 'ComparingIntent',
         description: 'Provide information about comparing educational institutes',
@@ -353,7 +309,6 @@ export function BotStack({stack}: StackContext) {
             enabled: true,
         },
     });
-
     comparingIntent.addSlot({
         slotName: 'CompareInstituteSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
@@ -384,7 +339,6 @@ export function BotStack({stack}: StackContext) {
             }
         }
     })
-
     const compareInstitutesIntent = locale.addIntent({
         intentName: 'CompareInstitutesIntent',
         description: 'Provide information about comparing educational institutes',
@@ -397,7 +351,6 @@ export function BotStack({stack}: StackContext) {
             enabled: true,
         },
     });
-
     compareInstitutesIntent.addSlot({
         slotName: 'CompareInstitutesSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
@@ -418,7 +371,6 @@ export function BotStack({stack}: StackContext) {
             },
         },
     });
-      
 
     const comparedGovernorateIntent = locale.addIntent({
         intentName: 'CompareGovernorateIntent',
@@ -465,8 +417,6 @@ export function BotStack({stack}: StackContext) {
             },
         },
     });
-
-    
 
     comparedGovernorateIntent.addSlot({
         slotName: 'GovernorateSlot',
@@ -519,7 +469,6 @@ export function BotStack({stack}: StackContext) {
         }
     });
     
-    // Add the slot for fallback handling
     FallbackIntent.addSlot({
         slotName: 'FallbackContext',
         slotTypeName: 'BQASlotType',
@@ -544,7 +493,6 @@ export function BotStack({stack}: StackContext) {
             }
         }
     });
-   
  
     const handleNoResponse = locale.addIntent({
         intentName: 'HandleNoResponse',
@@ -555,44 +503,8 @@ export function BotStack({stack}: StackContext) {
         },
     });
 
-    
-    
-
-
-    // Calculation Intent
-
-/*    locale.addSlotType({
-        slotTypeName: 'ElectricityConsumptionSlot',
-        description: 'Types of electricity consumption levels',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            {sampleValue: {value: 'Low'}},
-            {sampleValue: {value: 'Medium'}},
-            {sampleValue: {value: 'High'}},
-            {sampleValue: {value: '300 kilowatt'}},
-        ],
-    });*/
-
-
-    // create/update the bot resource
     const bot = botDefinition.build();
-
-    // create a version that automatically is built when the bot changes
     const version = bot.automaticVersion();
-
-    // const fulfillmentFunction = new Function(stack, "FulfillmentFunction", {
-    //     handler: "packages/functions/src/LexBot/intentAmazonLexFulfillment.lambda_handler",
-    //     runtime: "python3.11", // SST automatically maps this
-    //     memorySize: 512,
-    //     timeout: 60,
-    //     environment: {
-    //     },
-    //     permissions: ["lex"], // SST automatically configures IAM permissions
-    //
-    // });
-
     const fulfillmentPermission = {
         action: 'lambda:InvokeFunction',
         principal: new iam.ServicePrincipal('lex.amazonaws.com')
@@ -611,17 +523,7 @@ export function BotStack({stack}: StackContext) {
     // Grant permission for the Lambda function to interact with Amazon Lex
     fulfillmentFunction.grantInvoke(fulfillmentPrincipal);
 
-    fulfillmentFunction.addPermission('lex-fulfillment', fulfillmentPermission)    // const communicationFunction = new Function(stack, "CommunicationFunction", {
-    //     handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
-    //     runtime: "python3.11",
-    //     memorySize: 512,
-    //     timeout: 60,
-    //     environment: {
-    //         BOT_ID: bot.resource.ref,
-    //     },
-    //     permissions: ["lex"], // SST automatically configures IAM permissions
-    // });
-    // create an alias and assign it to the latest bot version
+    fulfillmentFunction.addPermission('lex-fulfillment', fulfillmentPermission)    
     const alias = bot.addAlias({
         botAliasName: 'liveAlias',
         botVersion: version.botVersion(),
@@ -637,11 +539,6 @@ export function BotStack({stack}: StackContext) {
             },
         },
     });
-
-
-
-    
-    // communicationFunction.addEnvironment("BOT_ALIAS_ID", alias.resource.ref);
     return {
         bot,
         alias
