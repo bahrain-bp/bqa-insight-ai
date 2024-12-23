@@ -90,6 +90,44 @@ export async function handler(event: SQSEvent){
                 }`;
                     
             
+                // const userMessage = `Your goal is to extract structured information from the user's input that matches the form described below and output it in JSON format.
+                // When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
+                // These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
+                // "University Name","Location","Number of Programs","Number of Qualifications", "Univeristy Classification"
+                
+                // request: {
+                // University Name: String // The institute name excluding Education & Training Quality Authority.
+                // Location: String// The institute location and town.
+                // Number of Programs: Number// The total number of programes available.
+                // Number of Qualifications: Number // The total number of qualifications.
+                // Univeristy Classification: String // The university classification is it Public or Private university. If it didn't say private, it means public.
+                // }
+    
+                // Please output the extracted information in JSON format and in JSON format only. 
+                // Do not output anything except for the extracted information. Do not use the below input output examples as a response. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
+    
+                // Input: Bahrain Polytechnic located in Isa Town Bahrain. The number of programs are 22, and the number of qualifications are 22.
+                // Output: "University Name","Location","Number of Programs","Number of Qualifications","Univeristy Classification"
+                // "Bahrain Polytechnic","Isa Town","22","22","Public"
+    
+                // Output: 
+                // {
+                // "University Name": "Bahrain Polytechnic",
+                // "Location": "Isa Town",
+                // "Number of Programs": "22",
+                // "Number of Qualifications": "22",
+                // "Univeristy Classification": "Public",
+                // }
+    
+    
+                // Input: ` + text + `
+                // Output: {
+                // "University Name": "",
+                // "Location": "",
+                // "Number of Programs": "",
+                // "Number of Qualifications": "",
+                // "Univeristy Classification": "",
+                // }`;
     
                 const prompt = `
                 <|begin_of_text|><|start_header_id|>user<|end_header_id|>

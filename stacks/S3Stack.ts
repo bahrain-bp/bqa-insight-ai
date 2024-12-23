@@ -2,9 +2,13 @@ import { StackContext, Bucket, Function, Queue, use, toCdkDuration, Topic } from
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { ProgramMetadataStack } from "./ProgramMetadataStack";
+import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 export function S3Stack({ stack }: StackContext) {
-    const { fileMetadataTable } = use(FileMetadataStack);
+    const {fileMetadataTable } = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    const {programMetadataTable} = use(ProgramMetadataStack);
+    const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -42,23 +46,71 @@ export function S3Stack({ stack }: StackContext) {
         },
     });
 
-    const extractReportMetadata = new Function(stack, "claudeExtractReportMetadata", {
-        handler: "packages/functions/src/bedrock/claudeExtractReportMetadata.handler",
+    const extractUniversityMetadata = new Function(stack, "claudeUniversityMetadata", {
+        handler: "packages/functions/src/bedrock/claudeUniversityMetadata.handler",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
         ],
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
         INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        }
+    });
+    const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
+        handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
+        timeout: "300 seconds",
+        permissions: [
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
+        ],
+        environment: {
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+        EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        }
+    });
+
+    const extractReportMetadata = new Function(stack, "claudeExtractReportMetadata", {
+        handler: "packages/functions/src/bedrock/claudeExtractReportMetadata.handler",
+        timeout: "300 seconds",
+        permissions: [
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
+        ],
+        environment: {
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+        EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        }
+    });
+    const triggerExtractLambda = new Function(stack, "triggerExtractLambda", {
+        handler: "packages/functions/src/bedrock/triggerExtractLambda.handler",
+        timeout: "300 seconds",
+        permissions: [
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, "lambda:InvokeFunction"
+        ],
+        environment: {
+        SCHOOL_LAMBDA_FUNCTION_NAME : extractReportMetadata.functionName,
+        UNIVERSITY_LAMBDA_FUNCTION_NAME : extractUniversityMetadata.functionName,
+        PROGRAM_LAMBDA_FUNCTION_NAME: extractProgramMetadata.functionName,
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+        EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
         bind: [syncTopic],
     });
 
     extractMetadataQueue.addConsumer(stack, {
-        function: extractReportMetadata,
+        function: triggerExtractLambda,
     });
 
 
