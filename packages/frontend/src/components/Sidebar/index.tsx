@@ -83,7 +83,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-1001 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-99999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-primary duration-300 ease-linear dark:bg-primary lg:static lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
@@ -131,23 +131,36 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               <li>
                 <NavLink
                   to="/"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
                     pathname == "/" &&
-                    'bg-graydark dark:bg-meta-4'
+                    'bg-lightblue dark:bg-meta-4'
                   }`}
                 >
                   <img src={Dashboard} alt="Dashboard" width="18" height="18" />
                   Dashboard
                 </NavLink>
               </li>
-             
+
+              <li>
+                <NavLink
+                  to="/Filter"
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
+                    pathname.includes('Filter') && 'bg-lightblue dark:bg-meta-4'
+                  
+                  }`}
+                >
+                  <img src={Dashboard} alt="Dashboard" width="18" height="18" />
+                  Filter
+                </NavLink>
+              </li>
+
               {/* <!-- Menu Item File Management --> */}
               {loggedIn && (
               <li>
                 <NavLink
                   to="/fileManagement"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes('fileManagement') && 'bg-graydark dark:bg-meta-4'
+                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
+                    pathname.includes('fileManagement') && 'bg-lightblue dark:bg-meta-4'
                   }`}
                 >
                   <img src={Upload} alt="Upload" width="18" height="18" />

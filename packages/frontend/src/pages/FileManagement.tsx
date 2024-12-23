@@ -58,14 +58,13 @@ const FileManagement: React.FC = () => {
     }
   };
 
-  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const filesToUpload = Array.from(event.target.files || []);
+  const uploadFiles = async (filesToUpload: File[]) => {
     if (filesToUpload.length === 0) return;
 
     setUploading(true);
     try {
       const fileDetails = filesToUpload.map((file) => ({
-        fileName: file.name,
+        fileName: file.webkitRelativePath || file.name,
         fileType: file.type,
         fileSize: file.size,
       }));
@@ -96,14 +95,14 @@ const FileManagement: React.FC = () => {
       fetchFiles(); // Refresh file list after uploading
 
       // this is job syncing for bedrock knowledgebase
-      const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
-        method: "POST",                
-      });
+      // const syncJobResponse = await fetch(`${import.meta.env.VITE_API_URL}/sync`, {
+      //   method: "POST",                
+      // });
 
-      const syncJobData = await syncJobResponse.json();
-      if (syncJobData.statusCode == 200) {
-          console.log("Job started successfully!")
-      }
+      // const syncJobData = await syncJobResponse.json();
+      // if (syncJobData.statusCode == 200) {
+      //     console.log("Job started successfully!")
+      // }
       setAlertMessage("Files uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);
@@ -111,6 +110,13 @@ const FileManagement: React.FC = () => {
     } finally {
       setUploading(false);
     }
+  }
+
+  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const filesToUpload = Array.from(event.target.files || []);
+
+    await uploadFiles(filesToUpload)
+
   };
 
   const handleDelete = async () => {
@@ -195,6 +201,17 @@ const FileManagement: React.FC = () => {
     file.fileName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // FOLDER UPLOAD //
+  const directoryUploadAttributes = {directory: "true", webkitdirectory: "true", mozdirectory: "true"}
+
+  const handleFolderUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files) return
+
+    const files = Array.from(event.target.files)
+    // const folderName = files[0]?.webkitRelativePath.split("/")[0]
+    await uploadFiles(files)
+  }
+
   return (
     <>
       <Breadcrumb pageName="Manage Files" />
@@ -222,8 +239,8 @@ const FileManagement: React.FC = () => {
           <div className="text-center mb-4">
             <label
               htmlFor="fileUpload"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
-                style={{backgroundColor: '#003366'}}
+              className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+                // style={{backgroundColor: '#003366'}}
             >
               <FaUpload size={16} /> {/* Upload Icon */}
               <input
@@ -237,11 +254,30 @@ const FileManagement: React.FC = () => {
               Upload Files
             </label>
           </div>
+          <div className="text-center mb-4">
+            <label
+              htmlFor="folderUpload"
+              className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
+                // style={{backgroundColor: '#003366'}}
+            >
+              <FaUpload size={16} /> {/* Upload Icon */}
+              <input
+                type="file"
+                id="folderUpload"
+                className="sr-only"
+                onChange={handleFolderUpload}
+                disabled={uploading}
+                multiple
+                { ...directoryUploadAttributes }
+              />
+              Upload Folder
+            </label>
+          </div>
 
           {/* Action Buttons */}
           <div className="flex justify-between mb-4">
             <button
-              className="flex items-center gap-2 rounded bg-red-500 py-1 px-3 text-white disabled:bg-gray-300"
+              className="flex items-center gap-2 rounded bg-danger py-1 px-3 text-white disabled:bg-gray-300"
               onClick={() => setDeletePrompt(true)}
               disabled={deleting || selectedFiles.length === 0}
             >
@@ -249,7 +285,7 @@ const FileManagement: React.FC = () => {
               Delete Selected
             </button>
             <button
-              className="flex items-center gap-2 rounded bg-green-500 py-1 px-3 text-white disabled:bg-gray-300"
+              className="flex items-center gap-2 rounded bg-secondary py-1 px-3 text-white disabled:bg-gray-300"
               onClick={handleDownload}
               disabled={selectedFiles.length === 0 || downloading}
             >

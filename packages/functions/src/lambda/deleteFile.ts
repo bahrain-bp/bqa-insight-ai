@@ -1,11 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { S3, DynamoDB } from "aws-sdk";
+import { syncDeleteKnowlegeBase } from "src/bedrock/deleteSync";
 
 const s3 = new S3();
 const dynamodb = new DynamoDB.DocumentClient();
 
 const BUCKET_NAME = process.env.BUCKET_NAME || "";
 const TABLE_NAME = process.env.FILE_METADATA_TABLE_NAME || "";
+const INSTITUTE_METADATA_TABLE  = process.env.INSTITUTE_METADATA_TABLE || "";
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -29,6 +31,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       try {
         const uniqueKey = fileKey.replace(/^Files\//, ""); // Extract unique key
         const splitDirectory = `SplitFiles/${uniqueKey}`;
+        const txtFileKey = `TextFiles/${uniqueKey}.txt`; // Construct the corresponding .txt file key
+
+        // Remove .pdf from the uniqueKey and create a new key for .metadata.json file
+        const metadataFileKey = `TextFiles/${uniqueKey.replace('.pdf', '')}.metadata.json`; // Removes .pdf if present
 
         // Delete the main file from S3
         await s3.deleteObject({ Bucket: BUCKET_NAME, Key: fileKey }).promise();
@@ -55,13 +61,52 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           console.log(`No files found in directory: ${splitDirectory}`);
         }
 
+        // Delete the corresponding .txt file
+        const txtFileResponse = await s3
+          .listObjectsV2({ Bucket: BUCKET_NAME, Prefix: txtFileKey })
+          .promise();
+
+        if (
+          txtFileResponse.Contents &&
+          txtFileResponse.Contents.some((object) => object.Key === txtFileKey)
+        ) {
+          await s3
+            .deleteObject({ Bucket: BUCKET_NAME, Key: txtFileKey })
+            .promise();
+          console.log(`Deleted txt file from S3: ${txtFileKey}`);
+        } else {
+          console.log(`No corresponding txt file found for key: ${txtFileKey}`);
+        }
+
+        // Delete the corresponding metadata.json file (after removing .pdf if present)
+        const metadataFileResponse = await s3
+          .listObjectsV2({ Bucket: BUCKET_NAME, Prefix: metadataFileKey })
+          .promise();
+
+        if (
+          metadataFileResponse.Contents &&
+          metadataFileResponse.Contents.some((object) => object.Key === metadataFileKey)
+        ) {
+          await s3
+            .deleteObject({ Bucket: BUCKET_NAME, Key: metadataFileKey })
+            .promise();
+          console.log(`Deleted metadata.json file from S3: ${metadataFileKey}`);
+        } else {
+          console.log(`No corresponding metadata.json file found for key: ${metadataFileKey}`);
+        }
+
         // Delete the metadata from DynamoDB
         await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
+        // await dynamodb.delete({ TableName: INSTITUTE_METADATA_TABLE, Key: { fileKey } }).promise();
         console.log(`Deleted metadata from DynamoDB: ${fileKey}`);
       } catch (err) {
         console.error(`Failed to delete fileKey: ${fileKey}`, err);
         throw err; // Ensure any failure is caught at the top level
       }
+    
+      const uri = `s3://${BUCKET_NAME}/${fileKey}`;
+      await syncDeleteKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "", uri);
+      console.log("Successful sync deleting...");
     });
 
     // Wait for all deletion promises to resolve

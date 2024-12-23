@@ -1,11 +1,11 @@
-import { StackContext, use } from "sst/constructs";
+import { StackContext, Topic, use } from "sst/constructs";
 import {S3Stack} from "./S3Stack"; 
 import {aws_bedrock as bedrock, aws_iam as iam} from "aws-cdk-lib";
 import { ServicePrincipal } from "aws-cdk-lib/aws-iam";
 
 export function BedrockStack({ stack, app }: StackContext) {
     
-    const {bucket} = use(S3Stack);
+    const {bucket, syncTopic} = use(S3Stack);
 
     // create knowledgebase storage configuration
     const storageConfigurationProperty: bedrock.CfnKnowledgeBase.StorageConfigurationProperty = {
@@ -70,7 +70,7 @@ export function BedrockStack({ stack, app }: StackContext) {
       
             // the properties below are optional
             bucketOwnerAccountId: stack.account,
-            inclusionPrefixes: ['Files/'],
+            inclusionPrefixes: ['TextFiles/'],
           },
         },
         knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
@@ -177,6 +177,20 @@ export function BedrockStack({ stack, app }: StackContext) {
         agentId: cfnAgentLlama?.attrAgentId || "",
       });
       
+
+    syncTopic.addSubscribers(stack, {
+        sync: {
+            function: {
+                handler: "packages/functions/src/bedrock/sync.syncKnowlegeBase",
+                timeout: 120,
+                environment: {
+                    KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                    DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId,
+                },
+                permissions: ["bedrock"]
+            }
+        }
+    })
 
     stack.addOutputs({
         KnowledgeBase: cfnKnowledgeBase.name,

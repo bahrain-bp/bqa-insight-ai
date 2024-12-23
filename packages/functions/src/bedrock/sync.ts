@@ -1,10 +1,8 @@
-import { APIGatewayEvent } from "aws-lambda";
 import { BedrockAgentClient, StartIngestionJobCommand } from "@aws-sdk/client-bedrock-agent";
-import {BedrockStack} from "../../../../stacks//BedrockStack";
  
 const client = new BedrockAgentClient({region: "us-east-1"});
 
-export async function syncKnowlegeBase(event: APIGatewayEvent) {
+export async function syncKnowlegeBase() {
     try {
         const input = {
             knowledgeBaseId: process.env.KNOWLEDGE_BASE_ID,
@@ -14,6 +12,7 @@ export async function syncKnowlegeBase(event: APIGatewayEvent) {
         const command = new StartIngestionJobCommand(input);    
         const response = await client.send(command);
 
+        console.log("Syncing complete")
         return {
             statusCode: 200,
             body: {
@@ -23,6 +22,7 @@ export async function syncKnowlegeBase(event: APIGatewayEvent) {
 
     } catch (error)
     {
+        console.log(error)
         return {
             statusCode: 500,
             message: "Data Sync Failed: ", error
