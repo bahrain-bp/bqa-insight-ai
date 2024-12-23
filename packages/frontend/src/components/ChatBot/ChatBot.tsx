@@ -296,29 +296,63 @@ const Chat = () => {
             }
         */
        // Static test data for graph generation
-       const staticGraphData: ChartJsonData =
-        {
-            "title": "Abdul Rahman Kanoo School: Internal Examination Proficiency Rates",
-            "chartType": "pie",
-            "data": [
-              {
-                // "subject": "English",
-                "reviewCycle": "Review Cycle 9",
-                "proficiencyRate": 1
-              },
-              {
-                // "subject": "English",
-                "reviewCycle": "Review Cycle 10",
-                "proficiencyRate": 2
-              },
-              {
-                // "subject": "Science",
-                "reviewCycle": "Review Cycle 2",
-                "proficiencyRate": 4
-              }
-            ]
-          };
+       const staticGraphData: ChartJsonData = {
+        type: "bar", 
+        data: { 
+          datasets: [
+            {
+              label: "Jidhafs Intermediate Boys School",
+              data: [
+                { x: 2010, y: 2 },
+                { x: 2012, y: 2 },
+                { x: 2016, y: 2 },
+                { x: 2018, y: 3 },
+                { x: 2024, y: 3 },
+              ],
 
+              fill: false,
+            },
+            {
+              label: "Al Sehlah Intermediate Boys School",
+              data: [
+                { x: 2011, y: 3 },
+                { x: 2014, y: 3 },
+                { x: 2016, y: 4 },
+                { x: 2019, y: 3 },
+                { x: 2023, y: 2 },
+              ],
+              fill: false,
+            },
+            {
+              label: "Hamad Town Intermediate Boys School",
+              data: [
+                { x: 2013, y: 4 },
+                { x: 2018, y: 3 },
+                { x: 2021, y: 3 },
+                { x: 2024, y: 4 },
+              ],
+              fill: false,
+            },
+          ],
+        },
+        options: { 
+          scales: {
+            x: {
+              type: "linear",
+            },
+            y: {
+              type: "linear",
+              min: 1,
+              max: 4,
+              reverse: false,
+              ticks: {
+                stepSize: 1,
+              },
+            },
+          },
+        },
+      };
+      
           // if graph is required, add chart to context
           if(hasGraph) {
             const updateChartJson = [...chartJson, staticGraphData];
