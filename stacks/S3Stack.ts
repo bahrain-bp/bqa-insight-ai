@@ -59,7 +59,8 @@ export function S3Stack({ stack }: StackContext) {
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
-        }
+        },
+        bind: [syncTopic]
     });
     const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
         handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
@@ -73,8 +74,9 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        BUCKET_NAME: bucket.bucketName
-        }
+        BUCKET_NAME: bucket.bucketName,
+        },
+        bind: [syncTopic]
     });
 
     const extractReportMetadata = new Function(stack, "claudeExtractReportMetadata", {
@@ -90,7 +92,8 @@ export function S3Stack({ stack }: StackContext) {
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
-        }
+        },
+        bind: [syncTopic]
     });
     const triggerExtractLambda = new Function(stack, "triggerExtractLambda", {
         handler: "packages/functions/src/bedrock/triggerExtractLambda.handler",
@@ -109,7 +112,7 @@ export function S3Stack({ stack }: StackContext) {
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
-        bind: [syncTopic],
+        // bind: [syncTopic],
     });
 
     extractMetadataQueue.addConsumer(stack, {
