@@ -128,6 +128,28 @@ export function ApiStack({stack}: StackContext) {
             "POST /invokeBedrockAgent": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    permissions: ["bedrock", "s3", "textract", "bedrock:invokeModel"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            "GET /invokeBedrockAgent": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    permissions: ["bedrock", "s3", "textract", "bedrock:invokeModel"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            "POST /generateJson": {
+                function: {
+                    handler: "packages/functions/src/bedrock/generatejson.generateJson",
                     permissions: ["bedrock", "s3", "textract"],
                     timeout: "60 seconds",
                      environment: {
@@ -136,6 +158,18 @@ export function ApiStack({stack}: StackContext) {
                    }
                 }
             },
+            "GET /generateJson": {
+                function: {
+                    handler: "packages/functions/src/bedrock/generatejson.generateJson",
+                    permissions: ["bedrock", "s3", "textract"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            
             "POST /fetchfilters": {
                 function: {
                     handler: "packages/functions/src/fetchfilters.handler", // Your new handler
