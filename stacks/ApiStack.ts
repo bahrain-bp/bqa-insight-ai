@@ -8,6 +8,7 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { OpenDataStack } from "./OpenDataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -18,6 +19,7 @@ export function ApiStack({stack}: StackContext) {
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -154,8 +156,26 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [instituteMetadata], // Grant permissions to the table
         
                 }
-              
+            },
+            "GET /fetchSchoolReviews": {
+                function: {
+                    handler: "packages/functions/src/api/retrieveSchoolReviews.handler", 
+                    environment: {
+                        SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
+                    },
+                    permissions: [SchoolReviewsTable], 
+                }
+            },
+            "GET /fetchVocationalReviews": {
+                function: {
+                    handler: "packages/functions/src/api/retrieveVocationalReviews.handler", 
+                    environment: {
+                        VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
+                    },
+                    permissions: [VocationalReviewsTable], 
+                }
             }
+
         }
     });
 

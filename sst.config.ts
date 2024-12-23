@@ -12,6 +12,7 @@ import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
 import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
+import { OpenDataStack } from "./stacks/OpenDataStack";
 
 export default {
   config(_input) {
@@ -36,6 +37,7 @@ export default {
       app.stack(DBStack)
       .stack(FileMetadataStack)
       .stack(InstituteMetadataStack)
+      .stack(OpenDataStack)
       .stack(S3Stack)
       .stack(BedrockStack)
       .stack(AmazonLexSolarMapFulfillment)

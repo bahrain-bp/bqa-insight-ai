@@ -46,6 +46,7 @@
     "@aws-sdk/lib-dynamodb": "^3.705.0",
     "@aws-sdk/types": "^3.696.0",
     "crawler-request": "^1.2.2",
+    "csv-parser": "^3.0.0",
     "date-fns": "^4.1.0",
     "express": "^4.21.1",
     "mime-types": "^2.1.35",
