@@ -58,6 +58,7 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        BUCKET_NAME: bucket.bucketName
         }
     });
     const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
@@ -72,6 +73,7 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        BUCKET_NAME: bucket.bucketName
         }
     });
 
@@ -87,6 +89,7 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        BUCKET_NAME: bucket.bucketName
         }
     });
     const triggerExtractLambda = new Function(stack, "triggerExtractLambda", {

@@ -2,6 +2,7 @@ import * as AWS from "aws-sdk";
 import { InvokeModelCommand, BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDB } from "aws-sdk";
 import { SQSEvent } from "aws-lambda";
+import { handleDynamoDbInsert } from "src/lambda/fillingJson";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 const client = new BedrockRuntimeClient({region: "us-east-1"});
@@ -121,7 +122,7 @@ export async function handler(event: SQSEvent){
             const parsedResponse = JSON.parse(modelResponse || "");
     
 
-           await insertUniversityMetadata(parsedResponse);
+           await insertUniversityMetadata(parsedResponse,fileKey);
            console.log("IT SHOULD BE INSERTED TO UNIVERSITY METADATA TABLE");
          
             return parsedResponse;
@@ -157,15 +158,17 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
 
 
 // Insert University metadata into DynamoDB
-async function insertUniversityMetadata(data :any) {
-    const params = {
-        TableName: process.env.UNIVERSITY_METADATA_TABLE_NAME as string,
-                      Item: {
-                        universityName: data["University Name"],
-                        location: data["University Location"],
-                        numOfPrograms: data["Number Of Qualifications"],
-                        numOfQualifications: data["Number of Programmes"],
-                      },
-    };
-    return await dynamoDb.put(params).promise();
+async function insertUniversityMetadata(data: any, fileKey: string)  {
+  const params = {
+      TableName: process.env.UNIVERSITY_METADATA_TABLE_NAME as string,
+                    Item: {
+                      universityName: data["University Name"],
+                      location: data["University Location"],
+                      numOfPrograms: data["Number Of Qualifications"],
+                      numOfQualifications: data["Number of Programmes"],
+                    },
+  };
+  await dynamoDb.put(params).promise();
+  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'university'); // Add this line here
+  return;
 }
