@@ -103,9 +103,12 @@ export async function handler(event: SQSEvent) {
 
             const response = await client.send(command);
             console.log("HERE IS RESPONSE: ", response);
+    
+            const modelResponse = response.output?.message?.content?.[0].text
 
-            const modelResponse = response.output?.message?.content?.[0].text;
-            const parsedResponse = JSON.parse(modelResponse || "");
+            const afterRegex = regexFunction(modelResponse || "");
+    
+            const parsedResponse = JSON.parse(afterRegex || "");
             console.log("model output: ", modelResponse);
 
             await insertProgramMetadata(parsedResponse, fileKey);
@@ -153,4 +156,18 @@ async function insertProgramMetadata(data: any, fileKey: string) {
     await dynamoDb.put(params).promise();
     await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); // Add this line here
     return;
+}
+
+function regexFunction(input: string): string {
+    
+  // extract JSON  part incase there is text also
+  const jsonRegex = /{([\s\S]*?)}/;
+  const extractedJson = input.match(jsonRegex);
+
+  if (!extractedJson) {
+      throw new Error("No JSON-like structure found in the input.");
+  }
+
+  return extractedJson[0];
+
 }
