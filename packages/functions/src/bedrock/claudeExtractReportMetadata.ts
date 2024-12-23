@@ -10,8 +10,27 @@ const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
 const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
 
 //Using Llama model to extract metadata about reports and institutes
-export async function handler(event: string){
-  
+export async function handler(event: SQSEvent){
+    for (const record of event.Records) {
+        try {
+            let sqsEvent;
+            try {
+                sqsEvent = JSON.parse(record.body); // Parse the SQS message body
+            } catch (error) {
+                console.error("Error parsing SQS message:", record.body, error);
+                continue;
+            }
+            
+            // Destructure `text` and `fileKey` from the parsed SQS message
+            const { text, fileKey } = sqsEvent;
+            
+            if (!text || !fileKey) {
+                console.error("Invalid message content: missing 'text' or 'fileKey'");
+                continue;
+            }
+            
+    
+            
             //   const userMessage =
             //     "Given the following text, Please give me the institute name ending with the word school and give me the institute classification is it Goverment School or Private School, if you see the word Primary or Secondary it means Goverment School, and give me the date of review and give me the school’s overall effectiveness and give me the institute type is it a school or university and give me the grades in school by checking the primary middle high columns excluding 'Grades e.g. 1 to 12'and give me the school location in which town and governate is it and make the column name Location. Please Give it in csv format and csv format only. These are the columns, ensure that they are in the response 'Institute Name','Institute Classification','Date of Review','Overall Effectiveness','Location','Institute Type', 'Grades In School' Exlude the word Education and Training Quality Authority: "+text;
                 const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
@@ -59,7 +78,7 @@ export async function handler(event: string){
                 }
     
     
-                Input: ` + event + `
+                Input: ` + text + `
                 Output: {
                 "Institute Name": "",
                 "Institute Classification": "",
@@ -126,7 +145,7 @@ export async function handler(event: string){
                 //const parsed = JSON.parse(extractedOutput);
             // console.log(parsed[0]["School Name"])
             // console.log(extractedOutput["Institute Name"], "Instituite Name");
-           // await insertReportMetadata(extractedOutput, fileKey);
+            await insertReportMetadata(extractedOutput, fileKey);
             console.log("IT SHOULD BE INSERTED to reportMetaData");
     
     
@@ -140,10 +159,14 @@ export async function handler(event: string){
             await insertInstituteMetadata(extractedOutput);
             console.log("IT SHOULD BE INSERTED to instituiteMetaData");
     
-            //await deleteSQSMessage(record.receiptHandle);
+            await deleteSQSMessage(record.receiptHandle);
             return extractedOutput;
 
-
+        } catch (error) {
+            await deleteSQSMessage(record.receiptHandle);
+            console.error("Error processing SQS message:", error);
+        }
+    } 
 }
 
 

@@ -159,12 +159,3 @@ async function insertProgramMetadata(data :any) {
     return await dynamoDb.put(params).promise();
 }
 
-
-
-
-
-
-//   // Learn more about the Llama 3 prompt format at:
-//   // https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/#special-tokens-used-with-meta-llama-3
-  
-  

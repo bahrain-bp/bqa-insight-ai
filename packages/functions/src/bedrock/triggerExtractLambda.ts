@@ -37,11 +37,11 @@ export async function handler(event: SQSEvent){
 
             // Trigger the appropriate Lambda function
             if (reportType === "school" || "training centre" || "Vocational Reviews") {
-                await invokeLambda(schoolLambdaFunctionName, { text, fileKey });
+                await invokeLambda(schoolLambdaFunctionName, event);
             } else if (reportType === "university") {
-                await invokeLambda(universityLambdaFunctionName, { text, fileKey });
+                await invokeLambda(universityLambdaFunctionName, event);
             } else if (reportType === "programme") {
-                await invokeLambda(programLambdaFunctionName, { text, fileKey });
+                await invokeLambda(programLambdaFunctionName, event);
             } else {
                 console.error(`No matching Lambda function for report type: ${reportType}`);
             }
@@ -57,7 +57,7 @@ export async function handler(event: SQSEvent){
 function classifyReport(text: string): string {
     if (text.includes("school")) {
         return "school";
-    } else if (text.includes("university") || text.includes("higher education")) {
+    } else if (text.includes("university") || text.includes("higher education") || text.includes("University")) {
         return "university";
     }
     return "unknown";
