@@ -7,11 +7,7 @@ const Filter = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Type": ["Schools", "Universities", "Vocational Institutes"],
-    "Institute Classification": [],
-    "Institute Level": [],
-    "Location": [],
-    "Institute Name": [],
-    "Report Year": [],
+    
   });
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
@@ -33,19 +29,29 @@ const Filter = () => {
       if (!instituteType) return;
 
       let backendInstituteType = "";
-      switch (instituteType) {
-        case "Universities":
-          backendInstituteType = "university";
-          break;
-        case "Schools":
-          backendInstituteType = "school";
-          break;
-        case "Vocational Institutes":
-          backendInstituteType = "vocational";
-          break;
-        default:
-          return;
+      let filters = {};
+
+      // Define filter sets based on the "Institute Type"
+      if (instituteType === "Universities") {
+        filters = {
+          "University Name": [],
+          "Location": [],
+          "Number of Programs": [],
+          "Number of Qualifications": [],
+          "Program Names": [],
+          "Program Judgments": [],
+        };
+      } else if (instituteType === "Schools") {
+        filters = {
+          "Institute Classification": [],
+          "Institute Level": [],
+          "Location": [],
+          "Institute Name": [],
+          "Report Year": [],
+        };
       }
+      
+
 
       try {
         const prompt = new URLSearchParams();
@@ -61,6 +67,11 @@ const Filter = () => {
         }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${prompt.toString()}`);
+        if (!response.ok) {
+          const errorMessage = await response.text();
+          console.error('Error fetching filter options:', errorMessage);
+          throw new Error(`Error fetching data: ${errorMessage}`);
+        }
         const data = await response.json();
         setFilterOptions((prevOptions) => ({
           ...data.filters,
@@ -72,6 +83,7 @@ const Filter = () => {
     };
 
     fetchFilterOptions();
+    console.log('Selected options:', selectedOptions);
   }, [selectedOptions]);
 
   useEffect(() => {

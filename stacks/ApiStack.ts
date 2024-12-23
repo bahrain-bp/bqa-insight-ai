@@ -8,6 +8,8 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { ProgramMetadataStack } from "./ProgramMetadataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -18,6 +20,9 @@ export function ApiStack({stack}: StackContext) {
     const {bot} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    // const {UniversityProgramMetadataStack} = use(UniversityProgramMetadataStack);
+    const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
+    const { programMetadataTable } = use(ProgramMetadataStack);  
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -64,8 +69,9 @@ export function ApiStack({stack}: StackContext) {
                     environment: {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                        INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
                     },
-                    permissions: [bucket, fileMetadataTable],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata],
                 },
             },
             "POST /lex/start_session": {
@@ -136,27 +142,34 @@ export function ApiStack({stack}: StackContext) {
                     // }
                 }
             },
+            
             "POST /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName, 
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
-                    permissions: [instituteMetadata], // Grant permissions to the table
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
                 },
             },
             "GET /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName,
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
-                    permissions: [instituteMetadata], // Grant permissions to the table
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
         
                 }
               
-            }
-        }
+            },
+            
+            
+        },
     });
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues

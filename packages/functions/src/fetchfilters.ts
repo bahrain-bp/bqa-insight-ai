@@ -7,12 +7,14 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   const { instituteType } = event.queryStringParameters || {};  // Get the type of institute from query parameters
   let tableName = process.env.TABLE_NAME || '';  // Default table name
+  let universityTableName = process.env.UNIVERSITY_TABLE_NAME || '';  // University table name
+  let programTableName = process.env.PROGRAM_METADATA_TABLE_NAME || '';  // Program metadata table name
 
   // Validate institute type and set the corresponding table
   if (instituteType) {
     switch (instituteType.toLowerCase()) {
       case 'university':
-        tableName = process.env.UNIVERSITY_TABLE_NAME || '';  // Use the environment variable for universities
+        tableName = universityTableName;  // Use the environment variable for universities
         break;
       case 'vocational':
         tableName = process.env.VOCATIONAL_TABLE_NAME || '';  // Use the environment variable for vocational institutes
@@ -23,6 +25,12 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           body: JSON.stringify({ error: 'Invalid institute type' }),
         };
     }
+  } else {
+    // Handle case where instituteType is undefined or empty
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Institute type is required' }),
+    };
   }
 
   // Check if the table name is provided
@@ -63,17 +71,44 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       return match ? match[1] : null;
     };
 
-    // Transform the filtered data to match the format needed for the frontend
-    const filters = {
-      "Institute Classification": Array.from(new Set(filteredData.map(item => item.instituteClassification))),
-      "Institute Level": Array.from(new Set(filteredData.map(item => item.instituteGradeLevels))),
-      "Location": Array.from(new Set(filteredData.map(item => item.instituteLocation))),
-      "Institute Name": Array.from(new Set(filteredData.map(item => item.institueName))),
-      "Report Year": Array.from(new Set(filteredData
-        .map(item => extractYear(item.dateOfReview))  // Extract year from date
-        .filter(year => year !== null) // Filter out invalid dates
-      )),
-    };
+    // Initialize filters object
+    let filters = {};
+    
+    // Handle university-specific filter logic
+    if (instituteType.toLowerCase() === 'university') {
+      // Fetch program-related data from ProgramMetadataTable
+      const programParams = {
+        TableName: programTableName,
+      };
+
+      // Assuming we want to get program metadata too, by university name
+      const programData = await dynamoDB.scan(programParams).promise();
+      console.log(programData);
+
+      const programMetadata = programData.Items || [];
+      
+      // Transform the filtered data for universities
+      filters = {
+        "University Name": Array.from(new Set(filteredData.map(item => item.universityName))),
+        "Location": Array.from(new Set(filteredData.map(item => item.location))),
+        "Number of Programs": Array.from(new Set(filteredData.map(item => item.numOfPrograms))),
+        "Number of Qualifications": Array.from(new Set(filteredData.map(item => item.numOfQualifications))),
+        "Program Names": Array.from(new Set(programMetadata.map(item => item.programmeName))),
+        "Program Judgments": Array.from(new Set(programMetadata.map(item => item.programmeJudgment))),
+      };
+    } else {
+      // For vocational or other institutes, keep the original transformation
+      filters = {
+        "Institute Classification": Array.from(new Set(filteredData.map(item => item.instituteClassification))),
+        "Institute Level": Array.from(new Set(filteredData.map(item => item.instituteGradeLevels))),
+        "Location": Array.from(new Set(filteredData.map(item => item.instituteLocation))),
+        "Institute Name": Array.from(new Set(filteredData.map(item => item.institueName))),
+        "Report Year": Array.from(new Set(filteredData
+          .map(item => extractYear(item.dateOfReview))  // Extract year from date
+          .filter(year => year !== null) // Filter out invalid dates
+        )),
+      };
+    }
 
     console.log(filters); // Debugging
 

@@ -6,6 +6,7 @@ const dynamodb = new DynamoDB.DocumentClient();
 
 const BUCKET_NAME = process.env.BUCKET_NAME || "";
 const TABLE_NAME = process.env.FILE_METADATA_TABLE_NAME || "";
+const INSTITUTE_METADATA_TABLE  = process.env. INSTITUTE_METADATA_TABLE || "";
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   try {
@@ -57,6 +58,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
         // Delete the metadata from DynamoDB
         await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
+        await dynamodb.delete({ TableName: INSTITUTE_METADATA_TABLE, Key: { fileKey } }).promise();
         console.log(`Deleted metadata from DynamoDB: ${fileKey}`);
       } catch (err) {
         console.error(`Failed to delete fileKey: ${fileKey}`, err);

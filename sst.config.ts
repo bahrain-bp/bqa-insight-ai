@@ -4,7 +4,6 @@ import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
 import { AmazonLexSolarMapFulfillment } from "./stacks/Lexstacks/AmazonLexSolarMapFulfillment";
 import { BotStack } from "./stacks/Lexstacks/BotStack";
-
 import { FileMetadataStack } from "./stacks/FileMetadataStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
@@ -12,6 +11,9 @@ import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
 import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
+import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
+import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
+
 
 export default {
   config(_input) {
@@ -36,6 +38,8 @@ export default {
       app.stack(DBStack)
       .stack(FileMetadataStack)
       .stack(InstituteMetadataStack)
+      .stack(UniversityProgramMetadataStack)
+      .stack(ProgramMetadataStack)
       .stack(S3Stack)
       .stack(BedrockStack)
       .stack(AmazonLexSolarMapFulfillment)
