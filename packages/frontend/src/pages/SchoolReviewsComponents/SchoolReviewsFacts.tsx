@@ -109,7 +109,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
           title="Total Reviews"
           value={totalReviews}
           bgColor={COLORS.RED}
-          iconPath="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8H5a8 8 0 01-8-8V4a8 8 0 018-8h8a8 8 0 018 8v8z"
+          iconPath="M3 7h18M3 12h18M3 17h18"
         />
 
         <StatCard
@@ -123,7 +123,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
           title="Total Private Schools Reviews"
           value={totalPrivateReviews}
           bgColor={COLORS.GREEN}
-          iconPath="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"
+          iconPath="M3 7h18M3 12h18M3 17h18"
         />
       </div>
 
@@ -134,7 +134,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
           value={overallAverageGrade !== null ? overallAverageGrade : 'N/A'}
           subtitle={highlightedSubtitle(`${totalSchools} Schools`)}
           bgColor={COLORS.ORANGE}
-          iconPath="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10"
+          iconPath="M12 14l9-5-9-5-9 5 9 5z M12 14v7m-7-4h14"
         />
 
         <StatCard
@@ -150,7 +150,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
           value={averageGradePrivate !== null ? averageGradePrivate : 'N/A'}
           subtitle={highlightedSubtitle(`${totalPrivateSchools} Schools`)}
           bgColor={COLORS.YELLOW}
-          iconPath="M8 14l4-4 4 4m-4-4v12"
+          iconPath="M12 14l9-5-9-5-9 5 9 5z M12 14v7m-7-4h14"
         />
       </div>
 
@@ -168,7 +168,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
                   : 'N/A'
               }
               bgColor={level === 'Primary' ? COLORS.YELLOW : level === 'Intermediate' ? COLORS.GREEN : COLORS.ORANGE}
-              iconPath="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z"
+              iconPath="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8H5a8 8 0 01-8-8V4a8 8 0 018-8h8a8 8 0 018 8v8z"
               subtitle={
                 governmentLevelGenderGrades[`${level} Schools`] && governmentLevelGenderGrades[`${level} Schools`].count > 0
                   ? highlightedSubtitle(`${governmentLevelGenderGrades[`${level} Schools`].count} Schools`)
@@ -187,7 +187,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
                     : 'N/A'
                 }
                 bgColor={gender === 'Girls' ? COLORS.RED : COLORS.LIGHT_BLUE}
-                iconPath="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6m4-10h.01M12 12h.01"
+                iconPath="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8H5a8 8 0 01-8-8V4a8 8 0 018-8h8a8 8 0 018 8v8z"
                 subtitle={
                   governmentLevelGenderGrades[`${level} Schools (${gender})`] &&
                   governmentLevelGenderGrades[`${level} Schools (${gender})`].count > 0
@@ -206,7 +206,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
           title="Overall Average grade for Government Girls Schools"
           value={governmentGirlsAverageGrade !== null ? governmentGirlsAverageGrade : 'N/A'}
           bgColor={COLORS.RED}
-          iconPath="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3z"
+          iconPath="M12 14l9-5-9-5-9 5 9 5z M12 14v7m-7-4h14"
           subtitle={highlightedSubtitle(`${governmentGirlsCount} Schools`)}
         />
 
@@ -214,7 +214,7 @@ export function SchoolReviewsFacts({ data }: SchoolReviewFactsProps): JSX.Elemen
           title="Overall Average grade for Government Boys Schools"
           value={governmentBoysAverageGrade !== null ? governmentBoysAverageGrade : 'N/A'}
           bgColor={COLORS.LIGHT_BLUE}
-          iconPath="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10"
+          iconPath="M12 14l9-5-9-5-9 5 9 5z M12 14v7m-7-4h14"
           subtitle={highlightedSubtitle(`${governmentBoysCount} Schools`)}
         />
 

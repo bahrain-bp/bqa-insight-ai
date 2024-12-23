@@ -12,6 +12,7 @@ import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
 import Filter from "./pages/Filter.tsx";
 import { SchoolReviews } from './pages/SchoolReviews.tsx';
+import { VocationalReviews } from './pages/VocationalReviews.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -98,6 +99,15 @@ function App() {
               <>
                   <PageTitle title="School Reviews" />
                   <SchoolReviews />
+              </>
+              }
+        />
+        <Route
+          path="/vocationalReviews"
+          element={
+              <>
+                  <PageTitle title="Vocational Reviews" />
+                  <VocationalReviews />
               </>
               }
         />

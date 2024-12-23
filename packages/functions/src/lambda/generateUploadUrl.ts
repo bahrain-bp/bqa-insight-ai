@@ -42,6 +42,14 @@ export async function handler(event: any) {
             };
         }
 
+        const uniqueId = uuidv4(); 
+        // Set the fileKey with the uniqueId
+        let fileKey = `Files/${uniqueId}`;
+        // If the file is a PDF, ensure the key ends with .pdf
+        if (fileType === "application/pdf" && !fileKey.endsWith(".pdf")) {
+            fileKey = `Files/${uniqueId}.pdf`;
+        }
+        
         if (fileType === "text/csv") {
             // Validate exact CSV filename
             if (!ALLOWED_CSV_FILENAMES.has(fileName)) {
@@ -52,14 +60,7 @@ export async function handler(event: any) {
                 }),
               };
             }
-        }
-
-        const uniqueId = uuidv4(); 
-        // Set the fileKey with the uniqueId
-        let fileKey = `Files/${uniqueId}`;
-        // If the file is a PDF, ensure the key ends with .pdf
-        if (fileType === "application/pdf" && !fileKey.endsWith(".pdf")) {
-            fileKey = `Files/${uniqueId}.pdf`;
+            fileKey = `CSVFiles/${fileName}`;
         }
 
         const params = {

@@ -1,15 +1,14 @@
 
 import { useEffect, useState } from 'react';
-import { SchoolData } from './SchoolReviewsComponents/types';
+import { VocationalData } from './VocationalReviewsComponents/types';
 import { ToggleSection } from './Components/ToggleSection'; 
-import { SchoolReviewsFacts } from './SchoolReviewsComponents/SchoolReviewsFacts'; 
-import { SchoolReviewsTable } from './SchoolReviewsComponents/SchoolReviewsTable';
-import { SchoolGeneralCharts } from './SchoolReviewsComponents/SchoolGeneralCharts';
-import { SchoolHistoryGraph } from './SchoolReviewsComponents/SchoolHistoryGraph';
+import { VocationalReviewsTable } from './VocationalReviewsComponents/VocationalReviewsTable';
+import { VocationalHistoryGraph } from './VocationalReviewsComponents/VocationalHistoryGraph';
+import { VocationalGraphs } from './VocationalReviewsComponents/VocationalGraphs';
 
 
-export function SchoolReviews() {
-  const [data, setData] = useState<SchoolData[]>([]);
+export function VocationalReviews() {
+  const [data, setData] = useState<VocationalData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null); // Optional: To handle errors
 
@@ -17,7 +16,7 @@ export function SchoolReviews() {
     // Fetch data from the API when the component mounts
     const fetchData = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchSchoolReviews`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchVocationalReviews`);
         if (!response.ok) {
           throw new Error(`Network response was not ok: ${response.statusText}`);
         }
@@ -61,24 +60,20 @@ export function SchoolReviews() {
       ) : (
         // Data Loaded Content with Toggle Sections
         <div className="w-full flex flex-col">
-          {/* Facts Section */}
-          <ToggleSection title="Facts" ariaControls="school-reviews-facts">
-            <SchoolReviewsFacts data={data} />
-          </ToggleSection>
 
-          {/* Schools Ranking Section */}
-          <ToggleSection title="Schools Ranking Table" ariaControls="school-reviews-ranking">
-            <SchoolReviewsTable data={data} />
+          {/* Vocational Ranking Section */}
+          <ToggleSection title="Vocational Ranking Table" ariaControls="vocational-reviews-ranking">
+            <VocationalReviewsTable data={data} />
           </ToggleSection>
 
           {/* Graphs Section */}
-          <ToggleSection title="General Graphs" ariaControls="school-reviews-graphs">
-            <SchoolGeneralCharts data={data} />
+          <ToggleSection title="General Graphs" ariaControls="vocational-reviews-graphs">
+            <VocationalGraphs data={data} />
           </ToggleSection>
           
           {/* Search for a School Section */}
-          <ToggleSection title="School History Graph" ariaControls="school-search">
-            <SchoolHistoryGraph data={data} />
+          <ToggleSection title="Vocational History Graph" ariaControls="vocational-search">
+            <VocationalHistoryGraph data={data} />
           </ToggleSection>
         </div>
       )}

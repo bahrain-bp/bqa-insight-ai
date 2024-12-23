@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels'; // Import the plugin
-import { SchoolData, Review } from './types';
+import { VocationalData, Review } from './types'; // Updated import
 
 // Register only the necessary components plus the datalabels plugin
 ChartJS.register(
@@ -42,64 +42,64 @@ function parseGradeNumber(grade: string): number | null {
   return match ? parseInt(match[1], 10) : null;
 }
 
-interface SchoolSearchProps {
-  data: SchoolData[];
+interface VocationalSearchProps {
+  data: VocationalData[]; // Updated prop type
 }
 
-export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
+export function VocationalHistoryGraph({ data }: VocationalSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [matchingSchools, setMatchingSchools] = useState<SchoolData[]>([]);
-  const [selectedSchools, setSelectedSchools] = useState<SchoolData[]>([]);
+  const [matchingInstitutes, setMatchingInstitutes] = useState<VocationalData[]>([]);
+  const [selectedInstitutes, setSelectedInstitutes] = useState<VocationalData[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const dropdownRef = useRef<HTMLUListElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // ----------------------------
-  // 1) Filter Logic: Remove the 2-letter minimum
+  // 1) Filter Logic: Show matches based on search term
   // ----------------------------
   useEffect(() => {
     if (searchTerm.trim().length === 0) {
-      setMatchingSchools([]); // Show no matches when search term is empty
+      setMatchingInstitutes([]); // Show no matches when search term is empty
       setHighlightedIndex(-1);
       return;
     }
     const lower = searchTerm.toLowerCase();
-    const matches = data.filter((school) =>
-      school.EnglishSchoolName.toLowerCase().includes(lower)
+    const matches = data.filter((institute) =>
+      institute.EnglishInstituteName.toLowerCase().includes(lower)
     );
-    setMatchingSchools(matches);
+    setMatchingInstitutes(matches);
     setHighlightedIndex(matches.length > 0 ? 0 : -1);
   }, [searchTerm, data]);
 
   // ----------------------------
-  // 2) Handle Selection of Multiple Schools
+  // 2) Handle Selection of Multiple Institutes
   // ----------------------------
-  const handleSelectSchool = (school: SchoolData) => {
-    setSelectedSchools((prev) => {
+  const handleSelectInstitute = (institute: VocationalData) => {
+    setSelectedInstitutes((prev) => {
       // Prevent adding duplicates
-      if (prev.find((s) => s.InstitutionCode === school.InstitutionCode)) {
+      if (prev.find((s) => s.InstitutionCode === institute.InstitutionCode)) {
         return prev;
       }
-      return [...prev, school];
+      return [...prev, institute];
     });
     setSearchTerm('');
-    setMatchingSchools([]);
+    setMatchingInstitutes([]);
     setHighlightedIndex(-1);
   };
 
-  const removeSchool = (institutionCode: string) => {
-    setSelectedSchools((prev) =>
-      prev.filter((school) => school.InstitutionCode !== institutionCode)
+  const removeInstitute = (institutionCode: string) => {
+    setSelectedInstitutes((prev) =>
+      prev.filter((institute) => institute.InstitutionCode !== institutionCode)
     );
   };
 
   // ----------------------------
-  // 3) Prepare Chart Data for a School
+  // 3) Prepare Chart Data for an Institute
   // ----------------------------
-  const prepareLineData = (school: SchoolData): ChartData<'line'> => {
-    // Filter only Review Reports
-    const reviewReports = school.Reviews.filter(
-      (r) => r.ReviewType === 'Review Report'
+  const prepareLineData = (institute: VocationalData): ChartData<'line'> => {
+    // Filter reviews that include 'Review' in ReviewType (case-insensitive)
+    const reviewReports = institute.Reviews.filter(
+      (r) => r.ReviewType.toLowerCase().includes('review')
     );
 
     // Prepare data points
@@ -115,7 +115,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
     });
 
     return {
-      labels: [], // Not using string labels; relying on data.x
+      labels: points.map((p) => p.x), // Using cycle as labels
       datasets: [
         {
           type: 'line',
@@ -160,6 +160,10 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
           display: true,
           text: 'Cycle',
         },
+        grid: {
+          display: true,
+          borderColor: '#e0e0e0',
+        },
       },
       y: {
         min: 1,
@@ -185,6 +189,10 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
         title: {
           display: true,
           text: '(4) Inadequate => (1) Outstanding',
+        },
+        grid: {
+          display: true,
+          borderColor: '#e0e0e0',
         },
       },
     },
@@ -227,29 +235,29 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
   // 5) Handle Keyboard Navigation
   // ----------------------------
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (matchingSchools.length === 0) return;
+    if (matchingInstitutes.length === 0) return;
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-        prev < matchingSchools.length - 1 ? prev + 1 : 0
+        prev < matchingInstitutes.length - 1 ? prev + 1 : 0
       );
       scrollIntoView(highlightedIndex + 1);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-        prev > 0 ? prev - 1 : matchingSchools.length - 1
+        prev > 0 ? prev - 1 : matchingInstitutes.length - 1
       );
       scrollIntoView(highlightedIndex - 1);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (highlightedIndex >= 0 && highlightedIndex < matchingSchools.length) {
-        const selected = matchingSchools[highlightedIndex];
-        handleSelectSchool(selected);
+      if (highlightedIndex >= 0 && highlightedIndex < matchingInstitutes.length) {
+        const selected = matchingInstitutes[highlightedIndex];
+        handleSelectInstitute(selected);
       }
     } else if (e.key === 'Escape') {
       e.preventDefault();
-      setMatchingSchools([]);
+      setMatchingInstitutes([]);
       setHighlightedIndex(-1);
     }
   };
@@ -274,7 +282,7 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
       {/* === Search Input === */}
       <div>
         <label className="font-semibold block mb-1">
-          Search for a School by English Name
+          Search for an Institute by English Name
         </label>
         <input
           type="text"
@@ -282,80 +290,72 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="e.g. 'Al Orouba Primary Girls School'"
+          placeholder="e.g. 'Tech Vocational Institute'"
           ref={inputRef}
         />
       </div>
 
-      {/* === Matching Schools Dropdown === */}
-      {matchingSchools.length > 0 && (
+      {/* === Matching Institutes Dropdown === */}
+      {matchingInstitutes.length > 0 && (
         <ul
           className="border border-gray-300 rounded bg-white w-full md:w-1/2 shadow-lg max-h-60 overflow-y-auto"
           ref={dropdownRef}
         >
-          {matchingSchools.map((sch, idx) => (
+          {matchingInstitutes.map((inst, idx) => (
             <li
-              key={sch.InstitutionCode}
+              key={inst.InstitutionCode}
               className={`px-3 py-2 cursor-pointer ${
                 idx === highlightedIndex
                   ? 'bg-blue-500 text-white'
                   : 'hover:bg-gray-100'
               }`}
               onMouseEnter={() => setHighlightedIndex(idx)}
-              onMouseDown={() => handleSelectSchool(sch)} // Use the selection handler
+              onMouseDown={() => handleSelectInstitute(inst)} // Use the selection handler
             >
-              {sch.EnglishSchoolName}
+              {inst.EnglishInstituteName}
             </li>
           ))}
         </ul>
       )}
 
-      {/* === Selected Schools Information and Charts === */}
-      {selectedSchools.length > 0 && (
+      {/* === Selected Institutes Information and Charts === */}
+      {selectedInstitutes.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {selectedSchools.map((school) => {
+          {selectedInstitutes.map((institute) => {
             // Separate Review Reports and Other Reports
-            const reviewReports = school.Reviews.filter(
-              (r) => r.ReviewType === 'Review Report'
+            const reviewReports = institute.Reviews.filter(
+              (r) => r.ReviewType.toLowerCase().includes('review')
             );
-            const otherReports = school.Reviews.filter(
-              (r) => r.ReviewType !== 'Review Report'
+            const otherReports = institute.Reviews.filter(
+              (r) => !r.ReviewType.toLowerCase().includes('review')
             );
             return (
               <div
-                key={school.InstitutionCode}
+                key={institute.InstitutionCode}
                 className="p-4 border border-gray-200 rounded bg-white shadow flex flex-col space-y-4 h-full"
               >
-                {/* Basic School Information */}
+                {/* Basic Institute Information */}
                 <div>
                   <h3 className="text-lg font-bold mb-2">
-                    {school.EnglishSchoolName}
+                    {institute.EnglishInstituteName}
                   </h3>
-                  <p>Arabic Name: {school.ArabicSchoolName}</p>
-                  <p>Institution Code: {school.InstitutionCode}</p>
-                  <p>School Type: {school.SchoolType}</p>
-                  {/* Conditional Rendering: Hide Gender and Level for Private Schools */}
-                  {school.SchoolType !== 'Private' && (
-                    <>
-                      <p>School Gender: {school.SchoolGender}</p>
-                      <p>School Level: {school.SchoolLevel}</p>
-                    </>
-                  )}
+                  <p>Arabic Name: {institute.ArabicInstituteName}</p>
+                  <p>Institution Code: {institute.InstitutionCode}</p>
                   {/* Display Average Grade */}
-                  {school.AverageGrade !== null && (
+                  {institute.AverageGrade !== null && (
                     <p className="mt-2 text-md font-semibold">
-                      Average Grade: {school.AverageGrade}
+                      Average Grade: {institute.AverageGrade}
                     </p>
                   )}
                   {/* Remove Button */}
                   <button
                     className="mt-2 text-red-500 underline"
-                    onClick={() => removeSchool(school.InstitutionCode)}
+                    onClick={() => removeInstitute(institute.InstitutionCode)}
                   >
                     Remove
                   </button>
                 </div>
-            
+
                 {/* Other Reports */}
                 <div>
                   {otherReports.length > 0 && (
@@ -374,14 +374,14 @@ export function SchoolHistoryGraph({ data }: SchoolSearchProps) {
                     </>
                   )}
                 </div>
-            
+
                 {/* Spacer to ensure chart alignment */}
                 <div className="flex-grow"></div>
-            
+
                 {/* Chart Container */}
                 <div className="max-w-xl h-96">
                   {reviewReports.length > 0 ? (
-                    <Line data={prepareLineData(school)} options={options} />
+                    <Line data={prepareLineData(institute)} options={options} />
                   ) : (
                     <p className="text-gray-500">No review reports found.</p>
                   )}

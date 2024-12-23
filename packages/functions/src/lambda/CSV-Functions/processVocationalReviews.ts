@@ -115,7 +115,10 @@ export async function processVocationalReviews(bucket: string, key: string, tabl
 }
 
 function calculateAverageGrade(reviews: Review[]): number | null {
-  const reviewReports = reviews.filter(review => review.ReviewType === "Review Report");
+  // Filter reviews with "Review Report," "Repeat review," or "Review" in their ReviewType
+  const reviewReports = reviews.filter(review =>
+    ["Review Report", "Repeat review", "Review"].some(type => review.ReviewType.includes(type))
+  );
 
   if (reviewReports.length === 0) return null;
 
@@ -131,3 +134,4 @@ function calculateAverageGrade(reviews: Review[]): number | null {
 
   return parseFloat(average.toFixed(2));
 }
+

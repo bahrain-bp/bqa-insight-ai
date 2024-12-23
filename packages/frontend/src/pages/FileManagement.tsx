@@ -458,13 +458,13 @@ const FileManagement: React.FC = () => {
                 You can only upload two types of files: <strong>PDF</strong> or <strong>CSV</strong>.
               </p>
               <p className="mb-2">
-                For CSV files, please ensure they have the exact names listed below. Otherwise, the data
-                will not load correctly:
+                The "Upload Folder" option does not work for CSV files; it is only intended for uploading PDF files. 
+              </p>
+              <p className="mb-2">
+                For CSV files, please ensure they have the exact names listed below. Otherwise, the data will not load correctly:
               </p>
               <ul className="list-disc list-inside mb-4">
                 <li>Results of Government Schools Reviews.csv</li>
-                <li>Results of Higher Education Reviews.csv</li>
-                <li>Results of National Framework Operations.csv</li>
                 <li>Results of Private Schools Reviews.csv</li>
                 <li>Results of Vocational Reviews.csv</li>
               </ul>
