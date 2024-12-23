@@ -9,7 +9,7 @@ const sqs = new AWS.SQS();
 const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
 const lambda = new AWS.Lambda();
 
-const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
+
 const schoolLambdaFunctionName = process.env.SCHOOL_LAMBDA_FUNCTION_NAME || "";
 const universityLambdaFunctionName = process.env.UNIVERSITY_LAMBDA_FUNCTION_NAME || "";
 const programLambdaFunctionName = process.env.PROGRAM_LAMBDA_FUNCTION_NAME || "";
@@ -34,9 +34,9 @@ export async function handler(event: SQSEvent){
             }
         
             const reportType = classifyReport(text);
-
+            console.log("The report type is: ", reportType);
             // Trigger the appropriate Lambda function
-            if (reportType === "school" || "training centre" || "Vocational Reviews") {
+            if (reportType === "school") {
                 await invokeLambda(schoolLambdaFunctionName, event);
             } else if (reportType === "university") {
                 await invokeLambda(universityLambdaFunctionName, event);
@@ -52,16 +52,52 @@ export async function handler(event: SQSEvent){
     }
 
 }
-
-// Helper function to classify the report based on keywords
+// Helper function to classify the report based on keywords (case-insensitive)
 function classifyReport(text: string): string {
-    if (text.includes("school")) {
+    const lowerText = text.toLowerCase(); // Normalize text to lowercase
+    if (
+        lowerText.includes("schools reviews") ||
+        lowerText.includes("the school’s overall effectiveness") ||
+        lowerText.includes("training centre") ||
+        lowerText.includes("intermediate boys") ||
+        lowerText.includes("intermediate girls") ||
+        lowerText.includes("primary girls") ||
+        lowerText.includes("primary boys") ||
+        lowerText.includes("secondary boys") ||
+        lowerText.includes("secondary girls") ||
+        lowerText.includes("private schools") ||
+        lowerText.includes("schools & kindergartens Reviews") ||
+        lowerText.includes("private schools & kindergartens Reviews") ||
+        lowerText.includes("vocational reviews")
+    ) {
         return "school";
-    } else if (text.includes("university") || text.includes("higher education") || text.includes("University")) {
+    } else if (
+        lowerText.includes("institutional review report") ||
+        lowerText.includes("institution profile")
+    ) {
         return "university";
+    } else if (
+        lowerText.includes("programmes-within-college reviews") ||
+        lowerText.includes("programme review report") ||
+        lowerText.includes("degree in") ||
+        lowerText.includes("bachelor in") ||
+        lowerText.includes("college of")
+    ) {
+        return "programme";
     }
     return "unknown";
 }
+// // Helper function to classify the report based on keywords
+// function classifyReport(text: string): string {
+//     if (text.includes("Schools Reviews") || text.includes("Intermediate Boys") || text.includes("Secondary Girls") || text.includes("Training Centre") || text.includes("Vocational Reviews")){
+//         return "school";
+//     } else if (text.includes("Institutional Review Report")) {
+//         return "university";
+//     } else if (text.includes("Programmes-within-College Reviews") || text.includes("Bachelor in") || text.includes("College of")) {
+//         return "programme";
+//     }
+//     return "unknown";
+// }
 // Helper function to invoke a Lambda function
 async function invokeLambda(functionName: string, payload: any) {
     try {

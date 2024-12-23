@@ -41,8 +41,8 @@ export function S3Stack({ stack }: StackContext) {
         },
     });
 
-    const extractUniversityMetadata = new Function(stack, "extractUniversityMetadata", {
-        handler: "packages/functions/src/bedrock/extractUniversityMetadata.handler",
+    const extractUniversityMetadata = new Function(stack, "claudeUniversityMetadata", {
+        handler: "packages/functions/src/bedrock/claudeUniversityMetadata.handler",
         timeout: "300 seconds",
         permissions: [
             bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
@@ -55,8 +55,8 @@ export function S3Stack({ stack }: StackContext) {
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         }
     });
-    const extractProgramMetadata = new Function(stack, "extractProgramMetadata", {
-        handler: "packages/functions/src/bedrock/extractProgramMetadata.handler",
+    const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
+        handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
         timeout: "300 seconds",
         permissions: [
             bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
