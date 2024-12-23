@@ -74,7 +74,7 @@
 }
 
 .c-chat__list {
-    flex: 1;
+    /*flex: 1;*/
     padding: 10px;
     overflow-y: auto;
     scrollbar-width: thin;
@@ -121,7 +121,7 @@
     animation: fadeIn 0.3s ease;
 
     /*background: #fff;*/
-    color: #222;;
+    color: #fff;
     border-top-left-radius: 0;
 }
 
@@ -134,12 +134,12 @@
 
 /* Input box styling */
 .c-chat__form {
-    position: sticky; /* Sticky to the bottom of .c-chat */
+    position: sticky; /* Sticky to the bottom of .c-chat 
     bottom: 0;
     /*background: #1e1e2f;*/
     display: flex;
     padding: 10px;
-    border-top: 1px solid #444;
+    /*border-top: 1px solid #444;*/
     z-index: 10; /* Ensures it stays above other content */
 
 }
@@ -149,8 +149,8 @@
     padding: 10px;
     border: none;
     border-radius: 20px;
-    background: #333;
-    color: #fff;
+    /*background: #333;*/
+    /*color: #fff;*/
     font-size: 0.9rem;
     outline: none;
 }

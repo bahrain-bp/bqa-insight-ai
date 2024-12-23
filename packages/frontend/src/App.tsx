@@ -45,7 +45,7 @@ function App() {
           element={
             <>
               <PageTitle title="InsightAI" />
-              <ChatBot />
+              {/* <ChatBot /> */}
             </>
           }
         />

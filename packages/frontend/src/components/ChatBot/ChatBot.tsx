@@ -384,36 +384,36 @@ export const Chat = () => {
     return (
         <div className="c-chat h-full">
             {/* Chat Message List */}
-            <ul ref={chatListRef} className="c-chat__list">
-                {messages.map((message, index) => (
-                    <li
-                        key={index}
-                        className={`c-chat__item ${message.author === "human" ? "c-chat__item--human" : ""}`}
-                    >
-                        <div className={`c-chat__message ${message.author === "human" ? "bg-lightblue" : "bg-white"}`}>
-                            {typeof message.body === "string" ? (
-                                <span
-                                    className={message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
-                            ) : (
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-lg">{message.body.title}</span>
-                                    <span className="">{message.body.subtitle}</span>
-                                        <hr className="my-2 border-1 border-black"/>
-                                    <span>{message.body.buttons.map((btn, i) => (
-                                        <input type="button" value={btn.text} key={i} onClick={async () => {
-                                                await messageLex(btn.value)
-                                            }}
-                                            className="bg-primary text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer"/>
-                                    ))}</span>
-                                </div>
-                            )}
-                        </div>
-                    </li>
-                ))}
-            </ul>
+                <ul ref={chatListRef} className="c-chat__list h-full">
+                    {messages.map((message, index) => (
+                        <li
+                            key={index}
+                            className={`c-chat__item ${message.author === "human" ? "c-chat__item--human" : ""}`}
+                        >
+                            <div className={`c-chat__message ${message.author === "human" ? "bg-lightblue" : "bg-primary"}`}>
+                                {typeof message.body === "string" ? (
+                                    <span
+                                        className={message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
+                                ) : (
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-lg">{message.body.title}</span>
+                                        <span className="">{message.body.subtitle}</span>
+                                            <hr className="my-2 border-1 border-whiter"/>
+                                        <span>{message.body.buttons.map((btn, i) => (
+                                            <input type="button" value={btn.text} key={i} onClick={async () => {
+                                                    await messageLex(btn.value)
+                                                }}
+                                                className="bg-lightblue text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer"/>
+                                        ))}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
 
             {/* Chat Input Form */}
-            <form className="c-chat__form bg-boxdark-2" onSubmit={handleSubmit}>
+            <form className="c-chat__form bg-whiten rounded-b-md" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     name="input"
