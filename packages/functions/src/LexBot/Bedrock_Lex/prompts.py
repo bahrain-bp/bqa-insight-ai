@@ -1,5 +1,5 @@
 # TODO: change the questions in compare prompt and others
-def create_compare_prompt(instituite_name, metric, governorate):
+def create_compare_prompt(instituite_name, metric, governorate=False):
     prompt = f'''
          Goal :  To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
         Input 1
@@ -184,3 +184,57 @@ def create_generate_json_prompt(data):
     '''
     
     return prompt
+
+# def create_generate_json_prompt(data):
+#     heading = """
+#     Your objective is to meticulously analyze the provided text, which is Claude's Sonnet 3, and generate a structured JSON output following the specified schema.
+    
+#     1. **Title Extraction**: Derive a relevant and concise title that encapsulates the essence of the sonnet.
+    
+#     2. **Data Extraction for Chart Generation**:
+#         - Identify key thematic elements, literary devices, or metrics pertinent to the sonnet.
+#         - Organize the extracted data with unified column names (`x` for categories and `y` for corresponding values).
+#         - Ensure that each data point is represented individually, especially when dealing with ranges or multiple related elements.
+    
+#     3. **Optimal Chart Type Recommendation**:
+#         - Analyze the extracted data to determine the most suitable chart type (e.g., line chart, bar graph, scatter plot, pie chart) that effectively visualizes the information.
+    
+#     **Please adhere strictly to the JSON structure provided below. The number of rows may vary based on the data extracted, but ensure that all columns are aptly titled and relevant.**
+#     """
+    
+#     instructions = """
+#     <instructions>
+#         1. Do not include any additional or clarifying information beyond what is specified.
+#         2. Utilize the provided schema accurately, using 'x' for column categories and 'y' for their corresponding values.
+#         3. Maintain consistency in data representation, especially for ranges or grouped items.
+#     </instructions>
+#     """
+    
+#     formatting = """
+#     <formatting>
+#     {
+#         "title": "Your Extracted Title Here",
+#         "chartData": {
+#             "columns": ["x", "y"],
+#             "rows": [
+#                 {"x": "Category 1", "y": Value1},
+#                 {"x": "Category 2", "y": Value2},
+#                 // Add more rows as necessary
+#             ]
+#         },
+#         "chartType": "bar" // Choose from "line", "bar", "scatter", "pie"
+#     }
+#     </formatting>
+#     """
+    
+#     prompt = f'''
+#     {heading}
+#     {instructions}
+#     {formatting}
+#     Given text: 
+#     <text>
+#         {data}
+#     </text>
+#     '''
+    
+#     return prompt

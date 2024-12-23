@@ -8,7 +8,7 @@ def get_reports(knowledgebase_id, name, prompt=""):
     
     response = client.retrieve_and_generate(
             input={
-                'text': prompt
+                'text': name
             },
             retrieveAndGenerateConfiguration={
                 'knowledgeBaseConfiguration': {
@@ -17,21 +17,15 @@ def get_reports(knowledgebase_id, name, prompt=""):
                     'generationConfiguration': {
                         'inferenceConfig': {
                             'textInferenceConfig': {
-                                'maxTokens': 2000,  # Increased for comprehensive responses
-                                'temperature': 0.7,  # Balanced between creativity and accuracy
-                                'topP': 0.99
+                                'maxTokens': 65530,
+                                'temperature': 0.6,
+                                'topP': 0.999
                             }
                         }
                     },
                     'retrievalConfiguration': {
                         'vectorSearchConfiguration': {
-                            'numberOfResults': 5,  # Retrieve top 5 most relevant results
-                            'filter': {
-                                'stringContains': {
-                                    'key': 'institueName',  # Assuming 'name' is the field containing institution names
-                                    'value': name
-                                }
-                            }
+                            'numberOfResults': 2  # Retrieve top 5 most relevant results
                         }
                     }
                 },
@@ -40,3 +34,4 @@ def get_reports(knowledgebase_id, name, prompt=""):
         )
 
     print(response)
+    return response

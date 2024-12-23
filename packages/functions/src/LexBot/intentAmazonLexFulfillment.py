@@ -113,6 +113,9 @@ def dispatch(intent_request):
     llama_agent_id = os.getenv("llamaAgentId")
     llama_agent_alias_id = os.getenv("llamaAgentAliasId")
 
+    llama_agent_alias_id = os.getenv("llamaAgentAliasId")
+    knowledgeBase = os.getenv("KNOWLEDGEBASE_ID")
+
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
 
@@ -183,6 +186,7 @@ def dispatch(intent_request):
         prompt = create_analyze_prompt(institute, metric)
 
         response = invoke_agent(agent_id, agent_alias_id, "123", prompt)
+        # reports_response = get_reports(knowledgeBase, institute, prompt="")
         # response = invoke_agent(llama_agent_id, agent_alias_id, "123", prompt)
         # response = invoke_model(prompt)
         # print(response)
@@ -192,9 +196,9 @@ def dispatch(intent_request):
         session_attributes = get_session_attributes(intent_request)
 
         # generate chart data
-        json_prompt = create_generate_json_prompt(response)
-        json_response = invoke_agent(agent_id, agent_alias_id, "123", json_prompt)
-        print(json_response)
+        # json_prompt = create_generate_json_prompt(reports_response)
+        # json_response = invoke_agent(agent_id, agent_alias_id, "123", json_prompt)
+        # print(json_response)
 
         session_attributes['chartData'] = 'replace this with chart data'
 
@@ -248,7 +252,8 @@ def dispatch(intent_request):
         
         # these are the slot values
         governorate = get_slot(intent_request, 'GovernorateSlot')
-        response = "invoke bedrock and put text response in this variable. "
+        # response = "invoke bedrock and put text response in this variable. "
+        response = create_compare_prompt(governorate)
         
         # if governorate is not None:
         #     response += governorate
@@ -295,7 +300,8 @@ def dispatch(intent_request):
         slots = get_slots(intent_request)
         other_question = get_slot(intent_request, 'OtherQuestionsSlot')
         if other_question:
-            response = f"You asked : '{other_question}'."
+            # response = f"You asked : '{other_question}'."
+            response = invoke_agent(agent_id, agent_alias_id, "123", other_question)
         else:
             response = "What are the questions in your mind?"
         message = create_message(response)
@@ -304,7 +310,8 @@ def dispatch(intent_request):
             'Fulfilled',
             message,
         )
-    
+
+
     
     else:
         return close(
