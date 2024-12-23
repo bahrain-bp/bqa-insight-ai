@@ -14,8 +14,7 @@ export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket, bedrockOutputBucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
-    // const {extractReportMetadataAgent, becrockExtractAgentAlias} = use(BedrockExpressStack);
-    const {bot} = use(BotStack);
+    const {bot, alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
 
@@ -28,14 +27,6 @@ export function ApiStack({stack}: StackContext) {
             },
         },
         routes: {
-            // Sample Python lambda function
-            "GET /": {
-                function: {
-                    handler: "packages/functions/src/sample-python-lambda/lambda.main",
-                    runtime: "python3.11",
-                    timeout: "60 seconds",
-                },
-            },
             // Add the generate-upload-url route
             "POST /generate-upload-url": {
                 function: {
@@ -68,26 +59,40 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable],
                 },
             },
-            "POST /lex/start_session": {
+            "POST /textract": {
                 function: {
-                    handler: "packages/functions/src/startLexSession.handler",
+                    handler: "packages/functions/src/textract.extractTextFromPDF",
+                    permissions: ["textract", "s3"],
+                    timeout: "60 seconds",
+                }
+            },
+            "POST /comprehend": {
+                function: {
+                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
+                    permissions: ["comprehend"],
+                    timeout: "60 seconds"
+                }
+            },
+            "POST /lex/start-session": {
+                function: {
+                    handler: "packages/functions/src/LexBot/startLexSession.handler",
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "JUGNAGX1SE",
-                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        BOT_ID: bot.resource.ref,
+                        BOT_ALIAS_ID: alias.resource.ref,
                         LOCALE_ID: "en_US",
                     }
                 }
             },
-            "POST /lex/message_lex": {
+            "POST /lex/message-lex": {
                 function: {
-                    handler: "packages/functions/src/messageLex.handler",
+                    handler: "packages/functions/src/LexBot/messageLex.handler",
                     permissions: ["lex"],
                     timeout: "60 seconds",
                     environment: {
-                        BOT_ID: "JUGNAGX1SE",
-                        BOT_ALIAS_ID: "0RRCBGFQX1",
+                        BOT_ID: bot.resource.ref,
+                        BOT_ALIAS_ID: alias.resource.ref,
                         LOCALE_ID: "en_US",
                     }
                 }

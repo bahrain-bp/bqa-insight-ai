@@ -34,7 +34,7 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
             </div>
           </main>
           {}
-          <ChatButton />
+          {/* <ChatButton /> */}
         </div>
         {/* <!-- ===== Content Area End ===== --> */}
       </div>
