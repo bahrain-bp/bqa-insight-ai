@@ -267,17 +267,7 @@ export function BotStack({stack}: StackContext) {
             }
         }
     })
-    const UniStandard = locale.addIntent({
-        intentName: 'StandardIntent',
-        description: 'Provide information about jug jgopo institutes',
-        sampleUtterances: [
-            { utterance: 'Tfhoislghoidj' },
-        ],
-        fulfillmentCodeHook: {
-            enabled: true,
-        },
-    });
-    UniStandard.addSlot({
+    analyzingIntent.addSlot({
         slotName: 'StandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Standard to analyze',
@@ -288,7 +278,39 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'what is the standard of the specific program'
+                                value: 'What is the standard of the specific program?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    const uniStandard = locale.addIntent({
+        intentName: 'StandardIntent',
+        description: 'Intent about standards for universitites',
+        sampleUtterances: [
+            { utterance: 'Standard' },
+        ],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    });
+
+    uniStandard.addSlot({
+        slotName: 'StandardSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Standard to analyze',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the standard for analysis?'
                             }
                         },
                     },
