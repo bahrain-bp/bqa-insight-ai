@@ -28,7 +28,7 @@ export async function syncDeleteKnowlegeBase(knowledgeBaseId: string, dataSource
         }
             
     } catch (error) {
-        
+        console.log(error)
     }
    
 }
