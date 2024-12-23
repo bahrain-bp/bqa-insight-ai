@@ -6,8 +6,11 @@ const Filter = () => {
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
-    "Institute Type": ["Schools", "Universities", "Vocational Institutes"],
-    
+    "Institute Classification": [],
+    "Institute Level": [],
+    "Location": [],
+    "Institute Name": [],
+    "Report Year": [],
   });
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
@@ -25,37 +28,9 @@ const Filter = () => {
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
-      const instituteType = selectedOptions["Institute Type"][0];
-      if (!instituteType) return;
-
-      let backendInstituteType = "";
-      let filters = {};
-
-      // Define filter sets based on the "Institute Type"
-      if (instituteType === "Universities") {
-        filters = {
-          "University Name": [],
-          "Location": [],
-          "Number of Programs": [],
-          "Number of Qualifications": [],
-          "Program Names": [],
-          "Program Judgments": [],
-        };
-      } else if (instituteType === "Schools") {
-        filters = {
-          "Institute Classification": [],
-          "Institute Level": [],
-          "Location": [],
-          "Institute Name": [],
-          "Report Year": [],
-        };
-      }
-      
-
-
       try {
         const prompt = new URLSearchParams();
-        prompt.append("instituteType", backendInstituteType);
+
         if (selectedOptions["Institute Classification"].length) {
           prompt.append("classification", selectedOptions["Institute Classification"][0]);
         }
@@ -67,23 +42,14 @@ const Filter = () => {
         }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${prompt.toString()}`);
-        if (!response.ok) {
-          const errorMessage = await response.text();
-          console.error('Error fetching filter options:', errorMessage);
-          throw new Error(`Error fetching data: ${errorMessage}`);
-        }
         const data = await response.json();
-        setFilterOptions((prevOptions) => ({
-          ...data.filters,
-          "Institute Type": prevOptions["Institute Type"],
-        }));
+        setFilterOptions(data.filters);
       } catch (error) {
         console.error("Error fetching filter options:", error);
       }
     };
 
     fetchFilterOptions();
-    console.log('Selected options:', selectedOptions);
   }, [selectedOptions]);
 
   useEffect(() => {
@@ -113,24 +79,14 @@ const Filter = () => {
 
         let updatedState = { ...prevState };
 
-        if (header === "Institute Type") {
-          updatedState = {
-            ...prevState,
-            "Institute Type": [value],
-            "Institute Classification": [],
-            "Institute Level": [],
-            "Location": [],
-            "Institute Name": [],
-            "Report Year": [],
-          };
-        } else if (header === "Institute Classification") {
+        if (header === "Institute Classification") {
           updatedState = {
             ...prevState,
             "Institute Classification": [value],
             "Institute Level": [],
             "Location": [],
             "Institute Name": [],
-            "Report Year": [],
+            "Report Year": []
           };
         } else if (header === "Institute Level") {
           updatedState = {
@@ -143,7 +99,13 @@ const Filter = () => {
             ...prevState,
             "Location": [value],
           };
+        } else if (header === "Institute Name" && mode === "Compare") {
+          // Allow multiple selections only in Compare mode
+          if (!updatedState[header].includes(value)) {
+            updatedState[header] = [...updatedState[header], value];
+          }
         } else {
+          // Single selection for all other cases
           updatedState = {
             ...prevState,
             [header]: [value],
@@ -197,9 +159,6 @@ const Filter = () => {
   const generateSentence = () => {
     const parts: string[] = [];
     if (mode) parts.push(`${mode} insights for`);
-    if (selectedOptions["Institute Type"]?.length > 0)
-      parts.push(`Type ${selectedOptions["Institute Type"].join(", ")}`);
-    if (selectedOptions["Institute Level"]?.length > 0)
     if (selectedOptions["Institute Classification"]?.length > 0)
       parts.push(`classification ${selectedOptions["Institute Classification"].join(", ")}`);
     if (selectedOptions["Institute Level"]?.length > 0)

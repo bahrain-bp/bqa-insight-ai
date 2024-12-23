@@ -147,8 +147,8 @@ export function ApiStack({stack}: StackContext) {
                 function: {
                     handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, 
-                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
+                        TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
                     permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
