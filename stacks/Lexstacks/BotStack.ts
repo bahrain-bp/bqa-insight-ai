@@ -332,6 +332,26 @@ export function BotStack({stack}: StackContext) {
         },
     });
 
+    otherIntent.addSlot({
+        slotName: 'OtherQuestionsSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                  {
+                      message: {
+                        plainTextMessage: {
+                          value: "What are the questions in your mind?"
+                        }
+                      }
+                  }
+              ],
+              maxRetries: 2
+              }
+          }
+    })
+
     comparedGovernorateIntent.addSlot({
         slotName: 'GovernorateSlot',
         slotTypeName: 'AMAZON.FreeFormInput',

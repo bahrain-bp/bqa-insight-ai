@@ -134,7 +134,7 @@ def dispatch(intent_request):
         elif bqa_slot == 'Other':
             response = elicit_intent(
                 intent_request,
-                'InstituteSlot',
+                'OtherQuestionsSlot',
                 "OtherIntent"
             )
         else:
@@ -290,7 +290,20 @@ def dispatch(intent_request):
             message,
             session_attributes,
         )
-
+    
+    elif intent_name == 'OtherIntent':
+        slots = get_slots(intent_request)
+        other_question = get_slot(intent_request, 'OtherQuestionsSlot')
+        if other_question:
+            response = f"You asked : '{other_question}'."
+        else:
+            response = "What are the questions in your mind?"
+        message = create_message(response)
+        return close(
+            intent_request,
+            'Fulfilled',
+            message,
+        )
     
     
     else:
