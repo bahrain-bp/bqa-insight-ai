@@ -5,114 +5,141 @@ const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 // Lambda handler
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-
-  const tableName = process.env.TABLE_NAME || ''; 
+  // Environment variables
+  const tableName = process.env.TABLE_NAME || '';
   const uniTable = process.env.UNIVERSITY_TABLE_NAME || '';
   const progTable = process.env.PROGRAM_TABLE_NAME || '';
-
+  
+  // Validate required environment variables
   if (!tableName || !uniTable || !progTable) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'TABLE_NAME environment variable is not set' }),
+      body: JSON.stringify({ error: 'Required environment variables are not set.' }),
     };
   }
 
-  const { classification, level, location, universityName, programmeName } = event.queryStringParameters || {}; // Getting filters from query parameters
-
-  const params = {
-    TableName: tableName,
-  };
+  // Extract query parameters
+  const { classification, level, location, universityName, programmeName } = event.queryStringParameters || {};
 
   try {
-    const data = await dynamoDB.scan(params).promise();
-    console.log(data);
+    // Fetch and filter institute data
+    const instituteFilters = await fetchInstituteData(tableName, { classification, level, location });
+    console.log('Institute Data:', instituteFilters);
 
-    // Filter the data based on user selections for institutes
-    let filteredData = data.Items || [];
-
-    if (classification) {
-      filteredData = filteredData.filter(item => item.instituteClassification === classification);
-    }
-    if (level) {
-      filteredData = filteredData.filter(item => item.instituteGradeLevels === level);
-    }
-    if (location) {
-      filteredData = filteredData.filter(item => item.instituteLocation === location);
-    }
-
-    // Extract the year from dateOfReview
-    const extractYear = (date: string): string | null => {
-      if (!date) return null;
-      const match = date.match(/(\d{4})/);
-      return match ? match[1] : null;
-    };
-
-    // Transform the filtered data to match the format needed for the frontend
-    const filters = {
-      "Institute Classification": Array.from(new Set(filteredData.map(item => item.instituteClassification))),
-      "Institute Level": Array.from(new Set(filteredData.map(item => item.instituteGradeLevels))),
-      "Location": Array.from(new Set(filteredData.map(item => item.instituteLocation))),
-      "Institute Name": Array.from(new Set(filteredData.map(item => item.institueName))),
-      "Report Year": Array.from(new Set(filteredData
-        .map(item => extractYear(item.dateOfReview))  // Extract year from date
-        .filter(year => year !== null) // Filter out invalid dates
-      )),
-    };
-
-    console.log(filters); // Debugging
-
-    // Now filter and transform the university data
-    let uniFilteredData: any[] = [];
-
-    if (universityName || programmeName) {
-      const uniParams: AWS.DynamoDB.DocumentClient.ScanInput = {
-        TableName: uniTable,
-      };
-
-      // If universityName or programmeName is provided, filter based on those
-      if (universityName) {
-        uniParams.FilterExpression = 'universityName = :universityName';
-        uniParams.ExpressionAttributeValues = {
-          ':universityName': universityName,
-        };
-      }
-
-      if (programmeName) {
-        uniParams.FilterExpression = uniParams.FilterExpression 
-          ? `${uniParams.FilterExpression} and programmeName = :programmeName`
-          : 'programmeName = :programmeName';
-        uniParams.ExpressionAttributeValues = {
-          ...uniParams.ExpressionAttributeValues,
-          ':programmeName': programmeName,
-        };
-      }
-
-      // Scan DynamoDB for university data
-      const uniData = await dynamoDB.scan(uniParams).promise();
-      uniFilteredData = uniData.Items || [];
-    }
-
-    // Transform the filtered university data for frontend
-    const universityFilters = {
-      "University Name": Array.from(new Set(uniFilteredData.map(item => item.universityName))),
-      "Programme Name": Array.from(new Set(uniFilteredData.map(item => item.programmeName))),
-      "Programme Judgment": Array.from(new Set(uniFilteredData.map(item => item.programmeJudgment))),
-    };
-
-    console.log('University Filters:', universityFilters); // Debugging
+    // Fetch and filter university data
+    const universityFilters = await fetchUniversityData(uniTable, progTable, { universityName, programmeName });
+    console.log('University Data:', universityFilters);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
-        filters,            // Institute filters
-        universityFilters,  // University filters
+        filters: instituteFilters,
+        universityFilters,
       }),
     };
   } catch (error) {
-    console.error('Error fetching items:', error);
+    console.error('Error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Error fetching items from DynamoDB' }),
+      body: JSON.stringify({ error: 'Error fetching data from DynamoDB.' }),
     };
+  }
+};
+
+// Helper function to fetch and filter institute data
+const fetchInstituteData = async (
+  tableName: string,
+  filters: { classification?: string; level?: string; location?: string }
+) => {
+  const params = { TableName: tableName };
+
+  try {
+    const data = await dynamoDB.scan(params).promise();
+    console.log('Raw Institute Data:', data);
+
+    let filteredData = data.Items || [];
+
+    if (filters.classification) {
+      filteredData = filteredData.filter(item => item.instituteClassification === filters.classification);
+    }
+    if (filters.level) {
+      filteredData = filteredData.filter(item => item.instituteGradeLevels === filters.level);
+    }
+    if (filters.location) {
+      filteredData = filteredData.filter(item => item.instituteLocation === filters.location);
+    }
+
+    const extractYear = (date: string): string | null => date?.match(/(\d{4})/)?.[1] || null;
+
+    return {
+      "Institute Classification": [...new Set(filteredData.map(item => item.instituteClassification))],
+      "Institute Level": [...new Set(filteredData.map(item => item.instituteGradeLevels))],
+      "Location": [...new Set(filteredData.map(item => item.instituteLocation))],
+      "Institute Name": [...new Set(filteredData.map(item => item.institueName))],
+      "Report Year": [
+        ...new Set(
+          filteredData
+            .map(item => extractYear(item.dateOfReview))
+            .filter(year => year !== null)
+        ),
+      ],
+    };
+  } catch (error) {
+    console.error('Error fetching institute data:', error);
+    throw error;
+  }
+};
+const fetchUniversityData = async (
+  uniTable: string,
+  progTable: string,
+  filters: { universityName?: string; programmeName?: string }
+) => {
+  // University table query
+  const uniParams: AWS.DynamoDB.DocumentClient.ScanInput = { 
+    TableName: uniTable
+  };
+  if (filters.universityName) {
+    uniParams.FilterExpression = 'universityName = :universityName';
+    uniParams.ExpressionAttributeValues = { ':universityName': filters.universityName };
+  }
+
+  // Program table query
+  const progParams: AWS.DynamoDB.DocumentClient.ScanInput = { 
+    TableName: progTable
+  };
+  if (filters.universityName || filters.programmeName) {
+    const expressions: string[] = [];
+    const expressionValues: Record<string, string> = {};
+    
+    if (filters.universityName) {
+      expressions.push('universityName = :universityName');
+      expressionValues[':universityName'] = filters.universityName;
+    }
+    if (filters.programmeName) {
+      expressions.push('programmeName = :programmeName');
+      expressionValues[':programmeName'] = filters.programmeName;
+    }
+    
+    progParams.FilterExpression = expressions.join(' AND ');
+    progParams.ExpressionAttributeValues = expressionValues;
+  }
+
+  try {
+    const [uniData, progData] = await Promise.all([
+      dynamoDB.scan(uniParams).promise(),
+      dynamoDB.scan(progParams).promise()
+    ]);
+
+    const universities = uniData.Items || [];
+    const programs = progData.Items || [];
+
+    return {
+      "University Name": [...new Set(universities.map(item => item.universityName))],
+      "Programme Name": [...new Set(programs.map(item => item.programmeName).filter(Boolean))],
+      "Programme Judgment": [...new Set(programs.map(item => item.programmeJudgment).filter(Boolean))]
+    };
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    throw error;
   }
 };
