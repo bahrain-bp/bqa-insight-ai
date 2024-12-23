@@ -57,8 +57,9 @@ export function ApiStack({stack}: StackContext) {
                     environment: {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                        INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
                     },
-                    permissions: [bucket, fileMetadataTable],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata],
                 },
             },
             "POST /comprehend": {
