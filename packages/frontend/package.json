@@ -16,6 +16,7 @@
     "aws-amplify": "^6.8.0",
     "axios": "^1.7.8",
     "chart.js": "^4.4.7",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "codecatalyst-sst-app": "file:../..",
     "csv-parser": "^3.0.0",
     "esbuild": "^0.24.0",

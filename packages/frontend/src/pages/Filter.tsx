@@ -456,17 +456,17 @@ const Filter = () => {
 
 
   return (
-    <div className="flex flex-col items-center px-8">
-    {submittedMessage && (
-      <div className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
-        messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
-      }`}>
-        {submittedMessage}
-      </div>
-    )}
-
-    <div className="w-full mt-4">
-      <div className="bg-white p-6 rounded-md shadow-md w-full">
+    <div className="p-6">
+      {/* Pop-Up Message */}
+      {submittedMessage && (
+        <div
+          className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
+            messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
+          }`}
+        >
+          {submittedMessage}
+        </div>
+      )}
         <div className="flex items-center mb-4 space-x-8">
           <div className="flex items-center flex-1">
             <label className="block font-semibold text-2xl mr-4">Insighting To</label>
@@ -597,9 +597,7 @@ const Filter = () => {
               )}
             </>
           )}
-        </div>
       </div>
-    </div>
   );
 };
 

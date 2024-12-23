@@ -1,7 +1,6 @@
 import React, { useState, ReactNode, createContext } from 'react';
 import Header from '../components/Header/index';
 import Sidebar from '../components/Sidebar/index';
-import ChatButton from "../components/ChatBot/ChatBot.tsx";
 
 type ChatContextType = {isChatOpen : boolean, setIsChatOpen : React.Dispatch<React.SetStateAction<boolean>>}
 export const ChatContext = createContext<ChatContextType>({isChatOpen : false, setIsChatOpen : () => {}});
@@ -34,7 +33,7 @@ const DefaultLayout: React.FC<{ children: ReactNode }> = ({ children }) => {
             </div>
           </main>
           {}
-          <ChatButton />
+          {/* <ChatButton /> */}
         </div>
         {/* <!-- ===== Content Area End ===== --> */}
       </div>

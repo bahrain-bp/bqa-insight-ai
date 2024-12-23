@@ -108,7 +108,10 @@ export async function handler(event: SQSEvent){
             console.log("HERE IS RESPONSE: ", response);
     
             const modelResponse = response.output?.message?.content?.[0].text
-            const parsedResponse = JSON.parse(modelResponse || "");
+
+            const afterRegex = regexFunction(modelResponse || "");
+    
+            const parsedResponse = JSON.parse(afterRegex || "");
             console.log("model output: ", modelResponse);
            // const extractedOutput = parseMetadata(parsedResponse);
             await insertProgramMetadata(parsedResponse);
@@ -159,3 +162,16 @@ async function insertProgramMetadata(data :any) {
     return await dynamoDb.put(params).promise();
 }
 
+function regexFunction(input: string): string {
+    
+  // extract JSON  part incase there is text also
+  const jsonRegex = /{([\s\S]*?)}/;
+  const extractedJson = input.match(jsonRegex);
+
+  if (!extractedJson) {
+      throw new Error("No JSON-like structure found in the input.");
+  }
+
+  return extractedJson[0];
+
+}
