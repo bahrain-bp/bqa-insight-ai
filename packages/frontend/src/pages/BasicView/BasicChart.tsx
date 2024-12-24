@@ -1,12 +1,12 @@
-import { ChartContext } from "../../components/RouterRoot";
-import DynamicChart, { ChartJsonData } from "./dynamicChart";
+import { useContext, useEffect, useState } from "react";
+import DynamicChart, { ChartJsonData } from "../Dashboard/dynamicChart";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import React, { useContext, useEffect, useState } from "react";
+import { ChartContext } from "../../components/RouterRoot";
 import { Chart } from "react-chartjs-2";
 
-const ECommerce: React.FC = () => {
-  const { chartJson } = useContext(ChartContext);
+const BasicChart = () => {
+    const { chartJson } = useContext(ChartContext);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentChart, setCurrentChart] = useState<ChartJsonData | null>(null);
   
@@ -58,16 +58,14 @@ const ECommerce: React.FC = () => {
       }
     }
   };
-
-  return (
-    <div style={{ padding: "20px" }}>
-      <h2>Charts Generated on Home Page</h2>
+    return (
+        <div style={{ padding: "20px", width: "70%" }}>
+      <h2>Charts</h2>
       {isLoading && <p>Loading charts...</p>}
-      {!isLoading && chartJson.length === 0 && <p>No charts available</p>}
-
+        <br></br>
       <div id="export-content">
         {/* Intermediate Schools Performance Chart */}
-        <div className="chart-container" style={{ marginBottom: "2rem" }}>
+        {/* <div className="chart-container" style={{ marginBottom: "2rem" }}>
           <h3>Intermediate Schools Performance Over Time</h3>
           <Chart
             type="line"
@@ -127,7 +125,7 @@ const ECommerce: React.FC = () => {
               }
             }}
           />
-        </div>
+        </div> */}
 
         {/* Latest Performance Comparison Bar Chart */}
         <div className="chart-container" style={{ marginBottom: "2rem" }}>
@@ -180,7 +178,7 @@ const ECommerce: React.FC = () => {
         </div>
 
         {/* Performance vs Student Count Scatter Chart */}
-        <div className="chart-container" style={{ marginBottom: "2rem" }}>
+        {/* <div className="chart-container" style={{ marginBottom: "2rem" }}>
           <h3>Performance vs Student Count</h3>
           <Chart
             type="scatter"
@@ -213,10 +211,10 @@ const ECommerce: React.FC = () => {
               ]
             }}
           />
-        </div>
+        </div> */}
 
         {/* Multi-Year Grade Performance Chart */}
-        <div className="chart-container" style={{ marginBottom: "2rem" }}>
+        {/* <div className="chart-container" style={{ marginBottom: "2rem" }}>
           <h3>Multi-Year Grade Performance</h3>
           <Chart
             type="pie"
@@ -240,7 +238,7 @@ const ECommerce: React.FC = () => {
               }
             }}
           />
-        </div>
+        </div> */}
 
         {!isLoading && chartJson.length > 0 && (
           <div id="current-chart">
@@ -251,7 +249,7 @@ const ECommerce: React.FC = () => {
         )}
       </div>
 
-      {!isLoading && chartJson.length > 0 && (
+      {!isLoading && chartJson.length === 0 && (
         <button
           onClick={exportContentAsPDF}
           style={{
@@ -275,7 +273,7 @@ const ECommerce: React.FC = () => {
         </button>
       )}
     </div>
-  );
-};
+    );
+}
 
-export default ECommerce;
+export default BasicChart;

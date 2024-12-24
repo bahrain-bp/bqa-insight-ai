@@ -370,7 +370,7 @@ export const Chat = () => {
         //     setTimeout(() => addMessage(msg), msg.timeout || 0); // Use default timeout if undefined
         // });
     }, []);
-
+    
     // Scroll to the bottom when messages change
     useEffect(() => {
         if (chatListRef.current) {

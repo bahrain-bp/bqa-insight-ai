@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Filter from '../Filter'
 import Chat from '../../components/ChatBot/ChatBot'
+import BasicChart from './BasicChart'
 
 const BasicView = () => {
   const [activeTab, setActiveTab] = useState(0)
@@ -34,8 +35,8 @@ const BasicView = () => {
           </div>
         </div>
       </div>
-      <div className='basis-1/2'>
-        charts here
+      <div className='basis-1/2 w-full'>
+        <BasicChart />
       </div>
     </div>
   )
