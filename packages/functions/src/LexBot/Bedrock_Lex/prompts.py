@@ -560,6 +560,113 @@ def create_program_uni_analyze_prompt(standard, programme_name, institute_name):
     return prompt
 
 
+def create_compare_programme(standard, programme_name, institutes):
+    prompt = f"""
+        Your goal is to compare between the provided Programmes-within-College review reports and provide insights on the programmes' overall performance based on the different standards or indicators and judgment as well as the overview of the Bachelor Degree.
+
+        <instructions>
+        1. Ensure that the output contains all the insightful information.
+        2. Do not use the below Input Output examples in your response to different questions.
+        </instructions>
+
+        Input 1
+        Question: Compare between The Learning Programme Standard in the Bachelor of Information and Communications Technology programme offered by Bahrain Polytechnic and Ahlia University.
+        Output:
+        1. Curriculum Design
+        Bahrain Polytechnic (BP):
+        - The curriculum is structured into 480 credits over four years, offering four specializations: Programming, Networking, Information Systems, and Database Systems.
+        - Emphasizes Problem and Project-Based Learning (PBL) to foster practical, industry-aligned skills.
+        - Includes co-operative learning projects for real-world exposure, though not mandatory.
+
+        Ahlia University (AU):
+        - The Bachelor in Information Technology (BIT) comprises 132 credits across 44 courses, integrating theory and practical applications.
+        - Features professional certification-aligned courses (e.g., Microsoft certifications) and emphasizes practical projects.
+        - Offers an optional internship program requiring a minimum of 180 hours, enhancing employability.
+
+        2. Teaching and Learning Approaches
+        Bahrain Polytechnic:
+        - Employs diverse teaching strategies, including group projects, lab work, and independent studies.
+        - Integrates Moodle for e-learning, supported by an emerging e-learning framework.
+        - Focuses on PBL to bridge the gap between academia and industry.
+
+        Ahlia University:
+        - Utilizes a mix of lectures, practical sessions, and case studies, supported by Moodle for e-learning.
+        - Encourages student engagement through well-structured teaching materials and interactive sessions.
+
+        3. Assessment and Learning Outcomes
+        Bahrain Polytechnic:
+        - Employs various assessment methods, including quizzes, exams, and projects, with a focus on both formative and summative assessments.
+        - Internal and external moderation ensure the rigor of assessments.
+
+        Ahlia University:
+        - Provides a comprehensive Student Assessment Manual and guidelines for projects and internships.
+        - Aligns course assessments with Intended Learning Outcomes (ILOs), though greater transparency in alignment is recommended.
+
+        4. Graduate Attributes
+        Bahrain Polytechnic:
+        - Graduate attributes include adaptability, teamwork, and 21st-century skills, which are mapped to Program Intended Learning Outcomes (PILOs).
+
+        Ahlia University:
+        - Encourages generic graduate attributes such as critical thinking and technical proficiency.
+        - Recommendations suggest deriving more specific attributes tailored to IT disciplines.
+
+        Recommendations for Improvement
+        Bahrain Polytechnic:
+        - Expedite the implementation of the formal e-learning framework.
+        - Revise PILOs to ensure clarity, measurability, and alignment with course-level outcomes.
+
+        Ahlia University:
+        - Increase the availability of internship placements and refine internship evaluation criteria.
+        - Strengthen alignment between course assessments and ILOs.
+
+        Conclusion:
+        Both programs exhibit strengths in aligning their curricula with industry needs and incorporating innovative teaching methods. Bahrain Polytechnic excels in implementing PBL and fostering industry ties, while Ahlia University emphasizes practical projects and professional certifications. Both institutions could benefit from enhanced alignment of assessments with learning outcomes and greater stakeholder involvement in program development.
+
+        Input: Compare between {standard} Standard in the Bachelor of {programme_name} programme offered by {institutes}?          
+        Output:
+        1. Title 1
+        The programme name
+        University1 Name:
+        - 
+        - 
+
+        University2 Name:
+        - 
+        - 
+
+        2. Title 2
+        University1 Name:
+        - 
+        - 
+
+        University2 Name:
+        - 
+        - 
+
+        3. Title 3
+        University1 Name:
+        - 
+        - 
+
+        University2 Name:
+        - 
+        - 
+
+        Recommendations for Improvement:
+        University1 Name:
+        - 
+        - 
+
+        University2 Name:
+        - 
+        - 
+
+        Conclusion:
+    """
+
+    return prompt
+
+
 def create_generate_json_prompt(data):
     heading = """ Your goal is to analyze the given text and provide a relevant title in relation to the given text in JSON format. 
         Then, extract data from the given text appropriate for chart generation. The chart data you provide must include unified 

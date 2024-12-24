@@ -378,7 +378,10 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request),
                     )
         
-                message = f"the programs are: {programs_names}"
+                # message = f"the programs are: {programs_names}"
+                
+                compare_uni_programmes_prompt = create_compare_programme(standard, programs_names, Uni_name)
+                message = invoke_agent(agent_id, agent_alias_id, "123", compare_uni_programmes_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
