@@ -116,6 +116,17 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+            "POST /deleteSync": {
+                function: {
+                    handler: "packages/functions/src/bedrock/deleteSync.syncKnowlegeBase",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    environment: {
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+                    }
+                }
+            },
             
             "POST /invokeBedrock": {
                 function: {
@@ -128,6 +139,18 @@ export function ApiStack({stack}: StackContext) {
                         BUCKET_NAME: bedrockOutputBucket.bucketName,
                         KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
                     },
+                }
+            },
+            "POST /converseBedrock": {
+                function: {
+                    handler: "packages/functions/src/LexBot/Bedrock_Lex/converseBedrock.converse",
+                    permissions: ["bedrock"],
+                    timeout: "60 seconds",
+                    // environment: {
+                    //     AGENT_ID: cfnAgent?.attrAgentId || "",
+                    //     AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                    // },
+                    runtime: "python3.11",
                 }
             },
             "POST /invokeExpressLambda": {

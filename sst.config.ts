@@ -9,12 +9,12 @@ import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
-import { AfterDeployStack } from "./stacks/AfterDeployStack";
 import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
+import { OpenDataStack } from "./stacks/OpenDataStack";
 import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
 
-import { OpenDataStack } from "./stacks/OpenDataStack";
+import { AfterDeployStack } from "./stacks/AfterDeployStack";
 
 export default {
   config(_input) {
