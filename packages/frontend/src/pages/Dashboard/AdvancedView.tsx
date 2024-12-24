@@ -1,7 +1,6 @@
-import React, { useState, useRef, useContext } from 'react';
-import { ChartContext } from "../../components/RouterRoot";
+import React, { useState, useRef } from 'react';
+import { Send, FileDown, Clock, MessageSquare } from 'lucide-react';
 import { jsPDF } from "jspdf";
-import { Send, FileDown, FileText, Clock, MessageSquare } from 'lucide-react';
 
 interface ImageResponseCard {
   title: string;
@@ -24,7 +23,6 @@ const AdvancedView: React.FC = () => {
   const [inputValue, setInputValue] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const chatRef = useRef<HTMLDivElement>(null);
-  const { chartJson, setChartJson } = useContext(ChartContext);
 
   const startSession = async (): Promise<string> => {
     if (sessionId) return sessionId;
@@ -64,7 +62,7 @@ const AdvancedView: React.FC = () => {
         content: message,
         timestamp: new Date().toLocaleString()
       }]);
-      scrollToBottom(); // Scroll after user message
+      scrollToBottom();
 
       // Add loading message
       setMessages(prev => [...prev, {
@@ -72,7 +70,7 @@ const AdvancedView: React.FC = () => {
         content: 'Thinking...',
         timestamp: new Date().toLocaleString()
       }]);
-      scrollToBottom(); // Scroll after loading message
+      scrollToBottom();
 
       const sid = await startSession();
       const lexResponse = await fetch(`${import.meta.env.VITE_API_URL}/lex/message-lex`, {
@@ -105,12 +103,11 @@ const AdvancedView: React.FC = () => {
             timestamp: new Date().toLocaleString()
           }));
         }
-        scrollToBottom(); // Scroll after bot response
+        scrollToBottom();
       }
 
     } catch (error) {
       console.error("Error:", error);
-      // Remove loading message and add error message
       setMessages(prev => {
         const withoutLoading = prev.filter(msg => msg.type !== 'loading');
         return [...withoutLoading, {
@@ -119,7 +116,7 @@ const AdvancedView: React.FC = () => {
           timestamp: new Date().toLocaleString()
         }];
       });
-      scrollToBottom(); // Scroll after error message
+      scrollToBottom();
     } finally {
       setIsLoading(false);
       setInputValue("");
@@ -129,7 +126,6 @@ const AdvancedView: React.FC = () => {
   const shouldIncludeInReport = (content: string | ImageResponseCard): boolean => {
     if (typeof content !== 'string') return false;
     return !content.includes('?');
-    //&& !content.startsWith('invoke bedrock');
   };
 
   const exportToPDF = (): void => {
@@ -185,7 +181,9 @@ const AdvancedView: React.FC = () => {
     if (msg.type === 'loading') {
       return (
           <div className="flex justify-center">
-            <div className="animate-pulse text-gray-400">{msg.content}</div>
+            <div className="animate-pulse text-gray-400">
+              {typeof msg.content === 'string' ? msg.content : ''}
+            </div>
           </div>
       );
     }
@@ -221,7 +219,7 @@ const AdvancedView: React.FC = () => {
     return (
         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
           <div className={`${isUser ? 'bg-meta-6' : 'bg-primary'} rounded-lg p-4 max-w-[80%] ${!isUser && 'border border-gray-700'}`}>
-            <p className="text-white">{msg.content as string}</p>
+            <p className="text-white">{typeof msg.content === 'string' ? msg.content : ''}</p>
             <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {msg.timestamp}
@@ -233,7 +231,6 @@ const AdvancedView: React.FC = () => {
 
   return (
       <div className="flex flex-col h-[calc(100vh-160px)]">
-        {/* Header */}
         <div className="bg-boxdark border-b border-gray-700 p-4">
           <div className="max-w-4xl mx-auto flex justify-between items-center">
             <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -259,10 +256,8 @@ const AdvancedView: React.FC = () => {
           </div>
         </div>
 
-        {/* Chat Container */}
         <div className="flex-1 overflow-hidden">
           <div className="max-w-4xl mx-auto h-full flex flex-col">
-            {/* Messages Area */}
             <div
                 ref={chatRef}
                 className="flex-1 overflow-y-auto p-4 space-y-6"
@@ -274,7 +269,6 @@ const AdvancedView: React.FC = () => {
               ))}
             </div>
 
-            {/* Input Area */}
             <div className="p-4 border-t border-gray-700">
               <div className="flex gap-2 max-w-4xl mx-auto">
                 <input
