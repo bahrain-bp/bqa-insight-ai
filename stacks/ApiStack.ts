@@ -172,6 +172,7 @@ export function ApiStack({stack}: StackContext) {
                      environment: {
                          AGENT_ID: cfnAgent?.attrAgentId || "",
                          AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                         OPENAI_API_KEY: process.env.OPENAI_API_KEY || ""
                    }
                 }
             },

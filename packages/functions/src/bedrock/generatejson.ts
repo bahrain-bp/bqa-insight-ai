@@ -1,26 +1,9 @@
-import {
-    BedrockAgentRuntimeClient,
-    InvokeAgentCommand,
-  } from "@aws-sdk/client-bedrock-agent-runtime";
-import { APIGatewayEvent } from "aws-lambda";
+import OpenAI from "openai";
 
 
+export const generateJson = async (event: string) => {
 
-export const generateJson = async (event :  string ) => {
-  const client = new BedrockAgentRuntimeClient({ region: "us-east-1" });
-
-  const agentId = process.env.AGENT_ID;
-  const agentAliasId = process.env.AGENT_ALIAS_ID;
-  const sessionId = "123";
-
-
-  try {
-    const command = new InvokeAgentCommand({
-
-      agentId,
-      agentAliasId,
-      sessionId,
-      inputText: `{
+  const command = `{
 
         Your goal is to analyze the given text and provide a relavant title in relation to 
         the given text in JSON format, then extract data from the given text appropriate to be used for chart generation, 
@@ -187,56 +170,47 @@ export const generateJson = async (event :  string ) => {
                             }
                     </formatting>
                     Given text: ${event}
-                    `, 
+                    `;
+
+
+
+
+
+
+  try {
+    //¬let completion = "";
+
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
     });
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini", 
+      store: false,
+      messages: [
+        { "role": "user", "content": command }
+      ]
+    })
+    const responseText = completion.choices[0].message.content;
 
+    if (!responseText) {
+      throw new Error("responseText is undefined");
+    }
+
+    console.log(responseText)
+
+    // Extract and parse JSON 
+    const jsonMatch = responseText.match(/{.*}/s);
+    // Extract JSON object 
+    if (!jsonMatch) { throw new Error("No JSON object found in the response"); }
     try {
-        let completion = "";
-        const response = await client.send(command);
-    
-        if (response.completion === undefined) {
-          throw new Error("Completion is undefined");
-        }
-    
-        let hasChunks = false;
-        var decodedResponse = "";
-        for await (const chunkEvent of response.completion) {
-          const chunk = chunkEvent.chunk;
-          
-          if (chunk !== undefined && chunk.bytes) {
-            hasChunks = true;
-            decodedResponse = new TextDecoder("utf-8").decode(chunk.bytes);
-            completion += decodedResponse;
-          } else {
-            console.warn("Received an empty chunk or chunk with no bytes");
-          }
-        }
-    
-        if (!hasChunks) {
-          throw new Error("No chunks received in the response");
-        }
-
-        console.log("Raw response:", decodedResponse);
-
-        // Extract and parse JSON
-      const jsonMatch = decodedResponse.match(/{.*}/s); // Extract JSON object
-
-      if (!jsonMatch) {
-        throw new Error("No JSON object found in the response");
-
-        
-      }
-
-        return {
-           decodedResponse // Handle the result here
-       
-        };
-
-      } catch (err) {
-        console.error("Error invoking Bedrock agent generate json:", err);
-        return undefined;
-      }
-  } catch (error) {
-    console.log(error);
+      // Parse the matched JSON 
+      const parsedJson = JSON.parse(jsonMatch[0]);
+      return { statusCode: 200, body: parsedJson };
+    } catch (parseError) { console.error("Error parsing JSON:", parseError); throw new Error("Failed to parse JSON from response"); }
+  } catch (err) {
+    console.error("Error invoking Bedrock agent generate json:", err);
+    return undefined;
   }
 };
+
+

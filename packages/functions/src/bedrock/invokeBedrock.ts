@@ -137,11 +137,12 @@ import { generateJson } from "./generatejson"
           statusCode: 200,
           body: JSON.stringify({
              message: 'Received Output from Bedrock',
-             response: JSON.parse(decodedResponse).result  // Handle the result here
+             response: JSON.parse(decodedResponse).result,  // Handle the result here
+             generatedJson
             }),
         };
       } catch (err) {
-        console.error("Error invoking Bedrock agent:", err);
+        console.error("Error invoking Bedrock Fagent:", err);
         return undefined;
       }
   } catch (error) {
