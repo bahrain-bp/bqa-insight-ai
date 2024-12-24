@@ -1,4 +1,5 @@
-import { StackContext } from "sst/constructs";
+import { Function, Bucket, Queue, StackContext, use } from "sst/constructs";
+import * as cdk from "aws-cdk-lib";
 import { aws_lambda as lambda } from 'aws-cdk-lib';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration, aws_iam as iam } from "aws-cdk-lib";
@@ -7,8 +8,11 @@ import {
     LexCustomResource,
     LexBotDefinition,
 } from '@amaabca/aws-lex-custom-resources';
+import { BedrockStack } from "../BedrockStack";
 
 export function BotStack({stack}: StackContext) {
+
+    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias, cfnAgentLlama, cfnAgentAliasLlama} = use(BedrockStack);
 
     const provider = new LexCustomResource(
         stack,
@@ -270,31 +274,39 @@ export function BotStack({stack}: StackContext) {
         }
     })
 
-    const compareInstitutesIntent = {
-        name: 'CompareInstitutesIntent',
-        slots: [
-          {
-            name: 'CompareInstitutesSlot',
-            type: 'AMAZON.FreeFormInput',
-            elicitationRequired: true,
-            prompts: {
-              elicitation: {
-                messageGroups: [
-                  {
-                    message: {
-                      plainTextMessage: {
-                        value: "What are the names of institutes you would like to compare?"
-                      }
+      
+      const compareInstitutesIntent = locale.addIntent({
+        intentName: 'CompareInstitutesIntent',
+        description: 'Provide comparison of educational institutes based on governorate',
+        sampleUtterances: [
+            { utterance: 'Specific Institutes' },
+            { utterance: 'Institute comparison' },
+            { utterance: 'Compare Institutes' },
+        ],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+      })
+      compareInstitutesIntent.addSlot(
+        {
+          slotName: 'CompareInstitutesSlot',
+          slotTypeName: 'AMAZON.FreeFormInput',
+          valueElicitationSetting: {
+              slotConstraint: 'Required',
+              promptSpecification: {
+                  messageGroups: [
+                    {
+                        message: {
+                          plainTextMessage: {
+                            value: "What are the names of institutes you would like to compare?"
+                          }
+                        }
                     }
-                  }
                 ],
                 maxRetries: 2
-              }
+                }
             }
-          }
-        ]
-      };
-      
+        })
 
     const comparedGovernorateIntent = locale.addIntent({
         intentName: 'CompareGovernorateIntent',
@@ -320,6 +332,26 @@ export function BotStack({stack}: StackContext) {
             enabled: true,
         },
     });
+
+    otherIntent.addSlot({
+        slotName: 'OtherQuestionsSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                  {
+                      message: {
+                        plainTextMessage: {
+                          value: "What are the questions in your mind?"
+                        }
+                      }
+                  }
+              ],
+              maxRetries: 2
+              }
+          }
+    })
 
     comparedGovernorateIntent.addSlot({
         slotName: 'GovernorateSlot',
@@ -407,6 +439,16 @@ export function BotStack({stack}: StackContext) {
     //
     // });
 
+    // const lexInvokeBedrock = new iam.Role(stack, 'LexInvokeBedrock', {
+    //     assumedBy: new iam.ArnPrincipal('arn_for_trusted_principal'),
+    //   });
+    //   lexInvokeBedrock.addToPolicy(new iam.PolicyStatement({
+    //     actions: [
+    //       'bedrock:invokeModel',
+    //   ],
+    //     resources: [ "anthropic.claude-3-sonnet-20240229-v1:0" ],
+    //   }));
+
     const fulfillmentPermission = {
         action: 'lambda:InvokeFunction',
         principal: new iam.ServicePrincipal('lex.amazonaws.com')
@@ -420,7 +462,36 @@ export function BotStack({stack}: StackContext) {
         timeout: Duration.seconds(60),
         // code: lambda.Code.fromInline('print("Hello World")'),
         code: lambda.Code.fromAsset('packages/functions/src/LexBot/'),
+        environment: {
+            agentId: cfnAgent.attrAgentId,
+            agentAliasId: cfnAgentAlias.attrAgentAliasId,
+            KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+            llamaAgentId: cfnAgentLlama.attrAgentId,
+            llamaAgentAliasId: cfnAgentAliasLlama.attrAgentAliasId,
+        },
+        
     }); 
+
+    fulfillmentFunction.addToRolePolicy(new iam.PolicyStatement(
+        {
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "bedrock:invokeModel"
+            ],
+            resources: ["arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"]
+        }
+    ))
+
+    fulfillmentFunction.addToRolePolicy(new iam.PolicyStatement(
+        {
+            effect: iam.Effect.ALLOW,
+            actions: [
+                "bedrock:InvokeAgent",
+                "bedrock:*"
+            ],
+            resources: ["*"] // TODO: change it to be dynamic
+        }
+    ))
 
     // Grant permission for the Lambda function to interact with Amazon Lex
     fulfillmentFunction.grantInvoke(fulfillmentPrincipal);

@@ -1,4 +1,15 @@
+# from ..bedrock.bedrock_python.invokeBedrockPython import invokeBedrockPython
 # --- Helpers that build all of the responses ---
+
+import boto3
+import json
+import os
+
+from botocore.exceptions import ClientError
+from Bedrock_Lex.invokeBedrockAgent import invoke_agent
+from Bedrock_Lex.retrieveReports import get_reports
+from Bedrock_Lex.prompts import *
+from Bedrock_Lex.invokeClaudeModel import invoke_model
 
 def create_message(message):
     return {
@@ -94,6 +105,17 @@ def close(intent_request, fulfillment_state, message, session_attributes = {}):
     }
 
 def dispatch(intent_request):
+    
+    # Get Bedrock ageant id and alias id
+    agent_id = os.getenv("agentId")
+    agent_alias_id = os.getenv("agentAliasId")
+
+    llama_agent_id = os.getenv("llamaAgentId")
+    llama_agent_alias_id = os.getenv("llamaAgentAliasId")
+
+    llama_agent_alias_id = os.getenv("llamaAgentAliasId")
+    knowledgeBase = os.getenv("KNOWLEDGEBASE_ID")
+
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
 
@@ -115,7 +137,7 @@ def dispatch(intent_request):
         elif bqa_slot == 'Other':
             response = elicit_intent(
                 intent_request,
-                'InstituteSlot',
+                'OtherQuestionsSlot',
                 "OtherIntent"
             )
         else:
@@ -156,15 +178,28 @@ def dispatch(intent_request):
             )
         
 
-        response = "invoke bedrock and put text response in this variable. "
+        
         # these are the slot values
         institute = get_slot(intent_request, 'InstituteSlot')
         metric = get_slot(intent_request, 'MetricSlot')
-        if institute is not None and metric is not None:
-            response += institute + ", " + metric
+
+        prompt = create_analyze_prompt(institute, metric)
+
+        response = invoke_agent(agent_id, agent_alias_id, "123", prompt)
+        # reports_response = get_reports(knowledgeBase, institute, prompt="")
+        # response = invoke_agent(llama_agent_id, agent_alias_id, "123", prompt)
+        # response = invoke_model(prompt)
+        # print(response)
+
         message = create_message(response)
 
         session_attributes = get_session_attributes(intent_request)
+
+        # generate chart data
+        # json_prompt = create_generate_json_prompt(reports_response)
+        # json_response = invoke_agent(agent_id, agent_alias_id, "123", json_prompt)
+        # print(json_response)
+
         session_attributes['chartData'] = 'replace this with chart data'
 
         return close(
@@ -214,11 +249,14 @@ def dispatch(intent_request):
                 slots=get_slots(intent_request),
             )
 
-        response = "invoke bedrock and put text response in this variable. "
+        
         # these are the slot values
         governorate = get_slot(intent_request, 'GovernorateSlot')
-        if governorate is not None:
-            response += governorate
+        # response = "invoke bedrock and put text response in this variable. "
+        response = create_compare_prompt(governorate)
+        
+        # if governorate is not None:
+        #     response += governorate
 
         message = create_message(response)
 
@@ -257,8 +295,23 @@ def dispatch(intent_request):
             message,
             session_attributes,
         )
-
     
+    elif intent_name == 'OtherIntent':
+        slots = get_slots(intent_request)
+        other_question = get_slot(intent_request, 'OtherQuestionsSlot')
+        if other_question:
+            # response = f"You asked : '{other_question}'."
+            response = invoke_agent(agent_id, agent_alias_id, "123", other_question)
+        else:
+            response = "What are the questions in your mind?"
+        message = create_message(response)
+        return close(
+            intent_request,
+            'Fulfilled',
+            message,
+        )
+
+
     
     else:
         return close(

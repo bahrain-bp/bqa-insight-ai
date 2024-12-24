@@ -1,7 +1,7 @@
 import { StackContext, Table } from "sst/constructs";
 export function UniversityProgramMetadataStack({ stack }: StackContext) {
   // Create DynamoDB table to store file metadata
-  const UniversityProgramMetadataTable = new Table(stack, "UniversityProgramMetadataStack", {
+  const UniversityProgramMetadataTable = new Table(stack, "UniversityProgramMetadataStackk", {
     fields: {
         universityName: "string",
         location: "string",
