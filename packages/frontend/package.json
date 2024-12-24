@@ -12,7 +12,7 @@
   "dependencies": {
     "@aws-amplify/auth": "^6.6.0",
     "amazon-cognito-identity-js": "^6.3.12",
-    "apexcharts": "^3.41.0",
+    "apexcharts": "^4.0.0",
     "aws-amplify": "^6.8.0",
     "axios": "^1.7.8",
     "chart.js": "^4.4.7",
@@ -26,7 +26,7 @@
     "jszip": "^3.10.1",
     "match-sorter": "^6.3.1",
     "react": "^18.2.0",
-    "react-apexcharts": "^1.4.1",
+    "react-apexcharts": "^1.7.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
