@@ -1,7 +1,7 @@
 # TODO: change the questions in compare prompt and others
 def create_compare_prompt(instituite_name, metric, governorate=False):
     prompt = f'''
-         Goal :  To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
+        Goal :  To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
         Input 1
         Question: What are the improvement areas in the government schools this year?
         Output:
@@ -39,92 +39,93 @@ def create_compare_prompt(instituite_name, metric, governorate=False):
     return prompt
 
 
-def create_analyze_prompt(instituite_name, metric):
-    prompt = f"""
-        Goal: To analyze the improvements and declines of individual educational institutes in Bahrain, focusing on specific actions taken, challenges faced, and actionable strategies to enhance their overall performance in areas such as academic achievement, personal development, teaching quality, and governance.
+def create_analyze_prompt():
+    prompt = """
+        Your goal is to analyze the provided school report and provide insights on the school’s overall performance based on its achievements, challenges, and areas for improvement.
+
+        <instructions>
+        1. Ensure that the output contains all the insightful information.
+        2. Do not say that you did not find any information.
+        </instructions>
 
         Input 1
         Question: What improvements did Al Bayan School achieve this year?
         Output:
-        Classification: Individual school analysis (Al Bayan School)
-        Insights: Key improvements achieved by Al Bayan School this year include:
-        1. Introduction of a new STEM curriculum to enhance science and technology learning.
-        2. Implementation of a student mentoring program to support personal development.
-        3. Upgrading classroom technology with smart boards and digital tools.
-        4. Launching professional development workshops for teachers focused on differentiated instruction.
+        The performance of Al Bayan School this year highlights several key improvements:
+
+        Key Strengths:
+        Curriculum Enhancements:
+        - Introduction of a new STEM curriculum to enhance science and technology learning.
+        - Implementation of a student mentoring program to support personal development.
+
+        Technological Upgrades:
+        - Upgraded classroom technology with smart boards and digital tools.
+        - Launched professional development workshops for teachers focused on differentiated instruction.
 
         Input 2
         Question: What are the key declines observed in Al Bayan School this year?
         Output:
-        Classification: Individual school analysis (Al Bayan School)
-        Insights: Declines observed at Al Bayan School this year include:
-        1. A decrease in extracurricular activity participation due to increased academic pressure.
-        2. Higher teacher turnover rates compared to previous years, impacting classroom stability.
-        3. Challenges in maintaining consistent student performance in mathematics.
-        4. Reduced parent engagement in school activities and decision-making processes.
+        The performance of Al Bayan School also faced some declines this year:
+
+        Key Challenges:
+        Student Engagement:
+        - A decrease in extracurricular activity participation due to increased academic pressure.
+        - Reduced parent engagement in school activities and decision-making processes.
+
+        Staff Retention and Performance:
+        - Higher teacher turnover rates compared to previous years, impacting classroom stability.
+        - Challenges in maintaining consistent student performance in mathematics.
 
         Input 3
         Question: What are the improvements and declines observed at Ibn Khuldoon National School?
         Output:
-        Classification: Individual school analysis (Ibn Khuldoon National School)
-        Insights: Performance at Ibn Khuldoon National School shows:
-        Improvements:
-        1. Enhanced student well-being through the introduction of mindfulness and mental health programs.
-        2. Increased enrollment due to new marketing campaigns and reputation building.
-        3. Adoption of international curricula like IB, improving global competitiveness.
-        4. Successful completion of infrastructure renovations, providing better facilities for students.
-        Declines:
-        1. Limited access to advanced extracurricular programs due to budget constraints.
-        2. Difficulty retaining senior teaching staff, leading to increased recruitment costs.
-        3. Reports of inconsistent academic results in science and humanities subjects.
-        4. Reduced opportunities for international student exchange programs due to logistical issues.
+        The performance of Ibn Khuldoon National School reveals the following insights:
 
-        Input 4
-        Question: What are the strategies proposed for Al Noor International School to address its challenges?
+        Key Strengths:
+        Student Well-being:
+        - Enhanced student well-being through mindfulness and mental health programs.
+        - Increased enrollment due to new marketing campaigns and reputation building.
+
+        Curriculum and Infrastructure:
+        - Adoption of international curricula like IB, improving global competitiveness.
+        - Successful completion of infrastructure renovations, providing better facilities for students.
+
+        Key Challenges:
+        Extracurricular Programs:
+        - Limited access to advanced extracurricular programs due to budget constraints.
+        - Reduced opportunities for international student exchange programs due to logistical issues.
+
+        Staff and Academic Performance:
+        - Difficulty retaining senior teaching staff, leading to increased recruitment costs.
+        - Reports of inconsistent academic results in science and humanities subjects.
+
+        Input: How did {institute_name} perform in terms of {metric}?
         Output:
-        Classification: Individual school analysis (Al Noor International School)
-        Insights: Strategies proposed for Al Noor International School include:
-        1. Improving Student Outcomes: Introducing peer tutoring programs and after-school academic support.
-        2. Teacher Retention: Offering performance bonuses and professional growth opportunities to reduce turnover.
-        3. Parental Involvement: Hosting regular parent-teacher forums to increase engagement.
-        4. Extracurricular Development: Securing sponsorships to enhance funding for clubs and competitions.
+        The performance of {institute_name} in terms of {metric} is as follows:
 
-        Input 5
-        Question: How do Al Hekma International School’s improvements compare to its declines this year?
-        Output:
-        Classification: Individual school analysis (Al Hekma International School)
-        Insights: Al Hekma International School’s performance reveals:
-        Improvements:
-        1. Improved student-teacher ratios by hiring additional staff.
-        2. Introduction of advanced placement courses, providing students with college-level learning opportunities.
-        3. Successful rollout of a new digital library system, enhancing research capabilities.
-        4. Establishment of a student council to promote leadership and advocacy skills.
-        Declines:
-        1. Decrease in student attendance rates attributed to transportation issues.
-        2. Challenges in maintaining consistent quality across grade levels due to curriculum changes.
-        3. Limited participation in regional academic competitions compared to prior years.
-        4. Strained teacher-student relationships in some grades due to communication gaps.
+        Key Strengths:
+        Area 1:
+        - 
+        - 
+        - 
 
-        Input 6
-        Question: What actionable steps can be taken to address declines across Bahrain’s educational institutes?
-        Output:
-        Classification: Sector-wide recommendations
-        Insights: To address common challenges, educational institutes in Bahrain can implement the following steps:
-        1. Teacher Retention: Develop competitive salary packages and continuous training opportunities.
-        2. Student Engagement: Foster interest through dynamic extracurricular activities and modern teaching methods.
-        3. Infrastructure Upgrades: Allocate funding for renovation and technology integration in classrooms.
-        4. Parental Involvement: Build stronger school-community ties through regular communication and feedback mechanisms.
-        5. Academic Excellence: Invest in data-driven approaches to track and improve student performance in core subjects.
+        Area 2:
+        - 
+        - 
+        - 
 
-        Question: How did {instituite_name} perform in terms of {metric}
-    """
+        Key Challenges:
+        1. 
+        2. 
+        3. 
+
+    """    
     return prompt
 
 
 def create_uni_analyze_prompt():
     prompt = f"""
         Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
-        Use this data for your report: <data>{text}</data>.
 
         <instructions>
         1. Ensure that the output contains all the insightful information.
