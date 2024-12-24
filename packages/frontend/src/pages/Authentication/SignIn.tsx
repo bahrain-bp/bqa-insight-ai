@@ -4,8 +4,6 @@ import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { useNavigate } from 'react-router-dom';
 import { signIn, getCurrentUser } from '@aws-amplify/auth';
 
-
-
 type SetStateType<T> = React.Dispatch<React.SetStateAction<T>>;
 
 const SignIning = ({
@@ -16,28 +14,38 @@ const SignIning = ({
 }) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const navigate = useNavigate();
     
   const handleSignIn = async (email: string, password: string) => {
     try {
       const user = await signIn({ username: email, password });
       setUser(user);
+      setErrorMessage(''); // Clear any existing error messages
       navigate('/fileManagement');
     } catch (error: any) {
       console.error('Error signing in', error);
-      
+      // Handle specific error cases
+      if (error.name === 'NotAuthorizedException') {
+        setErrorMessage('Incorrect email or password. Please try again.');
+      } else if (error.name === 'UserNotFoundException') {
+        setErrorMessage('Email not found. Please check your email address.');
+      } else {
+        setErrorMessage('An error occurred during sign in. Please try again.');
+      }
     }
   };
+
   useEffect(() => {
     const checkUserSignIn = async () => {
       try {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
-        console.log("User ID:", currentUser.username); // or `.attributes.email` if needed
+        console.log("User ID:", currentUser.username);
         navigate("/fileManagement");
       } catch (error) {
         console.log("User not signed in:", error);
-        navigate("/auth/signin"); // Redirect to login page
+        navigate("/auth/signin");
       }
     };
     checkUserSignIn();
@@ -48,12 +56,19 @@ const SignIning = ({
       <Breadcrumb pageName="Sign In" />
 
       <div className="">
-        <div className="flex justify-center "> {/* Added flex container with height */}
+        <div className="flex justify-center">
           <div className="max-w-md">
             <div className="p-4 sm:p-12.5 xl:p-17.5 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Login to InsightAI
               </h2>
+
+              {/* Error Message Display */}
+              {errorMessage && (
+                <div className="mb-6 p-4 rounded-lg bg-danger bg-opacity-10 border border-danger text-danger text-sm">
+                  {errorMessage}
+                </div>
+              )}
 
               <form
                 onSubmit={(e) => {
@@ -103,7 +118,6 @@ const SignIning = ({
                       className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 text-black outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                       onChange={(e) => setPassword(e.target.value)}
                     />
-
                     <span className="absolute right-4 top-4">
                       <svg
                         className="fill-current"
@@ -127,17 +141,14 @@ const SignIning = ({
                     </span>
                   </div>
                 </div>
+
                 <div className="mb-5">
-              <input
-                type="submit"
-                value="Sign In"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleSignIn(email, password);
-                }}
-                className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
-              />
-            </div>
+                  <input
+                    type="submit"
+                    value="Sign In"
+                    className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
+                  />
+                </div>
 
                 <div className="mt-6 text-center">
                   <p>
