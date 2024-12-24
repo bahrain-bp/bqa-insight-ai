@@ -1,7 +1,5 @@
 import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
-import rebotIcon from "../../images/rebot.svg";
-import {ChatContext} from "../../layout/DefaultLayout";
 
 // import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
 import {ChartContext} from "../RouterRoot.tsx";
@@ -23,37 +21,37 @@ type Message = {
 
 let graph = "";
 
-const ChatBot = () => {
-    const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
-
-    const toggleChat = () => {
-        setIsChatOpen(!isChatOpen);
-    };
-
-    return (
-        <div>
-            {/* Button to toggle chat */}
-            <img
-                src={rebotIcon}
-                className={`fixed bottom-4 right-4  text-white p-3  cursor-pointer z-20 ${isChatOpen ? 'b-chat--closed' : 'b-chat--open'}`}
-                style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
-                alt="Open Chat"
-                onClick={toggleChat}
-                width={120}
-                height={120}
-            />
-
-            {/* Chat UI */}
-            <div className={`b-chat bg-boxdark ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
-                <div className="b-chat__header">
-                    <span>InsightAI</span>
-                    <button className="bg-danger" onClick={toggleChat}>Close</button>
-                </div>
-                <Chat/>
-            </div>
-        </div>
-    );
-};
+// const ChatBot = () => {
+//     const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
+//
+//     const toggleChat = () => {
+//         setIsChatOpen(!isChatOpen);
+//     };
+//
+//     return (
+//         <div>
+//             {/* Button to toggle chat */}
+//             <img
+//                 src={rebotIcon}
+//                 className={`fixed bottom-4 right-4  text-white p-3  cursor-pointer z-20 ${isChatOpen ? 'b-chat--closed' : 'b-chat--open'}`}
+//                 style={{transition: "opacity 0.5s ease, transform 0.5s ease"}}
+//                 alt="Open Chat"
+//                 onClick={toggleChat}
+//                 width={120}
+//                 height={120}
+//             />
+//
+//             {/* Chat UI */}
+//             <div className={`b-chat bg-boxdark ${isChatOpen ? 'b-chat--open' : 'b-chat--closed'}`}>
+//                 <div className="b-chat__header">
+//                     <span>InsightAI</span>
+//                     <button className="bg-danger" onClick={toggleChat}>Close</button>
+//                 </div>
+//                 <Chat/>
+//             </div>
+//         </div>
+//     );
+// };
 
 export const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
@@ -164,6 +162,7 @@ export const Chat = () => {
         } 
     }
 
+    // @ts-expect-error it will not be used
     const replaceLastMessageGraph = (item: Message) => {
         try {
             // Use the hardcoded JSON or your dynamic JSON data
@@ -279,7 +278,7 @@ export const Chat = () => {
                 "radar": 3,
                 "scatter": 4
             };
-            var validJson = "";
+            let validJson = "";
             for (const [key, value] of Object.entries(mappedType)) {
                 if (graph.includes(key)) {
                     validJson = validJsonArr[value];

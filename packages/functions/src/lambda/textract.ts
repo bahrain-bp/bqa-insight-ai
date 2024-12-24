@@ -8,7 +8,6 @@ import {
   GetDocumentAnalysisCommand,
 } from "@aws-sdk/client-textract";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
-import { syncKnowlegeBase } from "src/bedrock/sync";
 
 // Initialize the SQS client from AWS SDK v2
 const sqs = new AWS.SQS();
@@ -84,7 +83,7 @@ const processBlocks = (blocks: Block[]): string => {
 
 // Function to wait for document text detection job completion
 async function tryTextract(command: GetDocumentTextDetectionCommand): Promise<any> {
-  const maxRetries = 5;
+  const maxRetries = 10;
   let retries = 0;
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -176,31 +175,6 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
     console.error("Error deleting SQS message:", error);
   }
 }
-
-async function getMessageInQueue() {
-  const params = {
-    QueueUrl: queueUrl || "",
-    AttributeNames: ["ApproximateNumberOfMessages"]
-  }
-
-  try {    
-    const data = await sqs.getQueueAttributes(params).promise();
-    const numberOfMessages = data.Attributes?.ApproximateNumberOfMessages;
-    console.log(numberOfMessages, ": numbder")
-    if (numberOfMessages === "0") {
-      console.log("Syncing starting now");
-
-      syncKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "");
-      
-    }
-
-    
-  } catch (err) {
-    console.error('Error fetching queue attributes:', err);
-  }
-
-}
-
 // Function to send a message to the extract metadata queue
 async function sendMessageToExtractMetadataQueue(text: string, fileKey: string): Promise<void> {
   const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL; // Ensure this environment variable is set
@@ -310,7 +284,6 @@ export async function handler(event: SQSEvent) {
 
       // Delete the SQS message after successful processing
       await deleteSQSMessage(record.receiptHandle);
-      await getMessageInQueue();
       await sendMessageToExtractMetadataQueue(resultText, fileKey);
     }
 

@@ -113,7 +113,7 @@ export async function handler(event: SQSEvent) {
             console.log(`Updated file metadata for ${fileKey} with chunk URLs:`, chunkURLs);
 
             // Insert empty metadata.json file
-            await insertMetadataFile(bucketName, fileKey);
+            // await insertMetadataFile(bucketName, fileKey);
 
             // Delete the message from the queue after successful processing
             const deleteParams = {
@@ -167,19 +167,19 @@ async function splitPDF(buffer: Buffer, pagesPerFile: number): Promise<Uint8Arra
 }
 
 // Function to insert the empty metadata.json file into S3
-async function insertMetadataFile(bucketName: string, fileKey: string): Promise<void> {
-    const metadataKey = `${fileKey}.metadata.json`;
+// async function insertMetadataFile(bucketName: string, fileKey: string): Promise<void> {
+//     const metadataKey = `${fileKey}.metadata.json`;
 
-    // Create an empty JSON object for now
-    const metadataContent = JSON.stringify({});
+//     // Create an empty JSON object for now
+//     const metadataContent = JSON.stringify({});
 
-    await s3.putObject({
-        Bucket: bucketName,
-        Key: metadataKey,
-        Body: metadataContent,
-        ContentType: "application/json",
-    }).promise();
-}
+//     await s3.putObject({
+//         Bucket: bucketName,
+//         Key: metadataKey,
+//         Body: metadataContent,
+//         ContentType: "application/json",
+//     }).promise();
+// }
 
 // Function to update metadata in DynamoDB
 async function updateFileMetadata(fileKey: string, chunkURLs: string[]): Promise<void> {

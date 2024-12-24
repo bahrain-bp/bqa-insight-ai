@@ -3,15 +3,18 @@ import { FrontendStack } from "./stacks/FrontendStack";
 import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
 import { BotStack } from "./stacks/Lexstacks/BotStack";
-
 import { FileMetadataStack } from "./stacks/FileMetadataStack";
 import { ImageBuilderForCodeCatalyst } from "./stacks/devops/ImageBuilderForCodeCatalyst";
 import { OIDCForGitHubCI } from "./stacks/devops/OIDCForGitHubCI";
 import { AuthStack } from "./stacks/AuthStack";
 import {S3Stack} from "./stacks/S3Stack";
 import { BedrockStack } from "./stacks/BedrockStack";
-import { AfterDeployStack } from "./stacks/AfterDeployStack";
 import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
+import { OpenDataStack } from "./stacks/OpenDataStack";
+import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
+import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
+
+import { AfterDeployStack } from "./stacks/AfterDeployStack";
 
 export default {
   config(_input) {
@@ -36,6 +39,9 @@ export default {
       app.stack(DBStack)
       .stack(FileMetadataStack)
       .stack(InstituteMetadataStack)
+      .stack(UniversityProgramMetadataStack)
+      .stack(ProgramMetadataStack)
+      .stack(OpenDataStack)
       .stack(S3Stack)
       .stack(BedrockStack)
       .stack(BotStack)
