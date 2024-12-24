@@ -1,4 +1,4 @@
-import { StackContext, Bucket, Function, Queue, use, toCdkDuration } from "sst/constructs";
+import { StackContext, Bucket, Function, Queue, use, toCdkDuration, Topic } from "sst/constructs";
 import { RemovalPolicy } from "aws-cdk-lib/core";
 import { FileMetadataStack } from "./FileMetadataStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
@@ -32,6 +32,11 @@ export function S3Stack({ stack }: StackContext) {
         ],
     });
 
+    // create SNS topic to sync knowledgebase
+    const syncTopic = new Topic(stack, "SyncTopic", {
+        subscribers: {
+        }
+    })
 
     const extractMetadataQueue = new Queue(stack, "extractMetadataQueue", {
         cdk: {
@@ -55,7 +60,9 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        }
+        BUCKET_NAME: bucket.bucketName
+        },
+        bind: [syncTopic]
     });
     const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
         handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
@@ -69,7 +76,9 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        }
+        BUCKET_NAME: bucket.bucketName,
+        },
+        bind: [syncTopic]
     });
 
     const extractReportMetadata = new Function(stack, "claudeExtractReportMetadata", {
@@ -84,7 +93,9 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        }
+        BUCKET_NAME: bucket.bucketName
+        },
+        bind: [syncTopic]
     });
     const triggerExtractLambda = new Function(stack, "triggerExtractLambda", {
         handler: "packages/functions/src/bedrock/triggerExtractLambda.handler",
@@ -101,7 +112,9 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        }
+        BUCKET_NAME: bucket.bucketName
+        },
+        // bind: [syncTopic],
     });
 
     extractMetadataQueue.addConsumer(stack, {
@@ -241,7 +254,8 @@ export function S3Stack({ stack }: StackContext) {
         BucketName: bucket.bucketName,
         BedrockOutputBucket: bedrockOutputBucket.bucketName,
         QueueURL: splitPDFQueue.queueUrl,
+        SyncTopic: syncTopic.topicName,
     });
 
-    return { bucket, bedrockOutputBucket, queue: splitPDFQueue };
+    return { bucket, bedrockOutputBucket, queue: splitPDFQueue, syncTopic };
 }
