@@ -3,6 +3,7 @@ export function ProgramMetadataStack({ stack }: StackContext) {
   // Create DynamoDB table to store file metadata
   const programMetadataTable = new Table(stack, "ProgramMetadataStack", {
     fields: {
+        fileKey: "string",
         universityName: "string",
         programmeName: "string",
         programmeJudgment: "string"

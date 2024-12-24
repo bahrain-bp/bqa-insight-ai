@@ -8,7 +8,8 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
-// import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { ProgramMetadataStack } from "./ProgramMetadataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -19,7 +20,9 @@ export function ApiStack({stack}: StackContext) {
     const {bot , alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
-    // const {UniversityProgramMetadataStack} = use(UniversityProgramMetadataStack);
+    const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
+    const {programMetadataTable} = use(ProgramMetadataStack);
+    
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -59,8 +62,10 @@ export function ApiStack({stack}: StackContext) {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
                         INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
+                        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+                        UNIVERSITY_METADATA_TABLE_NAME :UniversityProgramMetadataTable.tableName
                     },
-                    permissions: [bucket, fileMetadataTable, instituteMetadata],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable],
                 },
             },
             "POST /lex/start_session": {
