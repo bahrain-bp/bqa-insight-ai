@@ -99,24 +99,24 @@ def dispatch(intent_request):
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
 
-    # Handle FallbackIntent
-    if intent_name == 'FallbackIntent':
-        user_input = intent_request.get('inputTranscript', '').lower()
-        if user_input == 'back':
-            return elicit_intent(
-                intent_request,
-                'MainMenuSlot',  # Replace with your main menu slot if needed
-                'MainMenuIntent',  # Replace with your actual main menu intent name
-            )
-        else:
-            return close(
-                intent_request,
-                'Fulfilled',
-                create_message("I don't understand it, please type 'back' to return to the main menu.")
-            )
+    # # Handle FallbackIntent
+    # if intent_name == 'FallbackIntent':
+    #     user_input = intent_request()
+    #     if user_input == 'back':
+    #         return elicit_intent(
+    #             intent_request,
+    #             'BQASlot',  # Replace with your main menu slot if needed
+    #             'BQAIntent',  # Replace with your actual main menu intent name
+    #         )
+    #     else:
+    #         return close(
+    #             intent_request,
+    #             'Fulfilled',
+    #             create_message("I don't understand it, please type 'back' to return to the main menu.")
+    #         )
 
     # Handle BQAIntent
-    elif intent_name == 'BQAIntent':
+    if intent_name == 'BQAIntent':
         print("doing BQA INTENT")
         bqa_slot = get_slot(intent_request, 'BQASlot')
         if bqa_slot == 'Analyze':
@@ -128,8 +128,9 @@ def dispatch(intent_request):
         elif bqa_slot == 'Compare':
             response = elicit_intent(
                 intent_request,
-                'CompareInstituteSlot',
+                "InstituteCompareTypeSlot",
                 "ComparingIntent"
+
             )
         elif bqa_slot == 'Other':
             response = elicit_intent(
@@ -167,16 +168,68 @@ def dispatch(intent_request):
                 slots=get_slots(intent_request),
             )
         
-        # If University is selected, check AnalysisTypeSlot
-        if institute_type == 'University':
-            slots = get_slots(intent_request)
-            if "AnalyzeUniversitySlot" not in slots:
+        if institute_type == 'School':
+             school = get_slot(intent_request, "AnalyzeSchoolSlot")
+             if school is None:
                 return elicit_slot(
                     intent_request,
-                    'AnalyzeUniversitySlot',
-                    slots=get_slots(intent_request),
-                )
+                    'AnalyzeSchoolSlot',
+                    slots=get_slots(intent_request)
+                ) 
+             schoolaspect = get_slot(intent_request, "SchoolAspectSlot")
+             if schoolaspect is None:
+                  return elicit_slot(
+                    intent_request,
+                    'SchoolAspectSlot',
+                    slots=get_slots(intent_request)
+                ) 
+             message = f"the school : {school} choosen for the {schoolaspect} aspect"
+             response = create_message(message)
+             session_attributes = get_session_attributes(intent_request)
+             session_attributes['chartData'] = "put chart data here"
+             return close(
+                 intent_request,
+                 'Fulfilled',
+                 response,
+                 session_attributes
+             )
+        
+        elif institute_type == 'Vocational training center':
+             vocational = get_slot(intent_request, "AnalyzeVocationalSlot")
+             if vocational is None:
+                return elicit_slot(
+                    intent_request,
+                    'AnalyzeVocationalSlot',
+                    slots=get_slots(intent_request)
+                ) 
+             vocationalaspect = get_slot(intent_request, "VocationalAspectSlot")
+             if vocationalaspect is None:
+                  return elicit_slot(
+                    intent_request,
+                    'VocationalAspectSlot',
+                    slots=get_slots(intent_request)
+                ) 
+             message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+             response = create_message(message)
+             session_attributes = get_session_attributes(intent_request)
+             session_attributes['chartData'] = "put chart data here"
+             return close(
+                 intent_request,
+                 'Fulfilled',
+                 response,
+                 session_attributes
+             )
+        
+        # If University is selected, check AnalysisTypeSlot
+        elif institute_type == 'University':
             analysis_type = get_slot(intent_request, 'AnalyzeUniversitySlot')
+            if not analysis_type:
+               return elicit_slot(
+                intent_request,
+                'AnalyzeUniversitySlot',
+                slots=get_slots(intent_request),
+            )
+          
 
             # If Program is selected, check ProgramNameSlot
             if analysis_type == 'Program':
@@ -188,11 +241,11 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request),
                     )
 
-                standard = get_slot(intent_request, 'StandardSlot')
+                standard = get_slot(intent_request, 'StandardProgSlot')
                 if standard is None:
                     return elicit_slot(
                         intent_request,
-                        'StandardSlot',
+                        'StandardProgSlot',
                         slots=get_slots(intent_request),
                     )
 
@@ -214,38 +267,20 @@ def dispatch(intent_request):
                     "StandardIntent",
                 )
 
-                # Only if program name is provided, ask for metric
-                # if 'StandardSlot' not in slots :
-                #     return elicit_slot(
-                #         intent_request,
-                #         'StandardSlot',
-                #         slots=get_slots(intent_request),
-                #     )
-                # standard = get_slot(intent_request, 'StandardSlot')
-                # response = f"Analyzing {program_name} program at university level with metric: {standard}"
-                # message = create_message(response)
-                # session_attributes = get_session_attributes(intent_request)
-                # session_attributes['chartData'] = 'replace this with chart data'
-                # return close(
-                #     intent_request,
-                #     'Fulfilled',
-                #     message,
-                #     session_attributes,
-                # )
-
     elif intent_name == 'StandardIntent':
+      
         print("Standard intent, request:", intent_request)
         standard = get_slot(
             intent_request,
             'StandardSlot',
         )
-        if standard is not None:
+        if standard is None:
             print("standard slot not available")
             return elicit_slot(
                 intent_request,
                 'StandardSlot',
             )
-        message = f"Put hte damn response here bro: {standard}"
+        message = f"the standared of the program is: {standard}"
         response = create_message(message)
         session_attributes = get_session_attributes(intent_request)
         session_attributes['chartData'] = "put chart data here bro"
@@ -255,92 +290,157 @@ def dispatch(intent_request):
             response,
             session_attributes,
         )
+    
+    
         
     # Handle ComparingIntent
     elif intent_name == 'ComparingIntent':
         slots = get_slots(intent_request)
-        if 'CompareInstituteSlot' not in slots:
+        
+        # Check InstituteTypeSlot first
+        institutecompare_type = get_slot(intent_request, 'InstituteCompareTypeSlot')
+        if not institutecompare_type:
             return elicit_slot(
                 intent_request,
-                'CompareInstituteSlot',
+                'InstituteCompareTypeSlot',
+                slots=get_slots(intent_request),
+            )
+        
+        if institutecompare_type == 'University':
+            compare_type = get_slot(intent_request,'CompareUniversitySlot')
+            if not compare_type:
+                  return elicit_slot(
+                intent_request,
+                'CompareUniversitySlot',
                 slots=get_slots(intent_request),
             )
 
-        compare_type = get_slot(intent_request, 'CompareInstituteSlot')
-        if compare_type == 'Governorate':
-            return elicit_intent(
-                intent_request,
-                'GovernorateSlot',
-                'CompareGovernorateIntent',
-            )
-        elif compare_type == 'Specific Institutes':
-            return elicit_intent(
-                intent_request,
-                'CompareInstitutesSlot',
-                'CompareInstitutesIntent',
-            )
-        else:
+
+            if compare_type == 'Universities':
+                Uni_name = get_slot(intent_request,'CompareUniversityWUniSlot')
+                if Uni_name is None:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareUniversityWUniSlot',
+                        slots=get_slots(intent_request),
+                    )
+
+                message = f"the universities are: {Uni_name}"
+                response = create_message(message)
+                session_attributes = get_session_attributes(intent_request)
+                session_attributes['chartData'] = "put chart data here "
+                return close(
+                    intent_request,
+                    'Fulfilled',
+                    response,
+                    session_attributes,
+                )
+        
+            elif compare_type == 'Programs':
+                programs_names = get_slot(intent_request,'CompareUniversityWProgramsSlot')
+                if programs_names is None:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareUniversityWProgramsSlot',
+                        slots=get_slots(intent_request),
+                    )
+        
+                message = f"the programs are: {programs_names}"
+                response = create_message(message)
+                session_attributes = get_session_attributes(intent_request)
+                session_attributes['chartData'] = "put chart data here "
+                return close(
+                        intent_request,
+                        'Fulfilled',
+                        response,
+                        session_attributes,
+                    )
+    
+        elif institutecompare_type == 'School':
+            compareschool_type = get_slot(intent_request,'CompareSchoolSlot')
+            if compareschool_type is None:
+                return elicit_slot(
+                    intent_request,
+                    'CompareSchoolSlot',
+                    slots=get_slots(intent_request),
+                )  
+            
+            if compareschool_type == 'Governorate':
+                governorate_name = get_slot(intent_request,'GovernorateSlot')
+                if governorate_name is None:
+                    return elicit_slot(
+                        intent_request,
+                        'GovernorateSlot',
+                        slots=get_slots(intent_request),
+                    )
+                message = f"the governorate you selected is: {governorate_name}"
+                response = create_message(message)
+                session_attributes = get_session_attributes(intent_request)
+                session_attributes['chartData'] = "put chart data here "
+                return close(
+                        intent_request,
+                        'Fulfilled',
+                        response,
+                        session_attributes,
+                    )
+            
+            elif compareschool_type == 'Specific Institutes':
+                specificInstitutes_name = get_slot(intent_request,'CompareSpecificInstitutesSlot')
+                if specificInstitutes_name is None:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareSpecificInstitutesSlot',
+                        slots=get_slots(intent_request),
+                    )
+                message = f"Comparision of Institutes: {specificInstitutes_name}"
+                response = create_message(message)
+                session_attributes = get_session_attributes(intent_request)
+                session_attributes['chartData'] = "put chart data here "
+                return close(
+                        intent_request,
+                        'Fulfilled',
+                        response,
+                        session_attributes,
+                    )
+            
+            elif compareschool_type == "All Government Schools" or compareschool_type == 'All Private Schools':
+                message = f"Comparision of schools: {compareschool_type}"
+                response = create_message(message)
+                session_attributes = get_session_attributes(intent_request)
+                session_attributes['chartData'] = "put chart data here "
+                return close(
+                        intent_request,
+                        'Fulfilled',
+                        response,
+                        session_attributes,
+                    )
+            
+        elif institutecompare_type == 'Vocational training center':
+            comparevocational_type = get_slot(intent_request,'CompareVocationalSlot')
+            if comparevocational_type is None:
+                return elicit_slot(
+                    intent_request,
+                    'CompareVocationalSlot',
+                    slots=get_slots(intent_request),
+                )  
+            comparevocationalaspect = get_slot(intent_request, "CompareVocationalaspectSlot")
+            if comparevocationalaspect is None:
+                  return elicit_slot(
+                    intent_request,
+                    'CompareVocationalaspectSlot',
+                    slots=get_slots(intent_request)
+                ) 
+            message = f"the vocational training center : {comparevocational_type} choosen for the {comparevocationalaspect} aspect"
+            response = create_message(message)
+            session_attributes = get_session_attributes(intent_request)
+            session_attributes['chartData'] = "put chart data here"
             return close(
-                intent_request,
-                'Fulfilled',
-                create_message("Please select a valid comparison type: Governorate or Specific Institutes.")
-            )
-
-    # Handle CompareGovernorateIntent
-    elif intent_name == 'CompareGovernorateIntent':
-        slots = get_slots(intent_request)
-        if 'GovernorateSlot' not in slots:
-            return elicit_slot(
-                intent_request,
-                'GovernorateSlot',
-                slots=get_slots(intent_request),
-            )
-
-        governorate = get_slot(intent_request, 'GovernorateSlot')
-        if governorate is not None:
-            response = f"You selected {governorate} for comparison. Processing your request."
-        else:
-            response = "Please provide a valid governorate."
-
-        message = create_message(response)
-        session_attributes = get_session_attributes(intent_request)
-
-
-        return close(
-            intent_request,
-            'Fulfilled',
-            message,
-            session_attributes
-        )
-    
-    elif intent_name == 'CompareInstitutesIntent':
-        slots = get_slots(intent_request)
-        if 'CompareInstitutesSlot' not in slots:
-            return elicit_slot(
-                intent_request,
-                'CompareInstitutesSlot',
-                slots=get_slots(intent_request),
-            )
-
-        institutes = get_slot(intent_request, 'CompareInstitutesSlot')
-        if institutes is not None:
-            response = f"You selected the following institutes for comparison: {institutes}. Processing your request."
-        else:
-            response = "Please provide the names of the institutes you want to compare."
-
-        message = create_message(response)
-        session_attributes = get_session_attributes(intent_request)
-
-
-        return close(
-            intent_request,
-            'Fulfilled',
-            message,
-            session_attributes
-        )
-    
-    
-
+                 intent_request,
+                 'Fulfilled',
+                 response,
+                 session_attributes
+             )
+                 
     # Handle OtherIntent
     elif intent_name == 'OtherIntent':
         slots = get_slots(intent_request)
