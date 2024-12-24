@@ -1,10 +1,10 @@
+import os
 from openai import OpenAI
 
 def invoke_Gpt(prompt):
     try:
-        client = OpenAI(
-            api_key="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"
-        )
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
         
         completion = client.chat.completions.create(
             model="gpt-4",  # or whichever model you prefer

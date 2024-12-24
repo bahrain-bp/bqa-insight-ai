@@ -454,23 +454,27 @@ export function BotStack({stack}: StackContext) {
         principal: new iam.ServicePrincipal('lex.amazonaws.com')
     }
     const fulfillmentPrincipal = new ServicePrincipal('lex.amazonaws.com')
-    const fulfillmentFunction = new lambda.Function(stack, 'Fulfillment-Lambda', {
-        functionName: stack.stage + '-fulfillment-lambda-for-lex-bot',
+    const fulfillmentFunction = new lambda.Function(
+      stack,
+      "Fulfillment-Lambda",
+      {
+        functionName: stack.stage + "-fulfillment-lambda-for-lex-bot",
         runtime: lambda.Runtime.PYTHON_3_11,
-        handler: 'intentAmazonLexFulfillment.lambda_handler',
-        memorySize: 512, 
+        handler: "intentAmazonLexFulfillment.lambda_handler",
+        memorySize: 512,
         timeout: Duration.seconds(60),
         // code: lambda.Code.fromInline('print("Hello World")'),
-        code: lambda.Code.fromAsset('packages/functions/src/LexBot/'),
+        code: lambda.Code.fromAsset("packages/functions/src/LexBot/"),
         environment: {
-            agentId: cfnAgent.attrAgentId,
-            agentAliasId: cfnAgentAlias.attrAgentAliasId,
-            KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
-            llamaAgentId: cfnAgentLlama.attrAgentId,
-            llamaAgentAliasId: cfnAgentAliasLlama.attrAgentAliasId,
+          agentId: cfnAgent.attrAgentId,
+          agentAliasId: cfnAgentAlias.attrAgentAliasId,
+          KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+          llamaAgentId: cfnAgentLlama.attrAgentId,
+          llamaAgentAliasId: cfnAgentAliasLlama.attrAgentAliasId,
+          OPENAI_API_KEY: process.env.OPENAI_API_KEY!,
         },
-        
-    }); 
+      }
+    ); 
 
     fulfillmentFunction.addToRolePolicy(new iam.PolicyStatement(
         {
