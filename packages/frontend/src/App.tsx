@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import {useEffect, useState} from 'react';
+import {Route, Routes, useLocation} from 'react-router-dom';
 import Loader from './Loader';
 import PageTitle from './components/PageTitle';
 import SignIning from './pages/Authentication/SignIn';
@@ -10,6 +10,7 @@ import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
 import SignOutPage from './pages/Authentication/SignOut.tsx';
 import BasicView from './pages/BasicView/BasicView.tsx';
+import AdvancedView from "./pages/Dashboard/AdvancedView.tsx";
 import { SchoolReviews } from './pages/SchoolReviews.tsx';
 import { VocationalReviews } from './pages/VocationalReviews.tsx';
 
@@ -83,15 +84,24 @@ function App() {
                 }
             />
 
-          <Route
-          path="/Filter"
-          element={
-            <>
-              <PageTitle title="Filter" />
-              <BasicView />
-            </>
-          }
-        />
+                <Route
+                    path="/Filter"
+                    element={
+                        <>
+                            <PageTitle title="Filter"/>
+                            <BasicView/>
+                        </>
+                    }
+                />
+                <Route
+                    path="/advancedView"
+                    element={
+                        <>
+                            <PageTitle title="Advanced View"/>
+                            <AdvancedView/>
+                        </>
+                    }
+                />
         <Route
           path="/schoolReviews"
           element={
@@ -111,7 +121,7 @@ function App() {
               }
         />
       </Routes>
-      
+
     </DefaultLayout>
   );
 }
