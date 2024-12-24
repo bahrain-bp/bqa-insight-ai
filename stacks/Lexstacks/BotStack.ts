@@ -214,7 +214,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'write the name of the program you want to analyze.',
+                                value: 'write the name of the program and the university you want to analyze.',
                             },
                         }
                     }

@@ -273,7 +273,9 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request),
                     )
 
-                message = f"Put hte damn response here bro: {program_name} {standard}"
+                # message = f"Put hte damn response here bro: {program_name} {standard}"
+                analyze_Uni_prompt = create_uni_analyze_prompt(program_name, standard)
+                message = invoke_agent(agent_id, agent_alias_id, "1234", analyze_Uni_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here bro"
