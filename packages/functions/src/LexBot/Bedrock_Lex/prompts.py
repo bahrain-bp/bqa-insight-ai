@@ -1,40 +1,118 @@
 # TODO: change the questions in compare prompt and others
-def create_compare_prompt(instituite_name, metric, governorate=False):
+def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False):
     prompt = f'''
-        Goal :  To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
-        Input 1
-        Question: What are the improvement areas in the government schools this year?
-        Output:
-        Classification: Government schools
-        Insights: Key improvement areas identified in government schools this year include:
-        1. Enhancing students' academic achievement through additional STEM programs.
-        2. Promoting students' personal development with counseling and extracurricular activities.
-        3. Improving teaching quality by offering professional development workshops for teachers.
-        4. Strengthening leadership and governance through the introduction of school performance audits.
-        Input 2
-        Question: What are the improvement areas in private schools in the past years?
-        Output:
-        Classification: Private schools
-        Insights:In recent years, private schools have focused on:
-        1. Boosting academic results by introducing international curricula such as IB and Cambridge standards.
-        2. Supporting student well-being through wellness programs and mental health initiatives.
-        3. Adopting modern teaching methods, including project-based learning and digital tools.
-        4. Enhancing governance through partnerships with international accreditation.
-        Input 3
-        Question: What are the government schools doing this year to achieve an outstanding grade?
-        Output:
-        Classification: Government schools
-        Insights:Government schools are implementing strategies to secure outstanding ratings, such as:
-        1. Introducing rigorous assessment practices to monitor student progress.
-        2. Fostering collaboration between teachers and parents to improve learning outcomes.
-        3. Developing leadership skills among administrators through advanced training programs.
-        4. Creating inclusive classrooms to address diverse learning needs.
-        Input 4
-        Question: What are the improvements in private schools compared to government schools?
-        Output:
-        Classification: Comparative analysis (Private and Government schools)
-        Insights:Private schools show advancements in personalized learning approaches and integration of advanced technology, such as AI-driven learning tools, while government schools have prioritized infrastructure development and STEM curriculum updates. Both sectors have made strides in enhancing student well-being programs, though private schools lead in adopting globally recognized teaching frameworks.
-        Input: How did {instituite_name} do in terms of {metric}?
+        
+Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
+
+    <instructions>
+    1. Ensure that the output contains all the insightful information.
+    2. Do not say that you did not find any information.
+    3. Do not add very negative comments that can ruin the educational instituite reputation. Add constructive ffedback only.
+    </instructions>
+
+    Input 1
+    Question: How Did alrawabi private school and Pakistan Urdu School do in terms of overall effectiveness?
+    Output:
+    Al Rawabi Private School
+
+    Overall Effectiveness: Satisfactory
+    Key Judgements:
+
+    Academic Achievement:
+        High pass rates in internal examinations for Primary and Intermediate schools, but inconsistent performance in High School external exams, particularly in science subjects.
+        Proficiency rates were satisfactory across levels, though High School students faced challenges in rigorous subjects like chemistry and physics.
+        Students' learning skills, particularly critical thinking and technological competencies, were underdeveloped.
+
+    Teaching, Learning, and Assessment:
+        Teachers use diverse strategies, but their effectiveness varied significantly, especially in High School.
+        Assessments and feedback mechanisms require better alignment to individual student needs, particularly for low achievers.
+
+    Leadership and Governance:
+        Regular self-evaluation and strategic planning exist, but operational plans lack robust alignment with priorities.
+        High staff turnover impacts professional development program effectiveness.
+
+    Student Personal Development:
+        Students exhibit good discipline and respect, engaging in activities that promote social responsibility.
+        Opportunities for leadership development in lessons are limited
+
+    Comparative Insights:
+
+    Al Rawabi Private School excels in providing a broad curriculum but struggles with High School performance and teacher retention.
+    Pakistan Urdu School demonstrates stronger academic outcomes in senior grades but requires improvements in integrating critical thinking and modern teaching tools.
+
+    Both schools show a commitment to improving their educational quality but need to address their respective challenges for sustained growth.
+
+    Input 2
+    Question: What are the improvement areas in private schools in the past years?
+    Output:
+    Private schools in Bahrain have focused on significant improvements in recent years:
+
+    Key Strengths:
+    Academic Results:
+    - Boosting academic performance by adopting international curricula such as IB and Cambridge standards.
+
+    Student Well-being:
+    - Supporting student well-being through wellness programs, mental health initiatives, and mindfulness activities.
+
+    Modern Teaching Methods:
+    - Adopting innovative teaching techniques, including project-based learning and digital tools integration.
+
+    Governance:
+    - Enhancing governance practices through partnerships with international accreditation organizations.
+
+    Input 3
+    Question: What are the government schools doing this year to achieve an outstanding grade?
+    Output:
+    Government schools are actively implementing strategies to achieve outstanding ratings:
+
+    Key Strategies:
+    Student Progress Monitoring:
+    - Introducing rigorous assessment practices to track and improve student progress.
+
+    Teacher-Parent Collaboration:
+    - Fostering partnerships between teachers and parents to enhance learning outcomes.
+
+    Leadership Development:
+    - Developing leadership skills among school administrators through advanced training programs.
+
+    Inclusive Education:
+    - Creating inclusive classrooms to cater to diverse student learning needs and abilities.
+
+    Input 4
+    Question: What are the improvements in private schools compared to government schools?
+    Output:
+    A comparative analysis between private and government schools reveals key differences:
+
+    Key Insights:
+    Private Schools:
+    - Advancements in personalized learning approaches and integration of advanced technology, such as AI-driven learning tools.
+    - A strong focus on international curricula and globally recognized teaching frameworks.
+
+    Government Schools:
+    - Prioritization of infrastructure development and updates to the STEM curriculum.
+    - Significant progress in fostering student well-being programs and promoting leadership development among educators.
+
+    Input: How did {institute_names} do in terms of {aspect}?
+    Output:
+    The performance of {institute_names} in terms of {aspect} is as follows:
+
+    Key Strengths:
+    Area 1:
+    - 
+    - 
+    - 
+
+    Area 2:
+    - 
+    - 
+    - 
+
+    Key Challenges:
+    1. 
+    2. 
+    3. 
+    
+?
     '''
     return prompt
 
