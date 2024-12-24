@@ -108,21 +108,21 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
 
 
   return (
-    <div style={{
-      maxWidth: '50vw', 
-      maxHeight: '50vh',
-      margin: '20px auto',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center', 
-    }}>
+    // <div style={{
+    //   maxWidth: '50vw', 
+    //   maxHeight: '50vh',
+    //   margin: '20px auto',
+    //   display: 'flex',
+    //   justifyContent: 'center',
+    //   alignItems: 'center', 
+    // }}>
     <Chart
       type={parsedData.type}
       data={formattedData}
       options={chartOptions}
       style={{ width: "100%", height: "100%" }}
     />
-    </div>
+    // </div>
   );
 };
 
