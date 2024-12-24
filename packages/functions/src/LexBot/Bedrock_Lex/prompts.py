@@ -261,10 +261,9 @@ def create_uni_analyze_prompt(program_name, standard):
 
 
 
-def create_compare_uni_prompt():
-    prompt = """
+def create_compare_uni_prompt(university_names, standard="Quality of Teaching and Learning"):
+    prompt = f"""
         Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
-        Use this data for your report: <data>${text}</data>.
 
         <instructions>
         1. Ensure that the output contains all the insightful information.
@@ -370,9 +369,9 @@ def create_compare_uni_prompt():
         Conclusion:
         The Learning Resources, ICT, and Infrastructure Standard at the University of Bahrain is well-aligned with the institution's goals to support its academic and administrative operations. Continuous improvement and strategic investment in infrastructure and digital transformation solidify its commitment to quality and effectiveness.
 
-        Input: How is the {standard} Standard in {institute_name}?          
+        Input: How is the {standard} Standard in {university_names}?          
         Output:
-        The {standard} Standard at the {institute_name} has been judged as ....
+        The {standard} Standard at the {university_names} has been judged as ....
         Key Strengths:
 
         Title 1:
