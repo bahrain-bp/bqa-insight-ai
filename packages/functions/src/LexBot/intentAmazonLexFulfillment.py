@@ -10,6 +10,7 @@ from Bedrock_Lex.invokeBedrockAgent import invoke_agent
 from Bedrock_Lex.retrieveReports import get_reports
 from Bedrock_Lex.prompts import *
 from Bedrock_Lex.invokeClaudeModel import invoke_model
+from Bedrock_Lex.invokeGPT import invoke_Gpt
 
 def create_message(message):
     return {
@@ -196,11 +197,11 @@ def dispatch(intent_request):
         session_attributes = get_session_attributes(intent_request)
 
         # generate chart data
-        # json_prompt = create_generate_json_prompt(reports_response)
-        # json_response = invoke_agent(agent_id, agent_alias_id, "123", json_prompt)
-        # print(json_response)
+        json_prompt = create_generate_json_prompt(response)
+        json_response = invoke_Gpt(json_prompt)
+        print(json_response)
 
-        session_attributes['chartData'] = 'replace this with chart data'
+        session_attributes['chartData'] = json_response
 
         return close(
             intent_request,
