@@ -8,6 +8,8 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
 
 
@@ -18,6 +20,8 @@ export function ApiStack({stack}: StackContext) {
     const {bot, alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
+    const { programMetadataTable } = use(ProgramMetadataStack);  
     const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
 
     // Create the HTTP API
@@ -160,22 +164,27 @@ export function ApiStack({stack}: StackContext) {
                     // }
                 }
             },
+            
             "POST /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
-                    permissions: [instituteMetadata], // Grant permissions to the table
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
                 },
             },
             "GET /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName,
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
-                    permissions: [instituteMetadata], // Grant permissions to the table
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
         
                 }
             },
