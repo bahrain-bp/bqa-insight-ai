@@ -555,19 +555,24 @@ const Filter = () => {
 
               {isFilterActive && (
                 <>
-                  <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
-                    {isEditing ? (
-                      <textarea
-                        value={editableSentence}
-                        onChange={handleSentenceChange}
-                        rows={4}
-                        className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
-                      />
-                    ) : (
-                      <span onClick={handleSentenceEdit} className="cursor-pointer">
-                        {editableSentence || generateSentence()}
-                      </span>
-                    )}
+          <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
+            {isEditing ? (
+              <textarea
+                value={editableSentence}
+                onChange={handleSentenceChange}
+                rows={4}
+                className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
+              />
+            ) : (
+              <div 
+                onClick={handleSentenceEdit} 
+                className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
+                title="Click to edit"
+              >
+                {editableSentence || generateSentence()}
+                <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
+              </div>
+            )}
                   </div>
                   {isEditing && (
                     <div className="mt-4 text-center">
