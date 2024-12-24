@@ -150,7 +150,7 @@ export function ApiStack({stack}: StackContext) {
                     //     AGENT_ID: cfnAgent?.attrAgentId || "",
                     //     AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
                     // },
-                    runtime: "python3.12",
+                    runtime: "python3.11",
                 }
             },
             "POST /invokeExpressLambda": {
