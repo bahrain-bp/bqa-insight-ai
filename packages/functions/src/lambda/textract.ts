@@ -84,7 +84,7 @@ const processBlocks = (blocks: Block[]): string => {
 
 // Function to wait for document text detection job completion
 async function tryTextract(command: GetDocumentTextDetectionCommand): Promise<any> {
-  const maxRetries = 5;
+  const maxRetries = 10;
   let retries = 0;
   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

@@ -8,6 +8,9 @@ import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
 import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
+import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { ProgramMetadataStack } from "./ProgramMetadataStack";
+import { OpenDataStack } from "./OpenDataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -17,6 +20,9 @@ export function ApiStack({stack}: StackContext) {
     const {bot, alias} = use(BotStack);
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
+    const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
+    const { programMetadataTable } = use(ProgramMetadataStack);  
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
 
     // Create the HTTP API
     const api = new Api(stack, "Api", {
@@ -55,16 +61,10 @@ export function ApiStack({stack}: StackContext) {
                     environment: {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
+                        INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
                     },
-                    permissions: [bucket, fileMetadataTable],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata],
                 },
-            },
-            "POST /textract": {
-                function: {
-                    handler: "packages/functions/src/textract.extractTextFromPDF",
-                    permissions: ["textract", "s3"],
-                    timeout: "60 seconds",
-                }
             },
             "POST /comprehend": {
                 function: {
@@ -141,26 +141,94 @@ export function ApiStack({stack}: StackContext) {
                     // }
                 }
             },
+            "POST /invokeBedrockAgent": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    permissions: ["bedrock", "s3", "textract", "bedrock:invokeModel"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            "GET /invokeBedrockAgent": {
+                function: {
+                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
+                    permissions: ["bedrock", "s3", "textract", "bedrock:invokeModel"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            "POST /generateJson": {
+                function: {
+                    handler: "packages/functions/src/bedrock/generatejson.generateJson",
+                    permissions: ["bedrock", "s3", "textract"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            "GET /generateJson": {
+                function: {
+                    handler: "packages/functions/src/bedrock/generatejson.generateJson",
+                    permissions: ["bedrock", "s3", "textract"],
+                    timeout: "60 seconds",
+                     environment: {
+                         AGENT_ID: cfnAgent?.attrAgentId || "",
+                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
+                   }
+                }
+            },
+            
+
             "POST /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
-                    permissions: [instituteMetadata], // Grant permissions to the table
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
                 },
             },
             "GET /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", // Your new handler
+                    handler: "packages/functions/src/fetchfilters.handler", 
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, // Pass the table name to the Lambda function
+                        TABLE_NAME: instituteMetadata.tableName,
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
                     },
-                    permissions: [instituteMetadata], // Grant permissions to the table
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
         
                 }
-              
+            },
+            "GET /fetchSchoolReviews": {
+                function: {
+                    handler: "packages/functions/src/api/retrieveSchoolReviews.handler", 
+                    environment: {
+                        SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
+                    },
+                    permissions: [SchoolReviewsTable], 
+                }
+            },
+            "GET /fetchVocationalReviews": {
+                function: {
+                    handler: "packages/functions/src/api/retrieveVocationalReviews.handler", 
+                    environment: {
+                        VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
+                    },
+                    permissions: [VocationalReviewsTable], 
+                }
             }
+
         }
     });
 
