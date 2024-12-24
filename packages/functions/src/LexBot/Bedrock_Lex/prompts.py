@@ -474,6 +474,92 @@ def create_compare_uni_prompt(university_names, standard="Quality of Teaching an
         """
     return prompt
 
+def create_program_uni_analyze_prompt(standard, programme_name, institute_name):
+    prompt = f"""
+        Your goal is to analyze the provided Programmes-within-College review report overall performance based on the different standards or indicators and judgment as well as the overview of the Bachelor Degree.
+
+        <instructions>
+        1. Ensure that the output contains all the insightful information.
+        2. Do not use the below input output examples in your response to a different question.
+        </instructions>
+
+        Input 1
+        Question: How is the Efficiency of the Programme Standard or indicator in the College of Information Technology offered by Ahlia University?
+        Output: The efficiency of the Bachelor of Information Technology programme in the College of Information Technology at Ahlia University has been evaluated as meeting the standards required by the Directorate of Higher Education Reviews (DHR) of the National Authority for Qualifications & Quality Assurance of Education & Training (QQA). Key findings include:
+
+        1. Admissions and Support:
+        - The programme has clear but liberal admission policies, though recommendations were made to set explicit and publicized minimum scores for entry.
+        - Students with special needs are considered and supported effectively.
+
+        2. Staffing and Resources:
+        - The faculty includes qualified academic staff with PhDs or master’s degrees in relevant fields.
+        - The programme has adequate IT resources, laboratories, and digital infrastructure to support learning.
+
+        3. Management:
+        - Clear lines of accountability exist within the management structure of the programme.
+        - A robust advising system and academic tracking (via the ADREG system) are in place to support students.
+
+        4. Areas for Improvement:
+        - Ensuring that academic staff have sufficient time for research.
+        - Addressing issues like photocopying of textbooks by students to comply with copyright laws.
+        - Enhancing facilities such as library space for the growing student population.
+
+        The overall conclusion is that the programme satisfies the indicator for efficiency, demonstrating appropriate use of resources, infrastructure, and student support systems.
+
+        Input 2
+        Question: How is The Learning Programme Standard or indicator in the Bachelor of Information and Communications Technology offered by Bahrain Polytechnic?
+        Output: The **Learning Programme Standard** in the Bachelor of Information and Communications Technology (BICT) offered by Bahrain Polytechnic has been evaluated and satisfies the requirements. Key findings include:
+
+        1. Curriculum Design:
+        - The curriculum is well-organized to provide academic progression and balance between theoretical knowledge and practical skills. 
+        - The programme comprises 480 credits completed over four years and includes specializations such as programming, networking, information systems, and database systems.
+        - The curriculum has been benchmarked with international standards and incorporates Problem and Project-Based Learning (PBL), aligning with institutional goals and industry needs.
+
+        2. Teaching and Learning:
+        - Diverse teaching methods are utilized, including lectures, tutorials, group projects, and laboratory work.
+        - The use of Moodle as a Learning Management System and the focus on PBL enhances student engagement and supports lifelong learning.
+        - E-learning is integrated, but the institution is recommended to expedite the implementation of a formal e-learning framework.
+
+        3. Assessment:
+        - A range of assessment methods, such as examinations, reports, and quizzes, are aligned with course and programme learning outcomes.
+        - Internal and external moderation processes ensure the validity and fairness of assessments, though improvements in measuring overall programme learning outcomes are recommended.
+
+        4. Graduate Attributes:
+        - Graduate attributes and learning outcomes are generally well-defined and appropriate but need refinement to ensure clarity and measurability.
+        - The institution is advised to involve stakeholders more consistently in revising programme aims.
+
+        Areas for Improvement:
+        - Revise Programme Intended Learning Outcomes (PILOs) to ensure they are measurable and appropriate.
+        - Accelerate the approval and implementation of the proposed e-learning framework.
+        - Enhance stakeholder engagement in curriculum development.
+
+        The review concludes that the Learning Programme Standard for the BICT is satisfied, demonstrating fitness for purpose in terms of curriculum, teaching, and assessment.
+
+        Input: How is the {standard} Standard or indicator in the Bachelor of {programme_name} offered by {institute_name}?          
+        Output:
+        The {standard} Standard in the Bachelor of {programme_name} offered by {institute_name} has been evaluated as meeting the requirements. Key findings include:
+
+        1. Title 1:
+        -
+        -
+        2. Title 2:
+        - 
+        -
+
+        3. Title 3:
+        - 
+        - 
+
+        4. Title 4:
+        - 
+        - 
+        -
+
+        Conclusion:
+    """
+    return prompt
+
+
 def create_generate_json_prompt(data):
     heading = """ Your goal is to analyze the given text and provide a relevant title in relation to the given text in JSON format. 
         Then, extract data from the given text appropriate for chart generation. The chart data you provide must include unified 
