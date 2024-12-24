@@ -205,7 +205,9 @@ def dispatch(intent_request):
                     'SchoolAspectSlot',
                     slots=get_slots(intent_request)
                 ) 
-             message = f"the school : {school} choosen for the {schoolaspect} aspect"
+            #  message = f"the school : {school} choosen for the {schoolaspect} aspect"
+             analyze_school_prompt = create_analyze_prompt(school, schoolaspect)
+             message = invoke_agent(agent_id, agent_alias_id, "123", analyze_school_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              session_attributes['chartData'] = "put chart data here"

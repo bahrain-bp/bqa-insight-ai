@@ -121,6 +121,194 @@ def create_analyze_prompt(instituite_name, metric):
     return prompt
 
 
+def create_uni_analyze_prompt():
+    prompt = f"""
+        Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
+        Use this data for your report: <data>{text}</data>.
+
+        <instructions>
+        1. Ensure that the output contains all the insightful information.
+        2. Do not say that you did not find any information.
+        </instructions>
+
+        Input 1
+        Question: How is the Student Support Services Standard in Arab Open University?
+        Output: The Student Support Services Standard at the Arab Open University (AOU) has been judged as addressed, meaning that the University meets the required quality standards in this area. Here are the key findings and recommendations:
+
+        Key Strengths:
+        Support Systems: The University has mechanisms in place to address students' academic and non-academic needs effectively.
+        Feedback Utilization: AOU employs surveys such as Alumni Surveys and Student Feedback Surveys to gather insights and improve its student services.
+        Inclusive Facilities: Benchmarking efforts include a focus on services for special needs students, comparing AOU Bahrain to other local and regional institutions.
+        Accessible Processes: Students benefit from clear support channels, including systems for handling appeals, feedback, and complaints.
+        Areas for Enhancement:
+        Benchmarking Practices: The report suggests adopting broader and more rigorous benchmarking practices to better encompass all aspects of student services.
+        Data Utilization: While feedback is collected effectively, there is room for improvement in using this data to continuously enhance the quality of services offered.
+        Workplace Engagement Feedback: Enhanced efforts to gather and act upon feedback from employers regarding graduates’ preparedness could strengthen the alignment of student support services with market needs.
+        Recommendations:
+        Expand Benchmarking Practices: To include all academic and administrative services comprehensively, ensuring improvements are based on reliable comparisons.
+        Optimize Feedback Use: Better integrate feedback from surveys into strategic planning and enhancement initiatives for student services.
+        The Student Support Services Standard reflects a positive evaluation overall, with clear opportunities for further development in aligning student services with both internal and external stakeholder needs.
+
+        Input 2
+        Question: How is the Quality of Teaching and Learning Standard in Bahrain Polytechnic?
+        Output: The Quality of Teaching and Learning Standard at Bahrain Polytechnic has been judged as addressed, meaning the institution meets the required quality standards in this area. Below are the key findings and recommendations:
+
+        Key Strengths:
+        Teaching Philosophy and Strategies:
+        - Bahrain Polytechnic employs a teaching and learning (T&L) philosophy emphasizing problem-based learning (PBL), project-based learning, and collaborative approaches.
+        - Critical thinking and independent learning are core focuses across programs.
+
+        Implementation and Review:
+        - A T&L policy is in place to provide unified guidance across faculties, ensuring alignment with institutional goals.
+        - Mechanisms for monitoring teaching effectiveness include staff induction, biannual T&L symposiums, and regular program reviews.
+
+        Work-Based Learning (WBL):
+        - Strong links with industry ensure practical, real-world learning for students, preparing them for the labor market.
+        - Seven academic programs include workplace learning activities, assessed collaboratively by faculty and industry supervisors.
+
+        Areas for Enhancement:
+        Unified Mechanism for WBL:
+        - Each program implements WBL independently, and there is no institution-wide system for monitoring or improving WBL experiences.
+
+        Policy Reviews:
+        - The T&L policy is scheduled for review every four years, but a structured process to track review outcomes and enhancements could strengthen its implementation.
+
+        Recommendations:
+        1. Develop a Unified WBL Mechanism: Create a standardized system across faculties to monitor and improve students’ work-based learning experiences.
+        2. Enhance Review Processes: Ensure structured follow-ups to review outcomes for the T&L policy and other related frameworks.
+
+        The Quality of Teaching and Learning Standard reflects strong institutional commitment and effective implementation, with opportunities for growth in systematizing processes and leveraging WBL for greater consistency.
+
+        Input 3
+        Question: How is the Community Engagement Standard in Ahlia University?
+        Output:
+        The Community Engagement Standard at Ahlia University has been judged as addressed, reflecting the institution's commitment to meeting the required quality standards. Below are the key strengths and recommendations:
+
+        Key Strengths:
+        Strategic Integration:
+        - Community engagement is aligned with the university’s mission and strategic goals, ensuring that initiatives contribute meaningfully to societal development.
+        - Ahlia University has a structured approach to community engagement, including outreach programs and partnerships with external organizations.
+
+        Wide Range of Activities:
+        - The university offers various initiatives, such as workshops, conferences, and training programs, aimed at addressing the needs of the local community.
+        - Engagement includes cultural, educational, and social development activities that promote lifelong learning.
+
+        Stakeholder Involvement:
+        - Strong emphasis is placed on collaboration with external stakeholders, including businesses, public institutions, and non-governmental organizations, to enhance the impact of community engagement efforts.
+
+        Recommendations:
+        1. Monitoring and Assessment: Develop a robust mechanism to regularly evaluate the effectiveness and impact of community engagement activities.
+        2. Documentation and Reporting: Ensure that all community engagement activities are well-documented and publicly reported to highlight achievements and areas for improvement.
+
+        Conclusion:
+        The Community Engagement Standard at Ahlia University demonstrates a commendable alignment with institutional priorities and societal needs. The structured approach and focus on collaboration underline its commitment to meaningful contributions, with opportunities for enhanced monitoring and impact evaluation.
+
+        Input 4
+        Question: How is the Learning Resources, ICT and Infrastructure Standard in University of Bahrain?
+        Output: The Learning Resources, ICT, and Infrastructure Standard at the University of Bahrain has been judged as addressed, reflecting the institution's ability to meet the required quality standards effectively. Below are the key strengths and recommendations:
+
+        Key Strengths:
+        Library and Learning Resources:
+        - The University of Bahrain maintains six libraries across three campuses, including a digital library, which provide a balanced collection of print and electronic resources to support teaching, learning, and research activities.
+        - Libraries are equipped with study spaces, computers, and group study rooms, and future plans include the development of a large Engineering library.
+        - Active engagement with faculty and students ensures the alignment of library resources with academic needs, with continuous feedback mechanisms through surveys.
+
+        Information and Communication Technology (ICT):
+        - The IT Centre follows a robust operational plan, including disaster recovery, maintenance, and the replacement of ICT resources.
+        - The Digital Smart Campus strategy emphasizes digital transformation, focusing on cloud infrastructure, customer support, business process automation, and enhanced information management.
+        - ICT services, including the Student Information System (SIS) and online helpdesk, ensure effective support for academic and administrative operations.
+
+        Physical Infrastructure:
+        - Infrastructure developments at the Sakhir campus demonstrate the University's commitment to providing modern, functional facilities for its students and staff.
+        - Adequate space, accessible resources, and 24/7 digital library services underline the institution's dedication to meeting the needs of its community.
+
+        Recommendations:
+        1. Continue enhancing ICT systems to integrate the latest technological advancements, ensuring alignment with academic and administrative requirements.
+        2. Develop mechanisms to assess and further improve the utilization of library resources among all stakeholders, particularly through targeted workshops and feedback sessions.
+        3. Monitor and evaluate the effectiveness of new infrastructure developments to ensure they meet the intended goals.
+
+        Conclusion:
+        The Learning Resources, ICT, and Infrastructure Standard at the University of Bahrain is well-aligned with the institution's goals to support its academic and administrative operations. Continuous improvement and strategic investment in infrastructure and digital transformation solidify its commitment to quality and effectiveness.
+
+        Input: How is the {standard} Standard in {institute_name}?          
+        Output:
+        The {standard} Standard at the {institute_name} has been judged as ....
+        Key Strengths:
+
+        Title 1:
+        - 
+        - 
+        - 
+
+        Title 2:
+        - 
+        - 
+        -
+
+        Title 3:
+        - 
+        -
+
+        Recommendations:
+        1.
+        2.
+        3.
+        Conclusion:
+    """
+
+    return prompt
+
+
+
+def create_compare_uni_prompt():
+    prompt = f"""
+        Your goal is to compare between the provided educational institutes reports and provide insights on the Universities' overall performance based on the different standards and judgments.
+
+        <instructions>
+        1. Ensure that the output contains all the insightful information.
+        2. Do not use the below Input Output in your response to different questions.
+        </instructions>
+
+        Input 1
+        Question: Compare between The Quality of Teaching and Learning Standard of Bahrain Polytechnic and Ahlia University.
+        Output:
+        The comparison between the Quality of Teaching and Learning Standards of Bahrain Polytechnic and Ahlia University is based on their institutional review reports. Here's a summarized analysis:
+
+        Common Elements:
+        Alignment with Core Functions:
+
+        Both Bahrain Polytechnic and Ahlia University emphasize teaching and learning as core functions alongside research and community engagement.
+        Judgment on Quality:
+
+        Both institutions successfully meet the quality assurance requirements for teaching and learning, achieving a judgment of "addressed" in their respective reviews.
+        Standardized Evaluation:
+
+        Both institutions adhere to predefined indicators and standards to measure teaching quality, such as programme management, student assessment, and learning outcomes.
+        Differences:
+        1. Approach to Programme Management:
+        Bahrain Polytechnic:
+        Integrates Problem-Based Learning (PBL), focusing on applied skills and preparing graduates for the industry.
+        Ahlia University:
+        Highlights partnerships with international universities to enhance teaching quality and align with global academic standards.
+        2. Assessment and Moderation:
+        Bahrain Polytechnic:
+        Adopts a robust moderation policy with clear audit trails for assessments, ensuring consistency and reliability in evaluation.
+        Ahlia University:
+        Uses an Assessment Manual and emphasizes plagiarism deterrence through tools like Turnitin to maintain academic integrity.
+        3. Recognition of Prior Learning:
+        Both institutions address this indicator but differ in implementation frameworks. Bahrain Polytechnic’s system suggests a more integrated and systematic approach compared to Ahlia University.
+        4. Unique Quality Features:
+        Bahrain Polytechnic:
+        Focuses on continuous improvement through a structured Quality Improvement Plan (QIP), showcasing a methodical approach to feedback and enhancement.
+        Ahlia University:
+        Relies on its Centre for Accreditation and Quality Assurance (CAQA) to monitor and review teaching quality measures.
+        Recommendations and Observations:
+        Ahlia University:
+        Recommendation: Expedite the development and implementation of comprehensive procedures for penalties on academic misconduct to enhance deterrence and maintain integrity.
+        Bahrain Polytechnic:
+        Recommendation: Strengthen follow-up on internal and external audit measures to address gaps in resource allocation and ensure sustained quality
+"""
+
 def create_generate_json_prompt(data):
     heading = """ Your goal is to analyze the given text and provide a relevant title in relation to the given text in JSON format. 
         Then, extract data from the given text appropriate for chart generation. The chart data you provide must include unified 
