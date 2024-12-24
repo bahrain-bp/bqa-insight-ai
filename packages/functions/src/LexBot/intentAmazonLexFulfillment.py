@@ -196,9 +196,9 @@ def dispatch(intent_request):
         session_attributes = get_session_attributes(intent_request)
 
         # generate chart data
-        # json_prompt = create_generate_json_prompt(reports_response)
-        # json_response = invoke_agent(agent_id, agent_alias_id, "123", json_prompt)
-        # print(json_response)
+        json_prompt = create_generate_json_prompt(response)
+        json_response = invoke_agent(json_prompt)
+        print(json_response)
 
         session_attributes['chartData'] = 'replace this with chart data'
 
