@@ -123,12 +123,12 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
       throw new Error("No response received");
     }
 
-    const generatedJson = generateJson(completion);
+    // const generatedJson = generateJson(completion);
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: 'Received Output from Bedrock',
-        response: JSON.parse(completion).result
+        response: completion
       }),
     };
 
