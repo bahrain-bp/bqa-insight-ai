@@ -15,6 +15,7 @@ import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetada
 import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
 
 import { AfterDeployStack } from "./stacks/AfterDeployStack";
+import { BedrockCollectionStack } from "./stacks/BedrockCollectionStack";
 
 export default {
   config(_input) {
@@ -43,6 +44,7 @@ export default {
       .stack(ProgramMetadataStack)
       .stack(OpenDataStack)
       .stack(S3Stack)
+      .stack(BedrockCollectionStack)
       .stack(BedrockStack)
       .stack(BotStack)
       .stack(ApiStack) 

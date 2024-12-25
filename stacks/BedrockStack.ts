@@ -1,18 +1,26 @@
-import { StackContext, Topic, use } from "sst/constructs";
+import { dependsOn, StackContext, use } from "sst/constructs";
 import {S3Stack} from "./S3Stack"; 
 import {aws_bedrock as bedrock, aws_iam as iam} from "aws-cdk-lib";
 import { ServicePrincipal } from "aws-cdk-lib/aws-iam";
+import { aws_opensearchserverless as opensearchserverless } from 'aws-cdk-lib';
+import { BedrockCollectionStack } from "./BedrockCollectionStack";
 
 export function BedrockStack({ stack, app }: StackContext) {
     
+    dependsOn(BedrockCollectionStack)
+    const {cfnCollection} = use(BedrockCollectionStack)
+
     const {bucket, syncTopic} = use(S3Stack);
+
 
     // create knowledgebase storage configuration
     const storageConfigurationProperty: bedrock.CfnKnowledgeBase.StorageConfigurationProperty = {
         type: 'OPENSEARCH_SERVERLESS',
         // the properties below are optional
         opensearchServerlessConfiguration: {
-          collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/tl3oyze7ocph2xyqb54i',
+          collectionArn: cfnCollection.attrArn,
+          // collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/tl3oyze7ocph2xyqb54i',
+          // collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/900n0tuczg55zwaks1lk',
           fieldMapping: {
             metadataField: 'AMAZON_BEDROCK_METADATA',
             textField: 'AMAZON_BEDROCK_TEXT_CHUNK',
