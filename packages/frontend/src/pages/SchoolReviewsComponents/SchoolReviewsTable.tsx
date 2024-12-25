@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
 import { SchoolData, Review } from './types';
 
 interface SchoolReviewsTableProps {
@@ -17,8 +18,44 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
   const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
-
   const [sortState, setSortState] = useState<SortState>({ column: null, direction: 'asc' });
+
+  const exportToExcel = () => {
+    const exportData = displayedData.map(school => {
+      const { grade: latestGrade, date: latestDate } = getLatestReviewReportData(school.Reviews);
+      const avgGrade = (school.AverageGrade !== null && !isNaN(school.AverageGrade))
+        ? school.AverageGrade
+        : 'N/A';
+
+      const baseData = {
+        Rank: school.Rank,
+        'Institution Code': school.InstitutionCode,
+        'English School Name': school.EnglishSchoolName,
+        'Arabic School Name': school.ArabicSchoolName,
+        'School Type': school.SchoolType,
+        'Average Grade': avgGrade,
+        'Latest Review Grade': latestGrade,
+        'Latest Review Date': latestDate,
+        'Number of Reviews': school.Reviews.length,
+      };
+
+      if (showGenderAndLevel) {
+        return {
+          ...baseData,
+          'School Level': school.SchoolLevel || 'N/A',
+          'School Gender': school.SchoolGender || 'N/A',
+        };
+      }
+
+      return baseData;
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Schools');
+    const fileName = `Schools_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
 
   const toggleGender = (gender: string) => {
     setSelectedGenders((prev) =>
@@ -71,16 +108,13 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
 
   const showGenderAndLevel = schoolTypeFilter !== 'Private';
 
-  // Filtering (without search)
   const filteredData = useMemo(() => {
     let filtered = data;
 
-    // Filter by school type
     if (schoolTypeFilter !== 'All') {
       filtered = filtered.filter((school) => school.SchoolType?.toLowerCase() === schoolTypeFilter.toLowerCase());
     }
 
-    // If government, apply gender and level filters
     if (schoolTypeFilter === 'Government') {
       if (selectedGenders.length > 0) {
         filtered = filtered.filter((school) => {
@@ -100,7 +134,6 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
     return filtered;
   }, [data, schoolTypeFilter, selectedGenders, selectedLevels]);
 
-  // Compute Rank (based on filtered data, not search)
   const rankedData = useMemo(() => {
     const validSorted = [...filteredData].sort((a, b) => {
       const aGrade = (a.AverageGrade !== null && !isNaN(a.AverageGrade)) ? a.AverageGrade : Infinity;
@@ -124,7 +157,6 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
     return withRank;
   }, [filteredData]);
 
-  // Sorting
   const sortedData = useMemo(() => {
     if (!sortState.column) {
       return rankedData;
@@ -204,7 +236,6 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
 
   }, [sortState, rankedData]);
 
-  // The search now only applies at the display stage, not affecting ranking or sorting
   const displayedData = useMemo(() => {
     if (searchQuery.trim() === '') {
       return sortedData;
@@ -218,10 +249,8 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
   const handleSort = (col: string) => {
     setSortState((prev) => {
       if (prev.column === col) {
-        // toggle direction
         return { column: col, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
       } else {
-        // new column, default to asc
         return { column: col, direction: 'asc' };
       }
     });
@@ -231,16 +260,14 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
 
   function renderSortIndicator(columnName: string) {
     if (sortState.column !== columnName) {
-      return null; // Not sorted by this column
+      return null;
     }
     return sortState.direction === 'asc' ? ' ▲' : ' ▼';
   }
 
   return (
     <div className="w-full">
-      {/* Filters */}
       <div className="mb-4 flex flex-col space-y-4">
-        {/* School Type Filter */}
         <div>
           <span className="font-semibold mr-2">School Type:</span>
           <button
@@ -263,7 +290,6 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
           </button>
         </div>
 
-        {/* If Government, show Gender and Level filters */}
         {schoolTypeFilter === 'Government' && (
           <div className="flex flex-col md:flex-row md:space-x-8">
             <div>
@@ -298,25 +324,30 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
           </div>
         )}
 
-        {/* Search bar */}
-        <div>
-          <span className="font-semibold mr-2">Search by English School Name:</span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1"
-            placeholder="Enter name..."
-          />
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="font-semibold mr-2">Search by English School Name:</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-1"
+              placeholder="Enter name..."
+            />
+          </div>
+          <button
+            onClick={exportToExcel}
+          className="bg-[#0F7E0F] hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
+          >
+            Export to Excel
+          </button>
         </div>
       </div>
 
-      {/* Count of schools returned */}
       <div className="mb-2 text-gray-700 font-semibold">
         {displayedData.length} School(s) Returned
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
