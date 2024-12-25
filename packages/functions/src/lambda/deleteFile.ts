@@ -156,6 +156,46 @@ if (fileMetadata.Item?.instituteName) {
   //    await dynamodb.delete({ TableName: UNIVERSITY_METADATA_TABLE_NAME, Key: { universityName: key } }).promise();
   //    console.log(`Deleted from university metadata table: ${fileKey}`);
   //  }
+  // Check and Delete from Program Metadata Table   
+const programScan = await dynamodb.scan({
+  TableName: PROGRAM_METADATA_TABLE_NAME,
+  FilterExpression: "fileKey = :fileKey",
+  ExpressionAttributeValues: {
+    ":fileKey": fileKey
+  }
+}).promise();
+
+if (programScan.Items && programScan.Items.length > 0) {
+  const program = programScan.Items[0];
+  await dynamodb.delete({ 
+    TableName: PROGRAM_METADATA_TABLE_NAME, 
+    Key: { 
+      universityName: program.universityName,
+      programmeName: program.programmeName 
+    } 
+  }).promise();
+  console.log(`Deleted from program metadata table: ${program.programmeName}`);
+}
+
+// Check and Delete from University Metadata Table 
+const universityScan = await dynamodb.scan({
+  TableName: UNIVERSITY_METADATA_TABLE_NAME,
+  FilterExpression: "fileKey = :fileKey",
+  ExpressionAttributeValues: {
+    ":fileKey": fileKey
+  }
+}).promise();
+
+if (universityScan.Items && universityScan.Items.length > 0) {
+  const university = universityScan.Items[0];
+  await dynamodb.delete({ 
+    TableName: UNIVERSITY_METADATA_TABLE_NAME, 
+    Key: { 
+      universityName: university.universityName
+    } 
+  }).promise();
+  console.log(`Deleted from university metadata table: ${university.universityName}`);
+}
 
 
 
