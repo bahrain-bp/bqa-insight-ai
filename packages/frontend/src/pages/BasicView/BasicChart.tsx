@@ -2,13 +2,18 @@ import { useContext, useEffect, useState } from "react";
 import DynamicChart, { ChartJsonData } from "../Dashboard/dynamicChart";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { ChartContext } from "../../components/RouterRoot";
+import { ChartContext, LexChartSlotsContext } from "../../components/RouterRoot";
 import { Chart } from "react-chartjs-2";
 
 const BasicChart = () => {
     const { chartJson } = useContext(ChartContext);
+  const {chartSlots} = useContext(LexChartSlotsContext)
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentChart, setCurrentChart] = useState<ChartJsonData | null>(null);
+
+  useEffect(() => {
+        console.log("Lex Slots updated: ", chartSlots)
+    }, [chartSlots])
   
   useEffect(() => {
     if (chartJson && chartJson.length > 0) {

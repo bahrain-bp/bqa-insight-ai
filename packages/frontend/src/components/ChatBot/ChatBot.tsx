@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 
 // import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
-import {ChartContext} from "../RouterRoot.tsx";
+import {LexChartSlots, LexChartSlotsContext, ChartContext} from "../RouterRoot.tsx";
 
 
 type ImageResponseCard = {
@@ -69,7 +69,7 @@ export const Chat = () => {
                 },
             ],
         }]);*/
-    const {chartJson, setChartJson} = useContext(ChartContext)
+    const {chartSlots, setChartSlots} = useContext(LexChartSlotsContext)
 
     const addMessage = (item: Message) => {
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
@@ -126,6 +126,17 @@ export const Chat = () => {
             throw error
         }
     }
+    const getLexChartSlots = (lexResponse: any): LexChartSlots => {
+        const lexSlots = lexResponse.sessionState.intent.slots
+        const lexChartSlots: LexChartSlots = {ProgramNameSlot: undefined, AnalyzeSchoolSlot: undefined, CompareSchoolSlot: undefined, AnalyzeVocationalSlot: undefined, CompareVocationalSlot: undefined, CompareUniversityWUniSlot: undefined, CompareSpecificInstitutesSlot: undefined, CompareUniversityWProgramsSlot: undefined}
+        Object.keys(lexSlots).map((slot) => {
+            if (slot in lexChartSlots) {
+                console.log(`Found slot ${slot}`)
+                lexChartSlots[slot] = lexSlots[slot].value.interpretedValue
+            }
+        })
+        return lexChartSlots
+    }
 
     const messageLex = async (message: string) => {
         try {
@@ -146,6 +157,7 @@ export const Chat = () => {
             }
             const result = await lexResponse.json()
             const body = result.response
+            setChartSlots(getLexChartSlots(body))
             console.log("lex response: ", body)
             const hasImageResponseCard = body.messages[0].contentType === "ImageResponseCard"
             if (hasImageResponseCard) {
@@ -291,7 +303,6 @@ export const Chat = () => {
                 throw new Error("Invalid JSON data");
             }
 
-            setChartJson([...chartJson, JSON.parse(validJson)])
 
 
             if (typeof item.body !== "string") {
