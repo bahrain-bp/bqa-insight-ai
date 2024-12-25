@@ -200,82 +200,46 @@ const Filter = () => {
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
-  const value = e.target.value;
+    const value = e.target.value;
 
-  if (value && value !== "Select...") {
-    setSelectedOptions((prevState) => {
-      if (!isFilterActive) {
-        setIsFilterActive(true);
-      }
+    if (value && value !== "Select...") {
+      setSelectedOptions((prevState) => {
+        if (!isFilterActive) {
+          setIsFilterActive(true);
+        }
 
-      let updatedState = { ...prevState };
+        let updatedState = { ...prevState };
 
-      // Initialize array if it doesn't exist
-      if (!updatedState[header]) {
-        updatedState[header] = [];
-      }
+        // Enable multi-select only in Compare mode for Institute/University Name
+        if ((header === "Institute Name" && educationType === "schools" && mode === "Compare") ||
+            (header === "University Name" && educationType === "universities" && mode === "Compare")) {
+          if (!updatedState[header]) {
+            updatedState[header] = [];
+          }
+          if (!updatedState[header].includes(value)) {
+            updatedState[header] = [...updatedState[header], value];
+          }
+        } else {
+          // Single select for other fields
+          updatedState = {
+            ...prevState,
+            [header]: [value],
+          };
+          
+          if (educationType === "schools" && header === "Institute Classification") {
+            updatedState["Institute Level"] = [];
+            updatedState["Location"] = [];
+            updatedState["Institute Name"] = [];
+            updatedState["Report Year"] = [];
+          } else if (header === "Institute Level") {
+            updatedState["Institute Name"] = [];
+          }
+        }
 
-      // Handle Compare mode for both schools and universities for multi-select
-    // Handle multi-select for "Compare" mode
-    if (mode === "Compare" && educationType === "universities" && header === "University Name") {
-      // Add only unique selections
-      if (!updatedState[header].includes(value)) {
-        updatedState[header] = [...updatedState[header], value];
-      }
-      return updatedState;
+        return updatedState;
+      });
     }
-
-      // Handle all other cases
-      if (educationType === "schools") {
-        if (header === "Institute Classification") {
-          updatedState = {
-            ...prevState,
-            "Institute Classification": [value],
-            "Institute Level": [],
-            "Location": [],
-            "Institute Name": [],
-            "Report Year": []
-          };
-        } else if (header === "Institute Level") {
-          updatedState = {
-            ...prevState,
-            "Institute Level": [value],
-            "Institute Name": [],
-          };
-        } else if (header === "Location") {
-          updatedState = {
-            ...prevState,
-            "Location": [value],
-          };
-        } else {
-          updatedState = {
-            ...prevState,
-            [header]: [value],
-          };
-        }
-      } else if (educationType === "universities") {
-        updatedState = {
-          ...prevState,
-          [header]: [value],
-        };
-      } if (header === "University Name" && mode === "Compare" && educationType === "universities") {
-        updatedState = {
-          ...prevState,
-          [header]: [...(prevState[header] || []), value],
-          };
-        } else {
-          updatedState = {
-            ...prevState,
-            [header]: [value],
-          };
-        }
-
-
-      return updatedState;
-    });
-  }
-};
-
+  };
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
@@ -373,17 +337,13 @@ const Filter = () => {
     e.preventDefault();
     const sentence = editableSentence;
 
-    if (mode === "Compare" && educationType === "universities") {
-      const selectedUniversities = selectedOptions["University Name"] || [];
-  
-      if (selectedUniversities.length < 2) {
-        showMessage("Please select at least two universities in Compare mode.", "error");
-        return;
-      }
-    }
-
     if (mode === "Compare") {
       const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
+      if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
+        showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
+        return;
+      }
+    
       if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
         if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
           showMessage("Please select at least two institutes in Compare mode.", "error");
@@ -525,11 +485,16 @@ const Filter = () => {
                       value="Select..."
                     >
                       <option value="Select...">Select...</option>
-                      {getFilterValues(header)
-                        .filter(option => !selectedOptions[header]?.includes(option))
-                        .map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
+              {getFilterValues(header)
+                .filter(option => {
+                  if ((header === "Institute Name" || header === "University Name") && mode === "Compare") {
+                    return !selectedOptions[header]?.includes(option);
+                  }
+                  return true;
+                })
+                .map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
                     </select>
                   ) : (
                     <select
