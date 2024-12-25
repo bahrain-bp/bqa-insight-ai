@@ -7,6 +7,12 @@ const Filter = () => {
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [latestYear, setLatestYear] = useState<string>("");
+
+
+
+
+  
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
     "Institute Level": [],
@@ -50,6 +56,9 @@ const Filter = () => {
   const [userAdditions, setUserAdditions] = useState<string>("");
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
 
+
+
+
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
@@ -75,6 +84,12 @@ const Filter = () => {
         
         if (educationType === "schools") {
           setFilterOptions(data.filters);
+          // Find and store the latest year
+          if (data.filters["Report Year"]?.length > 0) {
+            const years = data.filters["Report Year"].map(Number);
+            const maxYear = Math.max(...years).toString();
+            setLatestYear(maxYear);
+          }
         } else if (educationType === "universities") {
           setUniversityFilters(data.universityFilters);
         }
@@ -87,6 +102,9 @@ const Filter = () => {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
+
+
+
 
   useEffect(() => {
     if (!userModifiedSentence) {
@@ -348,10 +366,12 @@ const Filter = () => {
     }, 3000);
   };
 
+
+  
+
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const sentence = editableSentence;
-
 
     if (mode === "Compare" && educationType === "universities") {
       const selectedUniversities = selectedOptions["University Name"] || [];
@@ -360,38 +380,20 @@ const Filter = () => {
         showMessage("Please select at least two universities in Compare mode.", "error");
         return;
       }
-  
-      console.log("Comparing the following universities:", selectedUniversities);
     }
-
-
 
     if (mode === "Compare") {
       const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
-
       if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
-        // Check multi-select for Institute Name in schools table
-        if (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2) {
+        if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
           showMessage("Please select at least two institutes in Compare mode.", "error");
           return;
-        }
-        console.log("Comparing the following institutes:", selectedOptions["Institute Name"]);
-      } else if (educationType === "universities") {
-        // Check multi-select for University Name in universities table
-        if (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2) {
+        } else if (educationType === "universities" && (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2)) {
           showMessage("Please select at least two universities in Compare mode.", "error");
           return;
         }
-        console.log("Comparing the following universities:", selectedOptions["University Name"]);
-      } else {
-        showMessage("Invalid education type selected.", "error");
-        return;
       }
-    
-      // Proceed with comparison logic based on selected items
-      console.log("Comparison successful for education type:", educationType);
-    } 
-    
+    }
 
     const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
     const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
@@ -403,19 +405,30 @@ const Filter = () => {
 
     if (sentence) {
       try {
+        // Create a copy of selectedOptions for submission
+        let submissionOptions = { ...selectedOptions };
+        
+        // If it's schools and no year is selected, use the latest year
+        if (educationType === "schools" && (!selectedOptions["Report Year"]?.length) && latestYear) {
+          submissionOptions = {
+            ...submissionOptions,
+            "Report Year": [latestYear]
+          };
+        }
+
         const prompt = {
           userMessage: sentence,
           educationType,
           ...(educationType === "schools" ? {
-            classification: selectedOptions["Institute Classification"],
-            level: selectedOptions["Institute Level"],
-            location: selectedOptions["Location"],
-            instituteName: selectedOptions["Institute Name"],
-            reportYear: selectedOptions["Report Year"]
+            classification: submissionOptions["Institute Classification"],
+            level: submissionOptions["Institute Level"],
+            location: submissionOptions["Location"],
+            instituteName: submissionOptions["Institute Name"],
+            reportYear: submissionOptions["Report Year"]
           } : {
-            universityName: selectedOptions["University Name"],
-            programmeName: selectedOptions["Programme Name"],
-            programmeJudgment: selectedOptions["Programme Judgment"]
+            universityName: submissionOptions["University Name"],
+            programmeName: submissionOptions["Programme Name"],
+            programmeJudgment: submissionOptions["Programme Judgment"]
           })
         };
 
@@ -436,6 +449,7 @@ const Filter = () => {
       showMessage("Please select options.", "error");
     }
   };
+
 
   const handleClear = () => {
     const currentFilters = getCurrentFilters();
