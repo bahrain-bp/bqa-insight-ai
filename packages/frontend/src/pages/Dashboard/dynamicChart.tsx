@@ -6,20 +6,20 @@ import { Chart } from "react-chartjs-2";
 ChartJS.register(...registerables);
 
 export interface ChartJsonData {
+  schoolName?: string; // For schools
+  vocationalName?: string; // For vocational institutes
+  schoolType?: string; // For schools (Government, Private)
+  options?: object;
   type: ChartType;
   data: {
+    labels?: string[]; // Required for pie charts
     datasets: Array<{
+      data: Array<{ x: number | string; y: number } | number>; // Allow both formats
       label: string;
-      data: Array<{ x: string | number; y: number }>;
-      backgroundColor?: string | string[];
-      borderColor?: string | string[];
-      borderWidth?: number;
-      fill?: boolean;
-      tension?: number;
-      hoverOffset?: number;
+      backgroundColor?: string[];
+      borderColor?: string[];
     }>;
   };
-  options?: object;
 }
 
 interface DynamicChartProps {
@@ -27,6 +27,7 @@ interface DynamicChartProps {
 }
 
 const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
+  console.log("DynamicChart jsonData:", jsonData);
   const parsedData: ChartJsonData = useMemo(() => {
     return typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
   }, [jsonData]);
@@ -43,18 +44,42 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
             text: "Dynamic Chart",
           },
         },
-        scales: {
+        scales: parsedData.type !== "pie" ? { // Scales are not used for pie charts
           x: {
-            type: "linear",
+            type: "category",
             position: "bottom",
+            title: {
+              display: true,
+              text: "Cycles",
+            },
           },
-        },
+          y: {
+            title: {
+              display: true,
+              text: "Grades",
+            },
+          },
+        } : undefined,
       }
     );
-  }, [parsedData.options]);
+  }, [parsedData.options, parsedData.type]);
+  
 
   const colorPalette : string[] = 
   [
+
+    "rgba(102, 156, 86, 1)", // Green shade 1
+    "rgba(83, 116, 156, 1)", // Blue shade 1
+    "rgba(243, 187, 65, 1)", // Yellow shade 1
+    "rgba(230, 65, 37, 1)", // Red shade 1
+    "rgba(230, 136, 53, 1)", // Orange shade 1
+  
+    "rgba(184, 108, 41, 1)", // Orange shade 3
+    "rgba(192, 140, 48, 1)", // Yellow shade 3
+    "rgba(184, 51, 29, 1)", // Red shade 3
+    "rgba(28, 70, 121, 1)", // Blue shade 3
+    "rgba(57, 123, 38, 1)", // Green shade 3
+
     "rgba(92, 54, 20, 1)", // Orange shade 5
     "rgba(128, 93, 31, 1)", // Yellow shade 5
     "rgba(92, 25, 13, 1)", // Red shade 5
@@ -67,62 +92,52 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
     "rgba(46, 98, 30, 1)", // Green shade 4
     "rgba(22, 56, 97, 1)", // Blue shade 4
 
-    "rgba(184, 108, 41, 1)", // Orange shade 3
-    "rgba(192, 140, 48, 1)", // Yellow shade 3
-    "rgba(184, 51, 29, 1)", // Red shade 3
-    "rgba(28, 70, 121, 1)", // Blue shade 3
-    "rgba(57, 123, 38, 1)", // Green shade 3
-    
-
     "rgba(207, 122, 47, 1)", // Orange shade 2
     "rgba(218, 163, 56, 1)", // Yellow shade 2
     "rgba(207, 58, 33, 1)", // Red shade 2
     "rgba(79, 139, 62, 1)", // Green shade 2
     "rgba(55, 93, 138, 1)", // Blue shade 2
-
-    "rgba(230, 136, 53, 1)", // Orange shade 1
-    "rgba(243, 187, 65, 1)", // Yellow shade 1
-    "rgba(230, 65, 37, 1)", // Red shade 1
-    "rgba(102, 156, 86, 1)", // Green shade 1
-    "rgba(83, 116, 156, 1)", // Blue shade 1
   ]
 
   // Format datasets to ensure they match the new structure
   const formattedData = useMemo(() => {
-  const colors = [...colorPalette]; // Create a copy of the color palette
-  return {
-    datasets: parsedData.data.datasets.map((dataset) => {
-      const color = colors.pop() || "rgba(51, 118, 204, 1)"; // Use and remove a color from the end
+    if (parsedData.type === "pie") {
+      // Format for pie charts
+      const labels = parsedData.data.labels || [];
+      const datasets = parsedData.data.datasets.map((dataset) => ({
+        label: dataset.label,
+        data: dataset.data.map((point) =>
+          typeof point === "number" ? point : point.y
+        ), // Convert mixed formats to flat `number[]`
+        backgroundColor: dataset.backgroundColor || colorPalette.slice(0, labels.length),
+      }));
+      return { labels, datasets };
+    } else {
+      // Format for other chart types (line, bar, etc.)
+      const colors = [...colorPalette];
       return {
-        ...dataset,
-        data: dataset.data.map((point) => ({
-          x: typeof point.x === "string" ? parseFloat(point.x) : point.x,
-          y: point.y,
-        })),
-        backgroundColor: color,
-        borderColor: color,
+        datasets: parsedData.data.datasets.map((dataset) => {
+          const color = colors.pop() || "rgba(51, 118, 204, 1)";
+          return {
+            ...dataset,
+            data: dataset.data.map((point) => 
+              typeof point === "number" ? { x: "", y: point } : { x: point.x, y: point.y }
+            ), // Ensure all points are in `{ x, y }` format
+            backgroundColor: color,
+            borderColor: color,
+          };
+        }),
       };
-    }),
-  };
-}, [parsedData.data]);
-
-
+    }
+  }, [parsedData, colorPalette]);
+  
   return (
-    // <div style={{
-    //   maxWidth: '50vw', 
-    //   maxHeight: '50vh',
-    //   margin: '20px auto',
-    //   display: 'flex',
-    //   justifyContent: 'center',
-    //   alignItems: 'center', 
-    // }}>
     <Chart
       type={parsedData.type}
-      data={formattedData}
+      data={formattedData as any} // Cast as any to satisfy Chart.js type requirements
       options={chartOptions}
       style={{ width: "100%", height: "100%" }}
     />
-    // </div>
   );
 };
 
