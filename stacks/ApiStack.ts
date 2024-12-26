@@ -256,16 +256,16 @@ export function ApiStack({stack}: StackContext) {
                 }
             },
             "GET /fetchUniversityReviews": {
-    function: {
-      handler: "packages/functions/src/api/retrieveUniversityReviews.handler",
-      environment: {
-        UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
-      },
-      permissions: [UniversityReviewsTable], // Ensure permissions are correctly set
-    },
-  },
-}
-    });
+            function: {
+            handler: "packages/functions/src/api/retrieveUniversityReviews.handler",
+            environment: {
+                UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
+            },
+            permissions: [UniversityReviewsTable], // Ensure permissions are correctly set
+            },
+        },
+        }
+            });
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
     const apiCachePolicy = new CachePolicy(stack, "CachePolicy", {
