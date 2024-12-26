@@ -32,6 +32,13 @@ export function OpenDataStack({ stack }: StackContext) {
     primaryIndex: { partitionKey: "InstitutionCode" },
   });
 
+  // New UniversityReviews table
+  const UniversityReviewsTable = new Table(stack, "UniversityReviews", {
+    fields: {
+      InstitutionCode: "string",
+    },
+    primaryIndex: { partitionKey: "InstitutionCode" },
+  });
 
   // Output table names
   stack.addOutputs({
@@ -39,6 +46,7 @@ export function OpenDataStack({ stack }: StackContext) {
     HigherEducationReviewsTableName: HigherEducationProgrammeReviewsTable.tableName,
     NationalFrameworkOperationsTableName: NationalFrameworkOperationsTable.tableName,
     VocationalReviewsTableName: VocationalReviewsTable.tableName,
+    UniversityReviewsTableName: UniversityReviewsTable.tableName, // Add UniversityReviewsTable to outputs
   });
 
   return {
@@ -46,5 +54,6 @@ export function OpenDataStack({ stack }: StackContext) {
     HigherEducationProgrammeReviewsTable,
     NationalFrameworkOperationsTable,
     VocationalReviewsTable,
+    UniversityReviewsTable, // Return UniversityReviewsTable
   };
 }

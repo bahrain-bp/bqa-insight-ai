@@ -22,7 +22,7 @@ export function ApiStack({stack}: StackContext) {
     const {instituteMetadata} = use (InstituteMetadataStack);
     const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
     const { programMetadataTable } = use(ProgramMetadataStack);  
-    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
 
 
 
@@ -254,9 +254,17 @@ export function ApiStack({stack}: StackContext) {
                     },
                     permissions: [VocationalReviewsTable], 
                 }
-            }
-
-        }
+            },
+            "GET /fetchUniversityReviews": {
+    function: {
+      handler: "packages/functions/src/api/retrieveUniversityReviews.handler",
+      environment: {
+        UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
+      },
+      permissions: [UniversityReviewsTable], // Ensure permissions are correctly set
+    },
+  },
+}
     });
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues

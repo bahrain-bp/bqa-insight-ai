@@ -12,6 +12,7 @@ import SignOutPage from './pages/Authentication/SignOut.tsx';
 import BasicView from './pages/BasicView/BasicView.tsx';
 import { SchoolReviews } from './pages/SchoolReviews.tsx';
 import { VocationalReviews } from './pages/VocationalReviews.tsx';
+import { UniversityReviews } from './pages/UniversitiesReviews.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -107,6 +108,15 @@ function App() {
               <>
                   <PageTitle title="Vocational Reviews" />
                   <VocationalReviews />
+              </>
+              }
+        />
+        <Route
+          path="/UniversityReviews"
+          element={
+              <>
+                  <PageTitle title="Vocational Reviews" />
+                  <UniversityReviews />
               </>
               }
         />
