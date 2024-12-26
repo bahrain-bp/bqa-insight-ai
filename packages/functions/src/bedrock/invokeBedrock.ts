@@ -1,59 +1,123 @@
 import { BedrockAgentRuntimeClient, InvokeAgentCommand } from "@aws-sdk/client-bedrock-agent-runtime";
 import { APIGatewayEvent } from "aws-lambda";
 import { generateJson } from "./generatejson";
+import { createComparePrompt, createAnalyzePrompt } from './promptfilters';
 
-type PromptType = 'analyze' | 'compare' | 'school' | 'general';
 
-interface PromptTemplates {
-  analyze: string;
-  compare: string;
-  school: string;
-  general: string;
+type EducationLevel = 'school' | 'university';
+type AnalysisType = 'analyze' | 'compare';
+
+interface PromptParams {
+  instituteName?: string;
+  institutes?: string[];
+  metric?: string;
+  level: EducationLevel;
 }
 
-const promptTemplates: PromptTemplates = {
-  analyze: `Goal: To analyze improvements and declines in educational institutes in Bahrain.
-           Question: What is the analysis for ${''} in terms of improvements and declines?`,
-  
-  compare: `Goal: To compare performance between educational institutes.
-           Question: What is the comparison between ${'institutes'}?`,
-  
-  school: `Goal: To get detailed information about a specific school.
-          Question: What is the performance of ${''} school?`,
-  
-  general: `Goal: To understand general educational trends in Bahrain.
-           Question: ${''}`
-};
-
-const determinePromptType = (prompt: string): PromptType => {
+// Function to determine if the prompt is about universities or schools
+function detectEducationLevel(prompt: string): EducationLevel {
   const lowerPrompt = prompt.toLowerCase();
-  
-  if (lowerPrompt.includes('compare') || lowerPrompt.includes('versus') || lowerPrompt.includes('vs')) {
-    return 'compare';
-  }
-  if (lowerPrompt.includes('analyze') || lowerPrompt.includes('analysis')) {
-    return 'analyze';
-  }
-  if (lowerPrompt.includes('school') || lowerPrompt.includes('institute')) {
-    return 'school';
-  }
-  return 'general';
-};
+  return lowerPrompt.includes('university') 
+    ? 'university' 
+    : 'school';
+}
 
-const generatePrompt = (type: PromptType, params: any): string => {
-  let template = promptTemplates[type];
+
+
+
+// Function to determine if we should analyze or compare
+function detectAnalysisType(prompt: string): AnalysisType {
+  const lowerPrompt = prompt.toLowerCase();
+  return (lowerPrompt.includes('compare') || 
+          lowerPrompt.includes('versus') || 
+          lowerPrompt.includes('vs') || 
+          lowerPrompt.includes('between')) 
+    ? 'compare' 
+    : 'analyze';
+}
+
+// Function to extract institute names
+function extractInstitutes(prompt: string): string[] {
+  const words = prompt.split(' ');
+  const institutes: string[] = [];
   
-  switch (type) {
-    case 'analyze':
-      return template.replace('{}', params.instituteName || '');
-    case 'compare':
-      return template.replace('institutes', params.institutions?.join(' and ') || '');
-    case 'school':
-      return template.replace('{}', params.instituteName || '');
-    default:
-      return template.replace('{}', params.question || '');
+  // Common indicators that the next word might be an institute name
+  const indicators = ['at', 'in', 'for', 'between', 'and'];
+  
+  for (let i = 0; i < words.length; i++) {
+    if (indicators.includes(words[i].toLowerCase())) {
+      if (words[i + 1]) {
+        // Check if next few words might be part of institute name
+        let instituteName = words[i + 1];
+        let j = i + 2;
+        while (j < words.length && 
+               !indicators.includes(words[j].toLowerCase()) && 
+               words[j].length > 1) {
+          instituteName += ' ' + words[j];
+          j++;
+        }
+        institutes.push(instituteName);
+      }
+    }
   }
-};
+  
+  return institutes;
+}
+
+
+// Function to extract metric (if any)
+function extractMetric(prompt: string): string {
+  const lowerPrompt = prompt.toLowerCase();
+  const metrics = [
+    'performance',
+    'improvement',
+    'academic achievement',
+    'teaching quality',
+    'student development',
+    'leadership',
+    'governance'
+  ];
+  
+  for (const metric of metrics) {
+    if (lowerPrompt.includes(metric)) {
+      return metric;
+    }
+  }
+  
+  return 'performance'; // default metric
+}
+
+
+
+// Main function to analyze prompt and generate appropriate response
+export function generatePrompt(userPrompt: string): string {
+  // Detect education level
+  const level = detectEducationLevel(userPrompt);
+  
+  // Detect analysis type
+  const analysisType = detectAnalysisType(userPrompt);
+  
+  // Extract institutes
+  const institutes = extractInstitutes(userPrompt);
+  
+  // Extract metric
+  const metric = extractMetric(userPrompt);
+
+  // Generate appropriate prompt based on type
+  if (analysisType === 'compare') {
+    return createComparePrompt(
+      institutes.join(' and '),
+      metric,
+      false // governorate parameter
+    );
+  } else {
+    return createAnalyzePrompt(
+      institutes[0] || '',
+      metric
+    );
+  }
+}
+
 
 export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
   const client = new BedrockAgentRuntimeClient({ region: "us-east-1" });
@@ -83,26 +147,22 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
 
   }
 
-
-
-
-
   try {
     const filterParams = JSON.parse(event.body || "{}");
-    console.log(filterParams, ": is prompt");
-    
-    if (!filterParams) {
-      throw new Error('Parameters not provided');
-    }
+        console.log(filterParams, ": is prompt");
+        
+        if (!filterParams) {
+            throw new Error('Parameters not provided');
+        }
 
-    const promptType = determinePromptType(filterParams.question || '');
-    const finalPrompt = generatePrompt(promptType, filterParams);
+        // Generate the appropriate prompt
+        const finalPrompt = generatePrompt(filterParams.question || '');
 
-    const command = new InvokeAgentCommand({
-      agentId: process.env.AGENT_ID,
-      agentAliasId: process.env.AGENT_ALIAS_ID,
-      sessionId: "123",
-      inputText: finalPrompt
+        const command = new InvokeAgentCommand({
+            agentId: process.env.AGENT_ID,
+            agentAliasId: process.env.AGENT_ALIAS_ID,
+            sessionId: "123",
+            inputText: finalPrompt
     });
 
     let completion = "";
@@ -124,11 +184,13 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
     }
 
     const generatedJson = generateJson(completion);
+
+
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: 'Received Output from Bedrock',
-        response: JSON.parse(completion).result
+        response: completion
       }),
     };
 
