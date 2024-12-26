@@ -59,20 +59,20 @@ function parseGradeNumber(grade: string): number | null {
           return;
         }
         const lower = searchTerm.toLowerCase();
-        const matches = data.filter((institute) =>
-          institute.EnglishInstituteName.toLowerCase().includes(lower)
+        const matches = data.filter((University) =>
+          University.EnglishInstituteName.toLowerCase().includes(lower)
         );
         setMatchingInstitutes(matches);
         setHighlightedIndex(matches.length > 0 ? 0 : -1);
       }, [searchTerm, data]);
 
-      const handleSelectInstitute = (institute: UniversityData) => {
+      const handleSelectUniversity = (University: UniversityData) => {
           setSelectedInstitutes((prev) => {
             // Prevent adding duplicates
-            if (prev.find((s) => s.InstitutionCode === institute.InstitutionCode)) {
+            if (prev.find((s) => s.InstitutionCode === University.InstitutionCode)) {
               return prev;
             }
-            return [...prev, institute];
+            return [...prev, University];
           });
           setSearchTerm('');
           setMatchingInstitutes([]);
@@ -246,7 +246,7 @@ function parseGradeNumber(grade: string): number | null {
         e.preventDefault();
         if (highlightedIndex >= 0 && highlightedIndex < matchingInstitutes.length) {
           const selected = matchingInstitutes[highlightedIndex];
-          handleSelectInstitute(selected);
+          handleSelectUniversity(selected);
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -275,7 +275,7 @@ function parseGradeNumber(grade: string): number | null {
         {/* === Search Input === */}
         <div>
           <label className="font-semibold block mb-1">
-            Search for an Institute by English Name
+            Search for an University by English Name
           </label>
           <input
             type="text"
@@ -283,7 +283,7 @@ function parseGradeNumber(grade: string): number | null {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="e.g. 'Tech Vocational Institute'"
+            placeholder="e.g. 'Bahrain Polytechnic '"
             ref={inputRef}
           />
         </div>
@@ -303,7 +303,7 @@ function parseGradeNumber(grade: string): number | null {
                     : 'hover:bg-gray-100'
                 }`}
                 onMouseEnter={() => setHighlightedIndex(idx)}
-                onMouseDown={() => handleSelectInstitute(inst)} // Use the selection handler
+                onMouseDown={() => handleSelectUniversity(inst)} // Use the selection handler
               >
                 {inst.EnglishInstituteName}
               </li>

@@ -50,16 +50,16 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
   // ==========================
   // 1) Scatter Chart: Institutes by Average Grade
   // ==========================
-  function toScatterPoint(institute: UniversityData) {
+  function toScatterPoint(Universities: UniversityData) {
     let xVal = 4; // Default to 4 if invalid
-    if (institute.AverageGrade !== null && !isNaN(institute.AverageGrade)) {
-      xVal = Math.max(1, Math.min(4, institute.AverageGrade)); // Clamp between 1 and 4
+    if (Universities.AverageGrade !== null && !isNaN(Universities.AverageGrade)) {
+      xVal = Math.max(1, Math.min(4, Universities.AverageGrade)); // Clamp between 1 and 4
     }
     const yVal = Math.random() * 0.8 - 0.4; // Generate random Y value in the range [-0.4, 0.4]
     return {
       x: xVal,
       y: yVal,
-      label: institute.EnglishInstituteName,
+      label: Universities.EnglishInstituteName,
       gradeCategory: getGradeCategory(xVal),
     };
   }
@@ -78,7 +78,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
     return {
       datasets: [
         {
-          label: 'Institutes',
+          label: 'Universities',
           data: points,
           backgroundColor: points.map(
             (point) => GRADE_COLORS[point.gradeCategory] || '#999'
@@ -126,7 +126,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       legend: { display: false }, // Hide legend since color represents grade
       title: {
         display: true,
-        text: 'Institutes by Average Grade',
+        text: 'Universities by Average Grade',
       },
       tooltip: {
         callbacks: {
@@ -156,8 +156,8 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       Inadequate: 0,
     };
 
-    data.forEach((institute) => {
-      const avgGrade = institute.AverageGrade;
+    data.forEach((Universities) => {
+      const avgGrade = Universities.AverageGrade;
       if (avgGrade >= 1 && avgGrade < 2) gradeCounts['Outstanding'] += 1;
       else if (avgGrade >= 2 && avgGrade < 3) gradeCounts['Good'] += 1;
       else if (avgGrade >= 3 && avgGrade < 4) gradeCounts['Satisfactory'] += 1;
@@ -168,7 +168,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       labels: Object.keys(gradeCounts),
       datasets: [
         {
-          label: 'Number of Institutes',
+          label: 'Number of Universities',
           data: Object.values(gradeCounts),
           backgroundColor: [
             GRADE_COLORS['Outstanding'],
@@ -192,7 +192,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
         },
         title: {
           display: true,
-          text: 'Number of Institutes',
+          text: 'Number of Universities',
         },
       },
       x: {
@@ -227,8 +227,8 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       Inadequate: 0,
     };
 
-    data.forEach((institute) => {
-      institute.Reviews.forEach((review) => {
+    data.forEach((University) => {
+      University.Reviews.forEach((review) => {
         const gradeNum = parseGradeNumber(review.Grade);
         if (gradeNum === 1) gradeCounts['Outstanding'] += 1;
         else if (gradeNum === 2) gradeCounts['Good'] += 1;

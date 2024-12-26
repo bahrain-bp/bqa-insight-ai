@@ -66,14 +66,14 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     let prevGrade: number | null = null;
     let prevRank = 0;
     let count = 0;
-    const withRank = validSorted.map((institute) => {
+    const withRank = validSorted.map((University) => {
       count++;
-      const grade = (institute.AverageGrade !== null && !isNaN(institute.AverageGrade)) ? institute.AverageGrade : Infinity;
+      const grade = (University.AverageGrade !== null && !isNaN(University.AverageGrade)) ? University.AverageGrade : Infinity;
       if (grade !== prevGrade) {
         prevRank = count;
         prevGrade = grade;
       }
-      return { ...institute, Rank: prevRank };
+      return { ...University, Rank: prevRank };
     });
 
     return withRank;
@@ -83,9 +83,9 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
   // 2) Apply Average Grade Filter on Ranked Data
   // ----------------------------
   const filteredData = useMemo(() => {
-    return rankedData.filter((institute) => {
+    return rankedData.filter((University) => {
       // Filter based on average grade
-      return institute.AverageGrade >= averageGradeFilter;
+      return University.AverageGrade >= averageGradeFilter;
     });
   }, [rankedData, averageGradeFilter]);
 
@@ -167,8 +167,8 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
       return sortedData;
     }
     const query = searchQuery.toLowerCase();
-    return sortedData.filter((institute) =>
-      institute.EnglishInstituteName.toLowerCase().includes(query)
+    return sortedData.filter((University) =>
+      University.EnglishInstituteName.toLowerCase().includes(query)
     );
   }, [searchQuery, sortedData]);
 
@@ -177,7 +177,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
   // ----------------------------
   const overallAverage = useMemo(() => {
     if (displayedData.length === 0) return 'N/A';
-    const sum = displayedData.reduce((acc, institute) => acc + institute.AverageGrade, 0);
+    const sum = displayedData.reduce((acc, University) => acc + University.AverageGrade, 0);
     const avg = sum / displayedData.length;
     return avg.toFixed(2);
   }, [displayedData]);
@@ -226,7 +226,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
 
         {/* Search bar */}
         <div>
-          <span className="font-semibold mr-2">Search by English Institute Name:</span>
+          <span className="font-semibold mr-2">Search by English University Name:</span>
           <input
             type="text"
             value={searchQuery}
@@ -239,7 +239,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
 
       {/* Count of institutes returned and Overall Average */}
       <div className="mb-2 text-gray-700 font-semibold flex flex-col sm:flex-row sm:items-center sm:space-x-4">
-        <span>{displayedData.length} Institute(s) Returned</span>
+        <span>{displayedData.length} University(s) Returned</span>
         <span>Overall Average Grade: {overallAverage}</span>
       </div>
 
@@ -275,23 +275,23 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
             </tr>
           </thead>
           <tbody>
-            {displayedData.map((institute, idx) => {
-              const avgGrade = (institute.AverageGrade !== null && !isNaN(institute.AverageGrade))
-                ? institute.AverageGrade.toFixed(2)
+            {displayedData.map((University, idx) => {
+              const avgGrade = (University.AverageGrade !== null && !isNaN(University.AverageGrade))
+                ? University.AverageGrade.toFixed(2)
                 : 'N/A';
 
-              const { grade: latestGrade, date: latestDate } = getLatestReviewReportData(institute.Reviews);
+              const { grade: latestGrade, date: latestDate } = getLatestReviewReportData(University.Reviews);
 
               return (
                 <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{institute.Rank}</td>
-                  <td className="py-2 px-4 text-gray-700">{institute.InstitutionCode}</td>
-                  <td className="py-2 px-4 text-gray-700">{institute.EnglishInstituteName}</td>
-                  <td className="py-2 px-4 text-gray-700">{institute.ArabicInstituteName}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.Rank}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.InstitutionCode}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.EnglishInstituteName}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.ArabicInstituteName}</td>
                   <td className="py-2 px-4 text-gray-700">{avgGrade}</td>
                   <td className="py-2 px-4 text-gray-700">{latestGrade}</td>
                   <td className="py-2 px-4 text-gray-700">{latestDate}</td>
-                  <td className="py-2 px-4 text-gray-700">{institute.Reviews.length}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.Reviews.length}</td>
                 </tr>
               );
             })}
@@ -299,7 +299,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
             {displayedData.length === 0 && (
               <tr>
                 <td colSpan={baseColumns} className="py-4 text-center text-gray-500">
-                  No institutes match your search.
+                  No University match your search.
                 </td>
               </tr>
             )}

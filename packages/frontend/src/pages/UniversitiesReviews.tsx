@@ -27,7 +27,7 @@ export function UniversityReviews() {
           throw new Error("Invalid data format from API.");
         }
       } catch (error: any) { // Type assertion for error
-        console.error("Error fetching schools:", error);
+        console.error("Error fetching University:", error);
         setError(error.message || "An unexpected error occurred.");
       } finally {
         setLoading(false); // Stop loading regardless of success or failure
@@ -61,17 +61,17 @@ export function UniversityReviews() {
         <div className="w-full flex flex-col">
 
           {/* University Ranking Section */}
-          <ToggleSection title="University Ranking Table" ariaControls="vocational-reviews-ranking">
+          <ToggleSection title="University Ranking Table" ariaControls="University-reviews-ranking">
             <UniversityReviewsTable data={data} />
           </ToggleSection>
 
           {/* Graphs Section */}
-          <ToggleSection title="General Graphs" ariaControls="vocational-reviews-graphs">
+          <ToggleSection title="General Graphs" ariaControls="University-reviews-graphs">
             <UniversityGeneralCharts data={data} />
           </ToggleSection>
           
           {/* Search for a University Section */}
-          <ToggleSection title="University History Graph" ariaControls="vocational-search">
+          <ToggleSection title="University History Graph" ariaControls="University-search">
             <UniversityHistoryGraph data={data} />
           </ToggleSection>
         </div>
