@@ -46,42 +46,42 @@ function parseGradeNumber(grade: string): number | null {
   }
   export function UniversityHistoryGraph({ data }: UniversitySearchProps) {
     const [searchTerm, setSearchTerm] = useState('');
-    const [matchingInstitutes, setMatchingInstitutes] = useState<UniversityData[]>([]);
-    const [selectedInstitutes, setSelectedInstitutes] = useState<UniversityData[]>([]);
+    const [matchingUniversities, setMatchingUniversities] = useState<UniversityData[]>([]);
+    const [selectedUniversity, setSelectedUniversity] = useState<UniversityData[]>([]);
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
     const dropdownRef = useRef<HTMLUListElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (searchTerm.trim().length === 0) {
-          setMatchingInstitutes([]); // Show no matches when search term is empty
+          setMatchingUniversities([]); // Show no matches when search term is empty
           setHighlightedIndex(-1);
           return;
         }
         const lower = searchTerm.toLowerCase();
         const matches = data.filter((University) =>
-          University.EnglishInstituteName.toLowerCase().includes(lower)
+          University.Program.toLowerCase().includes(lower)
         );
-        setMatchingInstitutes(matches);
+        setMatchingUniversities(matches);
         setHighlightedIndex(matches.length > 0 ? 0 : -1);
       }, [searchTerm, data]);
 
       const handleSelectUniversity = (University: UniversityData) => {
-          setSelectedInstitutes((prev) => {
+        setSelectedUniversity((prev) => {
             // Prevent adding duplicates
-            if (prev.find((s) => s.InstitutionCode === University.InstitutionCode)) {
+            if (prev.find((s) => s.Title === University.Title)) {
               return prev;
             }
             return [...prev, University];
           });
           setSearchTerm('');
-          setMatchingInstitutes([]);
+          setMatchingUniversities([]);
           setHighlightedIndex(-1);
         };
       
   const removeInstitute = (institutionCode: string) => {
-    setSelectedInstitutes((prev) =>
-      prev.filter((institute) => institute.InstitutionCode !== institutionCode)
+    setSelectedUniversity((prev) =>
+      prev.filter((University) => University.Title !== institutionCode)
     );
   };
 
@@ -228,29 +228,29 @@ function parseGradeNumber(grade: string): number | null {
     // 5) Handle Keyboard Navigation
     // ----------------------------
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (matchingInstitutes.length === 0) return;
+      if (matchingUniversities.length === 0) return;
   
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setHighlightedIndex((prev) =>
-          prev < matchingInstitutes.length - 1 ? prev + 1 : 0
+          prev < matchingUniversities.length - 1 ? prev + 1 : 0
         );
         scrollIntoView(highlightedIndex + 1);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setHighlightedIndex((prev) =>
-          prev > 0 ? prev - 1 : matchingInstitutes.length - 1
+          prev > 0 ? prev - 1 : matchingUniversities.length - 1
         );
         scrollIntoView(highlightedIndex - 1);
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < matchingInstitutes.length) {
-          const selected = matchingInstitutes[highlightedIndex];
+        if (highlightedIndex >= 0 && highlightedIndex < matchingUniversities.length) {
+          const selected = matchingUniversities[highlightedIndex];
           handleSelectUniversity(selected);
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        setMatchingInstitutes([]);
+        setMatchingUniversities([]);
         setHighlightedIndex(-1);
       }
     };
@@ -289,14 +289,14 @@ function parseGradeNumber(grade: string): number | null {
         </div>
   
         {/* === Matching Institutes Dropdown === */}
-        {matchingInstitutes.length > 0 && (
+        {matchingUniversities.length > 0 && (
           <ul
             className="border border-gray-300 rounded bg-white w-full md:w-1/2 shadow-lg max-h-60 overflow-y-auto"
             ref={dropdownRef}
           >
-            {matchingInstitutes.map((inst, idx) => (
+            {matchingUniversities.map((inst, idx) => (
               <li
-                key={inst.InstitutionCode}
+                key={inst.Title}
                 className={`px-3 py-2 cursor-pointer ${
                   idx === highlightedIndex
                     ? 'bg-blue-500 text-white'
@@ -305,45 +305,45 @@ function parseGradeNumber(grade: string): number | null {
                 onMouseEnter={() => setHighlightedIndex(idx)}
                 onMouseDown={() => handleSelectUniversity(inst)} // Use the selection handler
               >
-                {inst.EnglishInstituteName}
+                {inst.Program}
               </li>
             ))}
           </ul>
         )}
   
         {/* === Selected Institutes Information and Charts === */}
-        {selectedInstitutes.length > 0 && (
+        {selectedUniversity.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {selectedInstitutes.map((institute) => {
+            {selectedUniversity.map((University) => {
               // Separate Review Reports and Other Reports
-              const reviewReports = institute.Reviews.filter(
+              const reviewReports = University.Reviews.filter(
                 (r) => r.ReviewType.toLowerCase().includes('review')
               );
-              const otherReports = institute.Reviews.filter(
+              const otherReports = University.Reviews.filter(
                 (r) => !r.ReviewType.toLowerCase().includes('review')
               );
               return (
                 <div
-                  key={institute.InstitutionCode}
+                  key={University.Title}
                   className="p-4 border border-gray-200 rounded bg-white shadow flex flex-col space-y-4 h-full"
                 >
                   {/* Basic Institute Information */}
                   <div>
                     <h3 className="text-lg font-bold mb-2">
-                      {institute.EnglishInstituteName}
+                      {University.Program}
                     </h3>
-                    <p>Arabic Name: {institute.ArabicInstituteName}</p>
-                    <p>Institution Code: {institute.InstitutionCode}</p>
+                    <p>Unified Study Field Name: {University.UnifiedStudyField}</p>
+                    <p>University Name: {University.Title}</p>
                     {/* Display Average Grade */}
-                    {institute.AverageGrade !== null && (
+                    {University.AverageGrade !== null && (
                       <p className="mt-2 text-md font-semibold">
-                        Average Grade: {institute.AverageGrade}
+                        Average Grade: {University.AverageGrade}
                       </p>
                     )}
                     {/* Remove Button */}
                     <button
                       className="mt-2 text-red-500 underline"
-                      onClick={() => removeInstitute(institute.InstitutionCode)}
+                      onClick={() => removeInstitute(University.Title)}
                     >
                       Remove
                     </button>
@@ -374,7 +374,7 @@ function parseGradeNumber(grade: string): number | null {
                   {/* Chart Container */}
                   <div className="max-w-xl h-96">
                     {reviewReports.length > 0 ? (
-                      <Line data={prepareLineData(institute)} options={options} />
+                      <Line data={prepareLineData(University)} options={options} />
                     ) : (
                       <p className="text-gray-500">No review reports found.</p>
                     )}

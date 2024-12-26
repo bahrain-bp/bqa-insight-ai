@@ -109,10 +109,6 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
       const bDate = parseBatchReleaseDate(bDateStr);
 
       switch(column) {
-        case 'Rank':
-          aVal = a.Rank;
-          bVal = b.Rank;
-          break;
         case 'InstitutionCode':
           aVal = a.InstitutionCode;
           bVal = b.InstitutionCode;
@@ -168,7 +164,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     }
     const query = searchQuery.toLowerCase();
     return sortedData.filter((University) =>
-      University.EnglishInstituteName.toLowerCase().includes(query)
+      University.Program.toLowerCase().includes(query)
     );
   }, [searchQuery, sortedData]);
 
@@ -284,10 +280,9 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
 
               return (
                 <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{University.Rank}</td>
-                  <td className="py-2 px-4 text-gray-700">{University.InstitutionCode}</td>
-                  <td className="py-2 px-4 text-gray-700">{University.EnglishInstituteName}</td>
-                  <td className="py-2 px-4 text-gray-700">{University.ArabicInstituteName}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.Title}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.Program}</td>
+                  <td className="py-2 px-4 text-gray-700">{University.UnifiedStudyField}</td>
                   <td className="py-2 px-4 text-gray-700">{avgGrade}</td>
                   <td className="py-2 px-4 text-gray-700">{latestGrade}</td>
                   <td className="py-2 px-4 text-gray-700">{latestDate}</td>

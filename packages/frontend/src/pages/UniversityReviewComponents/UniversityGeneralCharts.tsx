@@ -59,7 +59,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
     return {
       x: xVal,
       y: yVal,
-      label: Universities.EnglishInstituteName,
+      label: Universities.Program,
       gradeCategory: getGradeCategory(xVal),
     };
   }

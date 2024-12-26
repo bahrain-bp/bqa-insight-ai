@@ -6,9 +6,9 @@ export interface Review {
     Grade: string; 
   }
   export interface UniversityData {
-    InstitutionCode: string;
-    EnglishInstituteName: string;
-    ArabicInstituteName: string; 
+    Title: string;
+    Program: string;
+    UnifiedStudyField: string; 
     Reviews: Review[];
     AverageGrade: number;
       }
