@@ -259,8 +259,8 @@ const BasicChart = () => {
       {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
         <button
           onClick={exportContentAsPDF}
+          className="bg-lightblue hover:bg-primary"
           style={{
-            backgroundColor: "#1d4ed8",
             color: "white",
             padding: "10px 20px",
             border: "none",
@@ -268,12 +268,6 @@ const BasicChart = () => {
             cursor: "pointer",
             fontSize: "16px",
             transition: "background-color 0.3s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#2563eb";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#1d4ed8";
           }}
         >
           Export as PDF
