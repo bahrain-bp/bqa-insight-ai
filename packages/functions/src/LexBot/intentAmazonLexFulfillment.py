@@ -120,6 +120,16 @@ def dispatch(intent_request):
 
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
+    returnToMenu = get_session_attributes(intent_request)['return'] == "true"
+    retrySlots = get_session_attributes(intent_request)['retry'] == "true"
+
+    # If user wants to go back to the main menu, elicit BQAIntent
+    if returnToMenu:
+        return elicit_intent(
+            intent_request,
+            "BQASlot",
+            "BQAIntent",
+        )
 
     # # Handle FallbackIntent
     # if intent_name == 'FallbackIntent':
