@@ -142,25 +142,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 </NavLink>
               </li>
 
-              <li>
-                <NavLink
-                  to="/Filter"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
-                    pathname.includes('Filter') && 'bg-lightblue dark:bg-meta-4'
-                  
-                  }`}
-                >
-                  <img src={Dashboard} alt="Dashboard" width="18" height="18" />
-                  Filter
-                </NavLink>
-              </li>
-
               {/* <!-- Menu Item School Reviews --> */}
               <li>
                 <NavLink
                   to="/schoolReviews"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
-                    pathname.includes('schoolReviewsDashboard') && 'bg-lightblue dark:bg-meta-4'
+                    pathname.includes('schoolReviews') && 'bg-lightblue dark:bg-meta-4'
                   
                   }`}
                 >
@@ -174,7 +161,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                 <NavLink
                   to="/vocationalReviews"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-lightblue dark:hover:bg-meta-4 ${
-                    pathname.includes('vocationalReviewsDashboard') && 'bg-lightblue dark:bg-meta-4'
+                    pathname.includes('vocationalReviews') && 'bg-lightblue dark:bg-meta-4'
                   
                   }`}
                 >
