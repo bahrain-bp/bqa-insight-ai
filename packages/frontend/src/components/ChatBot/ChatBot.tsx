@@ -369,8 +369,11 @@ export const Chat = () => {
         input.focus()
     };
 
+    const returnToMenu = () => messageLex(undefined, {return: true})
+
     useEffect(() => {
         if (isInitialized.current) return;
+        returnToMenu()
         isInitialized.current = true;
 
         // initialMessages.forEach((msg) => {
@@ -434,7 +437,7 @@ export const Chat = () => {
                     name="return"
                     value="Main Menu"
                     className="bg-lightblue text-white rounded cursor-pointer px-3 shrink"
-                    onClick={() => messageLex(undefined, {return: true})}
+                    onClick={returnToMenu}
                 />
             </form>
         </div>
