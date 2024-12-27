@@ -38,6 +38,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
       parsedData.options || {
         responsive: true,
         plugins: {
+          datalabels: {display: false},
           legend: { display: true, position: "top" },
           title: {
             display: true,
