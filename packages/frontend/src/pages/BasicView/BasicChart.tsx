@@ -246,33 +246,37 @@ const BasicChart = () => {
     }
   };
   return (
-    <div style={{ padding: "20px", width: "70%" }}>
-      <h2>Charts</h2>
-      {(isSchoolDataLoading || isVocationalDataLoading) && <p>Loading charts...</p>}
-      <div id="export-content">
-        {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
-          <div id="current-chart">
-            <DynamicChart jsonData={currentChart} />
-          </div>
-        )}
+    <div className="flex flex-col md:flex-row">
+      <div className="p-5 w-full md:w-[70%]">
+        <h2>Charts</h2>
+        {(isSchoolDataLoading || isVocationalDataLoading) && <p>Loading charts...</p>}
+        <div id="export-content">
+          {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
+            <div id="current-chart">
+              <DynamicChart jsonData={currentChart} />
+            </div>
+          )}
+        </div>
       </div>
-      {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
-        <button
-          onClick={exportContentAsPDF}
-          className="bg-lightblue hover:bg-primary"
-          style={{
-            color: "white",
-            padding: "10px 20px",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-            fontSize: "16px",
-            transition: "background-color 0.3s ease",
-          }}
-        >
-          Export as PDF
-        </button>
-      )}
+      <div className="w-full md:w-[30%] py-4 md:py-20 flex flex-col items-center">
+        {/* {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && ( */}
+          <button
+            onClick={exportContentAsPDF}
+            className="bg-lightblue hover:bg-primary"
+            style={{
+              color: "white",
+              padding: "10px 20px",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "16px",
+              transition: "background-color 0.3s ease",
+            }}
+          >
+            Export as PDF
+          </button>
+        {/* )} */}
+      </div>
     </div>
   );
 };
