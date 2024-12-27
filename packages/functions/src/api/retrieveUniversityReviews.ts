@@ -6,20 +6,19 @@ const client = new DynamoDBClient({});
 
 // Define the Review interface
 interface Review {
+  Title: string;
+  Program: string;
+  UnifiedStudyField: string;
   Cycle: string;
-  Batch: string;
-  BatchReleaseDate: string;
-  ReviewType: string;
-  Grade: string;
+  Type: string;
+  Judgement: string;
+  ReportFile: string;
 }
 
 // Define the UniversityReview interface
 interface UniversityReview {
-  InstitutionCode: string;
-  EnglishInstituteName: string;
-  ArabicInstituteName: string;
+  Institution: string;
   Reviews: Review[];
-  AverageGrade: number | null;
 }
 
 // Lambda Handler Function
@@ -36,18 +35,24 @@ export const handler: APIGatewayProxyHandler = async () => {
       TableName: tableName,
     };
 
+    console.log("Scan parameters:", scanParams);
+
     // Execute the Scan command
     const command = new ScanCommand(scanParams);
     const response = await client.send(command);
 
+    console.log("Raw response from DynamoDB:", response);
+
     // Map the DynamoDB items to UniversityReview objects
-    const items: UniversityReview[] | undefined = response.Items?.map((item: any) => ({
-      InstitutionCode: item.InstitutionCode?.S || "",
-      EnglishInstituteName: item.EnglishInstituteName?.S || "",
-      ArabicInstituteName: item.ArabicInstituteName?.S || "",
-      Reviews: item.Reviews ? parseReviews(item.Reviews) : [],
-      AverageGrade: item.AverageGrade ? parseFloat(item.AverageGrade.N) : null,
-    }));
+    const items: UniversityReview[] | undefined = response.Items?.map((item: any) => {
+      console.log("Raw item from DynamoDB:", item);
+      return {
+        Institution: item.Institution?.S || "",
+        Reviews: item.Reviews ? parseReviews(item.Reviews) : [],
+      };
+    });
+
+    console.log("Mapped items:", items);
 
     return {
       statusCode: 200,
@@ -72,14 +77,21 @@ export const handler: APIGatewayProxyHandler = async () => {
 function parseReviews(reviewsAttribute: any): Review[] {
   if (!reviewsAttribute.L) return [];
 
+  console.log("Parsing reviews attribute:", reviewsAttribute);
+
   return reviewsAttribute.L.map((reviewItem: any) => {
     const reviewMap = reviewItem.M || {};
-    return {
+    const review = {
+      Title: reviewMap.Title?.S || "",
+      Program: reviewMap.Program?.S || "",
+      UnifiedStudyField: reviewMap.UnifiedStudyField?.S || "",
       Cycle: reviewMap.Cycle?.S || "",
-      Batch: reviewMap.Batch?.S || "",
-      BatchReleaseDate: reviewMap.BatchReleaseDate?.S || "",
-      ReviewType: reviewMap.ReviewType?.S || "",
-      Grade: reviewMap.Grade?.S || "",
+      Type: reviewMap.Type?.S || "",
+      Judgement: reviewMap.Judgement?.S || "",
+      ReportFile: reviewMap.ReportFile?.S || "",
     };
+
+    console.log("Parsed review:", review);
+    return review;
   });
 }
