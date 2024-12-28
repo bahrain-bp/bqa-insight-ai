@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useContext } from "react";
+import { LexChartSlotsContext } from "../components/RouterRoot"; // Import the context
 
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
@@ -8,7 +8,7 @@ const Filter = () => {
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [latestYear, setLatestYear] = useState<string>("");
-
+  const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
 
 
 
@@ -398,8 +398,29 @@ const Filter = () => {
           body: JSON.stringify(prompt),
         });
 
+        console.log("Selected schools: ", selectedOptions["Institute Name"])
+
+        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
+          const slots = {
+            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            CompareSpecificInstitutesSlot:
+              mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
+            ProgramNameSlot: undefined,
+            AnalyzeVocationalSlot: undefined,
+            CompareUniversityWUniSlot: undefined,
+            CompareUniversityWProgramsSlot: undefined,
+            CompareSchoolSlot: undefined,
+            CompareVocationalSlot: undefined,
+          };
+          
+          setChartSlots(slots); // Update context with selected filters
+          console.log("Updated chart slots:", slots);
+          
+        }
+
         const body = await response.json();
         console.log("API Response:", body);
+        
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
         console.error("Error sending data to Bedrock:", error);

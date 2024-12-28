@@ -13,14 +13,38 @@ export const ChartContext = createContext<ChartContextType>({
     }
 )
 
+export type LexChartSlots = {
+    AnalyzeSchoolSlot?: string,
+    ProgramNameSlot?: string,
+    AnalyzeVocationalSlot?: string,
+    CompareUniversityWUniSlot?: string,
+    CompareUniversityWProgramsSlot?: string,
+    CompareSchoolSlot?: "All Government Schools" | "All Private Schools",
+    CompareSpecificInstitutesSlot?: string,
+    CompareVocationalSlot?: string,
+}
+
+type LexChartSlotsContextType = {
+    chartSlots : LexChartSlots,
+    setChartSlots : React.Dispatch<React.SetStateAction<LexChartSlots>>
+}
+export const LexChartSlotsContext = createContext<LexChartSlotsContextType>({
+        chartSlots : {},
+        setChartSlots: () => {}
+    }
+)
+
 export function RouterRoot() {
     const [chartJson, setChartJson] = useState<ChartJsonData[]>([])
+    const [chartSlots, setChartSlots] = useState<LexChartSlots>({})
 
     return (
         <ChartContext.Provider value={{chartJson, setChartJson}}>
-            <BrowserRouter>
-                <App />
-            </BrowserRouter>
+            <LexChartSlotsContext.Provider value={{chartSlots, setChartSlots}}>
+                <BrowserRouter>
+                    <App />
+                </BrowserRouter>
+            </LexChartSlotsContext.Provider>
         </ChartContext.Provider>
     )
 }
