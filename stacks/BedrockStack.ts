@@ -10,14 +10,52 @@ export function BedrockStack({ stack, app }: StackContext) {
     dependsOn(BedrockCollectionStack)
     const {cfnCollection} = use(BedrockCollectionStack)
 
+    // const collectionName = stack.stage + '-opensearch-collection'
+
+  //   const cfnAccessPolicy = new opensearchserverless.CfnAccessPolicy(stack, 'BedrockCfnAccessPolicy', {
+  //     name: stack.stage + '-access-policy',
+  //     policy: `[{"Rules":[{"ResourceType":"collection","Resource":["collection/${collectionName}"],"Permission":["aoss:*"]}],"Principal":["arn:aws:iam::${stack.account}:user/test-user"]}]`,
+  //     type: 'data',
+  // });
+  // const cfnNetworkPolicy = new opensearchserverless.CfnSecurityPolicy(stack, 'BedrockCfnNetworkPolicy', {
+  //     name: stack.stage + '-network-policy',
+  //     policy: `[{"Rules":[{"ResourceType":"collection","Resource":["collection/${collectionName}"]}],"AllowFromPublic":true}]`,
+  //     type: 'network',
+  // });
+
     const {bucket, syncTopic} = use(S3Stack);
+
+    // const cfnEncryptionPolicy = new opensearchserverless.CfnSecurityPolicy(stack, 'BedrockCfnEncryptionPolicy', {
+    //   name: stack.stage + '-encryption-policy',
+    //   // policy: `{"Rules":[{"ResourceType":"collection","Resource":["collection/${collectionName}"]}],"AWSOwnedKey":true}`,
+    //   policy: JSON.stringify({
+    //     Rules: [
+    //         {
+    //             ResourceType: "collection",
+    //             Resource: [`collection/${collectionName}`],
+    //         },
+    //     ],
+    //     AWSOwnedKey: true,
+    //   }),
+    //   type: 'encryption',
+    // });
+
+    // const cfnCollection = new opensearchserverless.CfnCollection(stack, 'BedrockCfnCollection', {
+    //     name: collectionName,
+    //     // the properties below are optional
+    //     type: 'VECTORSEARCH',
+    // });
+
+    // cfnCollection.addDependency(cfnEncryptionPolicy)
+    // cfnCollection.addDependency(cfnAccessPolicy)
+    // cfnCollection.addDependency(cfnNetworkPolicy)
 
 
     // create knowledgebase storage configuration
     const storageConfigurationProperty: bedrock.CfnKnowledgeBase.StorageConfigurationProperty = {
         type: 'OPENSEARCH_SERVERLESS',
         // the properties below are optional
-        opensearchServerlessConfiguration: {
+        opensearchServerlessConfiguration: { 
           collectionArn: cfnCollection.attrArn,
           // collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/tl3oyze7ocph2xyqb54i',
           // collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/900n0tuczg55zwaks1lk',
@@ -27,7 +65,26 @@ export function BedrockStack({ stack, app }: StackContext) {
             vectorField: 'bedrock-knowledge-base-default-vector',
           },
           vectorIndexName: 'bedrock-knowledge-base-default-index',
-        }}
+        }
+      }
+
+    // create knwoledgebase role
+    const knowledgeBaseRole = new iam.Role(stack, 'BedrockKnowledgeBaseRole', {
+      assumedBy: new ServicePrincipal('bedrock.amazonaws.com'),
+      inlinePolicies: {
+        opensearchAccess: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [
+                'aoss:APIAccessAll',
+                'aoss:DashboardsAccessAll'
+              ],
+              resources: [cfnCollection.attrArn]
+            })
+          ]
+        })
+      }
+    });
     
     // create the Knowledgebase
     const cfnKnowledgeBase = new bedrock.CfnKnowledgeBase(stack, 'KnowledgeBaseSST', {
@@ -45,7 +102,8 @@ export function BedrockStack({ stack, app }: StackContext) {
           },
         },
         name: 'KnowledgeBaseSST-'+app.stage,
-        roleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForKnowledgeBase_duktm',
+        // roleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForKnowledgeBase_duktm',
+        roleArn: knowledgeBaseRole.roleArn,
         storageConfiguration: storageConfigurationProperty
     });
 
@@ -136,6 +194,10 @@ export function BedrockStack({ stack, app }: StackContext) {
         //   },
         // },
       });
+
+      // cfnKnowledgeBase.addDependency(cfnCollection);
+      cfnKnowledgeBase.node.addDependency(cfnCollection)
+
       var cfnAgent = undefined
       // if (app.stage == "prod" || app.stage == "hasan") {
         cfnAgent = new bedrock.CfnAgent(stack, "BQACfnAgent", {

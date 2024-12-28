@@ -5,7 +5,7 @@ export function AfterDeployStack({ stack }: StackContext) {
   const { bot, alias } = use(BotStack)
   dependsOn(BotStack)
 
-  if (stack.stage === "prod") {
+  // if (stack.stage === "prod") {
     new Script(stack, "UpdateLexUiScript", {
       onCreate: {
         handler: 'packages/functions/src/LexBot/updateLexUi.handler',
@@ -18,5 +18,5 @@ export function AfterDeployStack({ stack }: StackContext) {
         permissions: ['cloudformation', 'iam', 's3', 'lambda', 'cloudfront', 'cognito', 'codebuild:*'],
       },
     })
-  }
+  // }
 }

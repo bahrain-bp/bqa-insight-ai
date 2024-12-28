@@ -250,6 +250,12 @@ export function ApiStack({stack}: StackContext) {
                     },
                     permissions: [VocationalReviewsTable], 
                 }
+            },
+            "POST /createIndex": {
+                function: {
+                    handler: "packages/functions/src/bedrock/createIndex.handler",
+                    permissions: ["bedrock", "opensearchserverless"]
+                }
             }
 
         }

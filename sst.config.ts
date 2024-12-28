@@ -16,6 +16,7 @@ import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
 
 import { AfterDeployStack } from "./stacks/AfterDeployStack";
 import { BedrockCollectionStack } from "./stacks/BedrockCollectionStack";
+import { OpenSearchServerlessStack } from "./stacks/OpenSearchStack";
 
 export default {
   config(_input) {
@@ -45,6 +46,7 @@ export default {
       .stack(OpenDataStack)
       .stack(S3Stack)
       .stack(BedrockCollectionStack)
+      .stack(OpenSearchServerlessStack)
       .stack(BedrockStack)
       .stack(BotStack)
       .stack(ApiStack) 
