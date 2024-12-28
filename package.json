@@ -61,7 +61,6 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.8.69",
     "pdfreader": "^3.0.5",
-    "react-router-dom": "^6.28.0",
     "uuid": "^11.0.3"
   }
 }
