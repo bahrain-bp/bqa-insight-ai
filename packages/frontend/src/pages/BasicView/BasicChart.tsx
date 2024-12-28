@@ -93,7 +93,7 @@ const BasicChart = () => {
     const fuse = new Fuse(dataset, { keys: ["schoolName"], threshold: 0.25 });
     const result = fuse.search(slotValue);
     console.log("Search results for " + slotValue + ": ", result)
-    return result.length > 0 ? result[0].item : null;
+    return result.length > 0 ? result[0].item as ChartJsonData : null;
   };
 
   // Perform fuzzy search for one or more names
@@ -115,10 +115,10 @@ const BasicChart = () => {
       else console.error(`No chart found for school: ${chartSlots.AnalyzeSchoolSlot}`);
     } else if (chartSlots.CompareSpecificInstitutesSlot) {
       const matchedCharts: ChartJsonData[] = []
-      chartSlots.CompareSpecificInstitutesSlot.split(", ").map((s: string) => {
+      chartSlots.CompareSpecificInstitutesSlot.split(",").map((s: string) => {
         const trimmed = s.trim()
         const result = performFuzzySearchForSlot(trimmed, allSchoolCharts)
-        if (result) matchedCharts.push(result);
+        if (result && (matchedCharts.indexOf(result) === -1)) matchedCharts.push(result);
     });
       const comparisonChart: ChartJsonData = {
         schoolName: "Comparison Chart",
@@ -208,10 +208,10 @@ const BasicChart = () => {
   } else if (chartSlots.CompareVocationalSlot) {
     console.log("Checking compare vocational: " , chartSlots.CompareVocationalSlot)
     const matchedCharts: ChartJsonData[] = []
-      chartSlots.CompareVocationalSlot.split(", ").map((s: string) => {
+      chartSlots.CompareVocationalSlot.split(",").map((s: string) => {
         const trimmed = s.trim()
         const result = performFuzzySearchForSlot(trimmed, allVocationalCharts)
-        if (result) matchedCharts.push(result);
+        if (result && (matchedCharts.indexOf(result) === -1)) matchedCharts.push(result);
       });
       const comparisonChart: ChartJsonData = {
       schoolName: "Comparison Chart",
