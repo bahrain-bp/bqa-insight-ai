@@ -259,7 +259,7 @@ const BasicChart = () => {
         </div>
       </div>
       <div className="w-full md:w-[30%] py-4 md:py-20 flex flex-col items-center">
-        {/* {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && ( */}
+        {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
           <button
             onClick={exportContentAsPDF}
             className="bg-lightblue hover:bg-primary"
@@ -275,7 +275,7 @@ const BasicChart = () => {
           >
             Export as PDF
           </button>
-        {/* )} */}
+        )}
       </div>
     </div>
   );
