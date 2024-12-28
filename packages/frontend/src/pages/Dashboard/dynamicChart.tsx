@@ -41,8 +41,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
           datalabels: {display: false},
           legend: { display: true, position: "top" },
           title: {
-            display: true,
-            text: "Dynamic Chart",
+            display: false,
           },
         },
         scales: parsedData.type !== "pie" ? { // Scales are not used for pie charts
