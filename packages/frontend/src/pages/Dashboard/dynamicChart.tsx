@@ -59,6 +59,12 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
               display: true,
               text: "Grades",
             },
+            reverse: true,
+            min: 1,
+            max: 4,
+            ticks: {
+              precision: 0,
+            }
           },
         } : undefined,
       }
