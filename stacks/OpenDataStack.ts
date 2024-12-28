@@ -46,7 +46,7 @@ export function OpenDataStack({ stack }: StackContext) {
     HigherEducationReviewsTableName: HigherEducationProgrammeReviewsTable.tableName,
     NationalFrameworkOperationsTableName: NationalFrameworkOperationsTable.tableName,
     VocationalReviewsTableName: VocationalReviewsTable.tableName,
-    UniversityReviewsTableName: UniversityReviewsTable.tableName, // Add UniversityReviewsTable to outputs
+    UniversityReviewsTableName: UniversityReviewsTable.tableName, 
   });
 
   return {
@@ -54,6 +54,6 @@ export function OpenDataStack({ stack }: StackContext) {
     HigherEducationProgrammeReviewsTable,
     NationalFrameworkOperationsTable,
     VocationalReviewsTable,
-    UniversityReviewsTable, // Return UniversityReviewsTable
+    UniversityReviewsTable, 
   };
 }

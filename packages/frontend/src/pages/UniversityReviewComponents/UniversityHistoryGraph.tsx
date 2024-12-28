@@ -3,388 +3,293 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
   ChartData,
   ChartOptions,
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import ChartDataLabels from 'chartjs-plugin-datalabels'; // Import the plugin
-import { UniversityData, Review } from './types';
+import { Bar } from 'react-chartjs-2';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
-// Register only the necessary components plus the datalabels plugin
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-    ChartDataLabels // Register the plugin locally
-  );
-  
-  // Define colors for each grade
-const GRADE_COLORS: Record<number, string> = {
-    1: '#30C5A2', // Outstanding
-    2: '#37B0FF', // Good
-    3: '#FFA600', // Satisfactory
-    4: '#D34F4F', // Inadequate
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ChartDataLabels
+);
+
+const judgementTypes = ['Confidence', 'Limited Confidence', 'No Confidence'];
+
+const JUDGEMENT_COLORS: Record<string, string> = {
+  'Confidence': '#30C5A2',
+  'Limited Confidence': '#FFA600',
+  'No Confidence': '#D34F4F',
+};
+
+
+interface Review {
+  Title: string;
+  Program: string;
+  UnifiedStudyField: string;
+  Cycle: string;
+  Type: string;
+  Judgement: string;
+  ReportFile: string;
+}
+
+interface UniversityReview {
+  InstitutionCode: string;
+  InstitutionName: string;
+  Reviews: Review[];
+}
+
+interface UniversityHistoryGraphProps {
+  data: UniversityReview[];
+}
+
+
+export function UniversityHistoryGraph({ data }: UniversityHistoryGraphProps) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [matchingUniversities, setMatchingUniversities] = useState<UniversityReview[]>([]);
+  const [selectedUniversities, setSelectedUniversities] = useState<UniversityReview[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const dropdownRef = useRef<HTMLUListElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (searchTerm.trim().length === 0) {
+      setMatchingUniversities([]);
+      setHighlightedIndex(-1);
+      return;
+    }
+
+    const lower = searchTerm.toLowerCase();
+    
+    const matches = data.filter((university) => {
+      const institutionName = university.InstitutionName?.toLowerCase() || '';
+      return institutionName.includes(lower);
+    });
+
+    setMatchingUniversities(matches);
+    setHighlightedIndex(matches.length > 0 ? 0 : -1);
+  }, [searchTerm, data]);
+
+  const handleSelectUniversity = (university: UniversityReview) => {
+    setSelectedUniversities((prev) => {
+      if (prev.find((u) => u.InstitutionCode === university.InstitutionCode)) {
+        return prev;
+      }
+      return [...prev, university];
+    });
+    setSearchTerm('');
+    setMatchingUniversities([]);
+    setHighlightedIndex(-1);
   };
-  
-// Helper function to parse numeric grade from strings like "(4) Inadequate"
-function parseGradeNumber(grade: string): number | null {
-    if (!grade) return null;
-    const match = grade.match(/\((\d+)\)/);
-    return match ? parseInt(match[1], 10) : null;
-  }
-  interface UniversitySearchProps {
-    data: UniversityData[]; // Updated prop type
-  }
-  export function UniversityHistoryGraph({ data }: UniversitySearchProps) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [matchingUniversities, setMatchingUniversities] = useState<UniversityData[]>([]);
-    const [selectedUniversity, setSelectedUniversity] = useState<UniversityData[]>([]);
-    const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-    const dropdownRef = useRef<HTMLUListElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        if (searchTerm.trim().length === 0) {
-          setMatchingUniversities([]); // Show no matches when search term is empty
-          setHighlightedIndex(-1);
-          return;
-        }
-        const lower = searchTerm.toLowerCase();
-        const matches = data.filter((University) =>
-          University.Program.toLowerCase().includes(lower)
-        );
-        setMatchingUniversities(matches);
-        setHighlightedIndex(matches.length > 0 ? 0 : -1);
-      }, [searchTerm, data]);
-
-      const handleSelectUniversity = (University: UniversityData) => {
-        setSelectedUniversity((prev) => {
-            // Prevent adding duplicates
-            if (prev.find((s) => s.Title === University.Title)) {
-              return prev;
-            }
-            return [...prev, University];
-          });
-          setSearchTerm('');
-          setMatchingUniversities([]);
-          setHighlightedIndex(-1);
-        };
-      
-  const removeInstitute = (institutionCode: string) => {
-    setSelectedUniversity((prev) =>
-      prev.filter((University) => University.Title !== institutionCode)
+  const removeUniversity = (institutionCode: string) => {
+    setSelectedUniversities((prev) =>
+      prev.filter((university) => university.InstitutionCode !== institutionCode)
     );
   };
 
-
-  const prepareLineData = (institute: UniversityData): ChartData<'line'> => {
-      // Filter reviews that include 'Review' in ReviewType (case-insensitive)
-      const reviewReports = institute.Reviews.filter(
-        (r) => r.ReviewType.toLowerCase().includes('review')
-      );
-  
-      // Prepare data points
-      const points = reviewReports.map((r) => {
-        const gradeNum = parseGradeNumber(r.Grade);
-        const cycle = r.Cycle || 'N/A';
-        return {
-          x: cycle,
-          y: gradeNum,
-          date: r.BatchReleaseDate || '',
-          review: r,
-        };
-      });
-  
-      return {
-        labels: points.map((p) => p.x), // Using cycle as labels
-        datasets: [
-          {
-            type: 'line',
-            label: 'Review Report',
-            // @ts-ignore
-            data: points,
-            showLine: false, // Only show points, no connecting lines
-            clip: false, // Allow points and labels to render outside the chart area
-            pointRadius: 6,
-            pointHoverRadius: 8,
-            borderColor: '#999', // Line color (if showLine is true)
-            // Dynamically set point colors based on grade
-            pointBackgroundColor: (ctx) => {
-              const idx = ctx.dataIndex;
-              const item = points[idx];
-              if (!item.y || item.y < 1 || item.y > 4) return '#999';
-              return GRADE_COLORS[item.y] || '#999';
-            },
-          },
-        ],
+  const prepareBarData = (university: UniversityReview): ChartData<'bar', number[]> => {
+    const programs = [...new Set(university.Reviews.map(review => review.Program))].sort();
+    
+    // Create a mapping of program to judgement counts
+    const programJudgements: Record<string, Record<string, number>> = {};
+    
+    programs.forEach(program => {
+      programJudgements[program] = {
+        'Confidence': 0,
+        'Limited Confidence': 0,
+        'No Confidence': 0
       };
+    });
+
+    // Count judgements for each program
+    university.Reviews.forEach(review => {
+      if (review.Program && review.Judgement) {
+        programJudgements[review.Program][review.Judgement]++;
+      }
+    });
+    return {
+      labels: programs,
+      datasets: judgementTypes.map(judgement => ({
+        label: judgement,
+        data: programs.map(program => programJudgements[program][judgement]),
+        backgroundColor: JUDGEMENT_COLORS[judgement],
+        borderColor: JUDGEMENT_COLORS[judgement],
+        borderWidth: 1,
+        barPercentage: 0.8,
+      }))
     };
-  
-    // ----------------------------
-    // 4) Chart Options
-    // ----------------------------
-    const options: ChartOptions<'line'> = {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: {
-        // Add extra padding for top/bottom/left/right so edges are visible
-        padding: {
-          top: 30,
-          bottom: 30,
-          left: 20,
-          right: 30,
+  };
+
+  const options: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        stacked: true,
+        title: {
+          display: true,
+          text: 'Programs',
+          padding: { top: 80 }
         },
-      },
-      scales: {
-        x: {
-          type: 'category',
-          title: {
-            display: true,
-            text: 'Cycle',
-          },
-          grid: {
-            display: true,
-            // @ts-ignore
-            borderColor: '#e0e0e0',
-          },
-        },
-        y: {
-          min: 1,
-          max: 4,
-          reverse: true, // So 4 is bottom, 1 is top
-          ticks: {
-            stepSize: 1,
-            callback: function (value) {
-              switch (value) {
-                case 1:
-                  return '(1) Outstanding';
-                case 2:
-                  return '(2) Good';
-                case 3:
-                  return '(3) Satisfactory';
-                case 4:
-                  return '(4) Inadequate';
-                default:
-                  return '';
-              }
-            },
-          },
-          title: {
-            display: true,
-            text: '(4) Inadequate => (1) Outstanding',
-          },
-          grid: {
-            display: true,
-            // @ts-ignore
-            borderColor: '#e0e0e0',
-          },
-        },
-      },
-      plugins: {
-        legend: {
-          display: false, 
-        },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const review = (context.raw as any).review as Review;
-              return [
-                `Grade: ${review.Grade}`,
-                `Cycle: ${review.Cycle}`,
-                `Date: ${review.BatchReleaseDate}`,
-              ].join('\n');
-            },
-          },
-        },
-        // chartjs-plugin-datalabels => display date near each point
-        datalabels: {
-          clip: false, // Allow labels to render outside the chart area
-          align: 'top',
-          anchor: 'end',
-          offset: 4,
-          color: '#333',
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+          padding: 10,
+          autoSkip: false,
           font: {
-            size: 10,
-          },
-          formatter: (_val, ctx) => {
-            const idx = ctx.dataIndex;
-            const item = (ctx.chart.data.datasets[0].data[idx] as any).review as Review;
-            return item.BatchReleaseDate;
-          },
-        },
-      },
-    };
-  
-    // ----------------------------
-    // 5) Handle Keyboard Navigation
-    // ----------------------------
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (matchingUniversities.length === 0) return;
-  
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev < matchingUniversities.length - 1 ? prev + 1 : 0
-        );
-        scrollIntoView(highlightedIndex + 1);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setHighlightedIndex((prev) =>
-          prev > 0 ? prev - 1 : matchingUniversities.length - 1
-        );
-        scrollIntoView(highlightedIndex - 1);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (highlightedIndex >= 0 && highlightedIndex < matchingUniversities.length) {
-          const selected = matchingUniversities[highlightedIndex];
-          handleSelectUniversity(selected);
+            size: 11
+          }
         }
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setMatchingUniversities([]);
-        setHighlightedIndex(-1);
+      },
+      y: {
+        stacked: true,
+        title: {
+          display: true,
+          text: 'Number of Reviews',
+          padding: { bottom: 10 }
+        },
+        beginAtZero: true
       }
-    };
-  
-    // Helper to ensure the highlighted item is visible in the dropdown
-    const scrollIntoView = (index: number) => {
-      const dropdown = dropdownRef.current;
-      if (dropdown && index >= 0 && index < dropdown.children.length) {
-        const item = dropdown.children[index] as HTMLElement;
-        item.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
-        });
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top'
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const label = context.dataset.label || '';
+            const value = context.parsed.y;
+            return `${label}: ${value} reviews`;
+          }
+        }
+      },
+      datalabels: {
+        display: false
       }
-    };
-  
-    // ----------------------------
-    // 6) Render the Component
-    // ----------------------------
-    return (
-      <div className="flex flex-col space-y-4">
-        {/* === Search Input === */}
-        <div>
-          <label className="font-semibold block mb-1">
-            Search for an University by English Name
-          </label>
-          <input
-            type="text"
-            className="border border-gray-300 rounded px-3 py-1 w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="e.g. 'Bahrain Polytechnic '"
-            ref={inputRef}
-          />
-        </div>
-  
-        {/* === Matching Institutes Dropdown === */}
-        {matchingUniversities.length > 0 && (
-          <ul
-            className="border border-gray-300 rounded bg-white w-full md:w-1/2 shadow-lg max-h-60 overflow-y-auto"
-            ref={dropdownRef}
-          >
-            {matchingUniversities.map((inst, idx) => (
-              <li
-                key={inst.Title}
-                className={`px-3 py-2 cursor-pointer ${
-                  idx === highlightedIndex
-                    ? 'bg-blue-500 text-white'
-                    : 'hover:bg-gray-100'
-                }`}
-                onMouseEnter={() => setHighlightedIndex(idx)}
-                onMouseDown={() => handleSelectUniversity(inst)} // Use the selection handler
-              >
-                {inst.Program}
-              </li>
-            ))}
-          </ul>
-        )}
-  
-        {/* === Selected Institutes Information and Charts === */}
-        {selectedUniversity.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {selectedUniversity.map((University) => {
-              // Separate Review Reports and Other Reports
-              const reviewReports = University.Reviews.filter(
-                (r) => r.ReviewType.toLowerCase().includes('review')
-              );
-              const otherReports = University.Reviews.filter(
-                (r) => !r.ReviewType.toLowerCase().includes('review')
-              );
-              return (
-                <div
-                  key={University.Title}
-                  className="p-4 border border-gray-200 rounded bg-white shadow flex flex-col space-y-4 h-full"
-                >
-                  {/* Basic Institute Information */}
-                  <div>
-                    <h3 className="text-lg font-bold mb-2">
-                      {University.Program}
-                    </h3>
-                    <p>Unified Study Field Name: {University.UnifiedStudyField}</p>
-                    <p>University Name: {University.Title}</p>
-                    {/* Display Average Grade */}
-                    {University.AverageGrade !== null && (
-                      <p className="mt-2 text-md font-semibold">
-                        Average Grade: {University.AverageGrade}
-                      </p>
-                    )}
-                    {/* Remove Button */}
-                    <button
-                      className="mt-2 text-red-500 underline"
-                      onClick={() => removeInstitute(University.Title)}
-                    >
-                      Remove
-                    </button>
-                  </div>
-  
-                  {/* Other Reports */}
-                  <div>
-                    {otherReports.length > 0 && (
-                      <>
-                        <h4 className="font-semibold">Other Reports:</h4>
-                        <ul className="list-disc list-inside">
-                          {otherReports.map((report, idx) => (
-                            <li key={idx}>
-                              <strong>Type:</strong> {report.ReviewType} |{' '}
-                              <strong>Grade:</strong> {report.Grade} |{' '}
-                              <strong>Cycle:</strong> {report.Cycle} |{' '}
-                              <strong>Date:</strong> {report.BatchReleaseDate}
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    )}
-                  </div>
-  
-                  {/* Spacer to ensure chart alignment */}
-                  <div className="flex-grow"></div>
-  
-                  {/* Chart Container */}
-                  <div className="max-w-xl h-96">
-                    {reviewReports.length > 0 ? (
-                      <Line data={prepareLineData(University)} options={options} />
-                    ) : (
-                      <p className="text-gray-500">No review reports found.</p>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (matchingUniversities.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev < matchingUniversities.length - 1 ? prev + 1 : 0
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) =>
+        prev > 0 ? prev - 1 : matchingUniversities.length - 1
+      );
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (highlightedIndex >= 0 && highlightedIndex < matchingUniversities.length) {
+        handleSelectUniversity(matchingUniversities[highlightedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setMatchingUniversities([]);
+      setHighlightedIndex(-1);
+    }
+  };
+
+  return (
+    <div className="flex flex-col space-y-4 max-w-full">
+      <div>
+        <label className="font-semibold block mb-1">
+          Search for a University
+        </label>
+        <input
+          type="text"
+          className="border border-gray-300 rounded px-3 py-1 w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Enter university name..."
+          ref={inputRef}
+        />
       </div>
-    );
-  }
-  
+
+      {matchingUniversities.length > 0 && (
+        <ul
+          className="border border-gray-300 rounded bg-white w-full md:w-1/2 shadow-lg max-h-60 overflow-y-auto"
+          ref={dropdownRef}
+        >
+          {matchingUniversities.map((univ, idx) => (
+            <li
+              key={univ.InstitutionCode}
+              className={`px-3 py-2 cursor-pointer ${
+                idx === highlightedIndex
+                  ? 'bg-blue-500 text-white'
+                  : 'hover:bg-gray-100'
+              }`}
+              onMouseEnter={() => setHighlightedIndex(idx)}
+              onMouseDown={() => handleSelectUniversity(univ)}
+            >
+              {univ.InstitutionName}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {selectedUniversities.length > 0 && (
+        <div className="grid grid-cols-1 gap-4">
+          {selectedUniversities.map((university) => (
+            <div
+              key={university.InstitutionCode}
+              className="p-4 border border-gray-200 rounded bg-white shadow flex flex-col space-y-4"
+            >
+              <div>
+                <h3 className="text-lg font-bold mb-2">
+                  {university.InstitutionName}
+                </h3>
+                <button
+                  className="mt-2 text-red-500 underline"
+                  onClick={() => removeUniversity(university.InstitutionCode)}
+                >
+                  Remove
+                </button>
+              </div>
+
+              <div>
+                <h4 className="font-semibold">Programs Reviewed:</h4>
+                <ul className="list-disc list-inside">
+                  {university.Reviews.map((review, idx) => (
+                    <li key={idx}>
+                      <strong>{review.Program}</strong>
+                      <br />
+                      Type: {review.Type} | 
+                      Judgement: {review.Judgement}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div style={{ height: '800px' }}>
+                {university.Reviews.length > 0 ? (
+                  <Bar data={prepareBarData(university)} options={options} />
+                ) : (
+                  <p className="text-gray-500">No reviews found.</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+export default UniversityHistoryGraph;

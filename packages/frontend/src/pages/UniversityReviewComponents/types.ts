@@ -1,15 +1,21 @@
-export interface Review {
-    Cycle: string;
-    Batch: string;
-    BatchReleaseDate: string;
-    ReviewType: string;
-    Grade: string; 
-  }
-  export interface UniversityData {
-    Title: string;
-    Program: string;
-    UnifiedStudyField: string; 
-    Reviews: Review[];
-    AverageGrade: number;
+
+      export interface Review {
+        Title: string;
+        Program: string;
+        UnifiedStudyField: string;
+        Cycle: string;
+        Type: string;
+        Judgement: string;
+        ReportFile: string;
       }
+      
+      export interface UniversityData {
+        InstitutionCode: string;
+        InstitutionName: string;
+        Reviews: Review[];
+        AverageJudgement?: number;
+      }
+      
+      
+
       

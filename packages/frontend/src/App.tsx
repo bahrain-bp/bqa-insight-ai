@@ -13,6 +13,7 @@ import BasicView from './pages/BasicView/BasicView.tsx';
 import { SchoolReviews } from './pages/SchoolReviews.tsx';
 import { VocationalReviews } from './pages/VocationalReviews.tsx';
 import { UniversityReviews } from './pages/UniversitiesReviews.tsx';
+import ProtectedRoute from './pages/Authentication/ProtectedRouteComp.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -52,7 +53,16 @@ function App() {
         />
       
     
-        <Route path="Auth/SignIn" element={<SignIning setUser={setUser} user={user}/>} />
+
+      <Route path="/auth/signin" element={<SignIning setUser={setUser} user={user} />} />
+      <Route 
+        path="/fileManagement" 
+        element={
+          <ProtectedRoute>
+            <FileManagement />
+          </ProtectedRoute>
+        } 
+      />
 
         <Route path="/signout" element={<SignOutPage />} />
         <Route

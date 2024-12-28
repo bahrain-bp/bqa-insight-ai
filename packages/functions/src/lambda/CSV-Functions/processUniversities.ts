@@ -1,10 +1,13 @@
 import * as AWS from 'aws-sdk';
 import csv from 'csv-parser';
+//import { title } from 'process';
+
 
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 const s3 = new AWS.S3();
 
 interface Review {
+  Title : string;
   Program: string;
   UnifiedStudyField: string;
   Cycle: string;
@@ -53,6 +56,7 @@ export async function processUniversityReviews(bucket: string, key: string, tabl
         const institutionCode = institutionName.replace(/[^a-zA-Z0-9]/g, '-').toUpperCase();
 
         const review: Review = {
+          Title:data ['Title'] || "",
           Program: data['Program'] || "",
           UnifiedStudyField: data['Unified Study field'] || "",
           Cycle: data['Cycle'] || "",
