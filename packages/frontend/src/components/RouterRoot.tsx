@@ -14,29 +14,29 @@ export const ChartContext = createContext<ChartContextType>({
 )
 
 export type LexChartSlots = {
-    "AnalyzeSchoolSlot": string | undefined,
-    ProgramNameSlot: string | undefined,
-    AnalyzeVocationalSlot: string | undefined,
-    CompareUniversityWUniSlot: string | undefined,
-    CompareUniversityWProgramsSlot: string | undefined,
-    CompareSchoolSlot: "All Government Schools" | "All Private Schools" | undefined,
-    CompareSpecificInstitutesSlot: string | undefined,
-    CompareVocationalSlot: string | undefined,
-} | undefined
+    AnalyzeSchoolSlot?: string,
+    ProgramNameSlot?: string,
+    AnalyzeVocationalSlot?: string,
+    CompareUniversityWUniSlot?: string,
+    CompareUniversityWProgramsSlot?: string,
+    CompareSchoolSlot?: "All Government Schools" | "All Private Schools",
+    CompareSpecificInstitutesSlot?: string,
+    CompareVocationalSlot?: string,
+}
 
 type LexChartSlotsContextType = {
     chartSlots : LexChartSlots,
     setChartSlots : React.Dispatch<React.SetStateAction<LexChartSlots>>
 }
 export const LexChartSlotsContext = createContext<LexChartSlotsContextType>({
-        chartSlots : undefined,
+        chartSlots : {},
         setChartSlots: () => {}
     }
 )
 
 export function RouterRoot() {
     const [chartJson, setChartJson] = useState<ChartJsonData[]>([])
-    const [chartSlots, setChartSlots] = useState<LexChartSlots>()
+    const [chartSlots, setChartSlots] = useState<LexChartSlots>({})
 
     return (
         <ChartContext.Provider value={{chartJson, setChartJson}}>
