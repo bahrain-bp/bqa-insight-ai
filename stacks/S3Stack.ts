@@ -10,7 +10,7 @@ export function S3Stack({ stack }: StackContext) {
     const {instituteMetadata} = use (InstituteMetadataStack);
     const {programMetadataTable} = use(ProgramMetadataStack);
     const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
-    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -215,8 +215,9 @@ export function S3Stack({ stack }: StackContext) {
             HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME: HigherEducationProgrammeReviewsTable.tableName,
             NATIONAL_FRAMEWORK_OPERATIONS_TABLE_NAME: NationalFrameworkOperationsTable.tableName,
             VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
+            UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
         },
-        permissions: [SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable], 
+        permissions: [SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable,UniversityReviewsTable], 
     });
 
     // S3 Notification for CSV files

@@ -7,10 +7,10 @@ const Filter = () => {
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
+
   const [latestYear, setLatestYear] = useState<string>("");
   const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
-
-
 
   
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
@@ -56,9 +56,6 @@ const Filter = () => {
   const [userAdditions, setUserAdditions] = useState<string>("");
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
 
-
-
-
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
@@ -102,10 +99,6 @@ const Filter = () => {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
-
-
-
-
   useEffect(() => {
     if (!userModifiedSentence) {
       const newSentence = generateSentence();
@@ -398,7 +391,9 @@ const Filter = () => {
           body: JSON.stringify(prompt),
         });
 
-        console.log("Selected schools: ", selectedOptions["Institute Name"])
+        const body = await response.json();
+        setBedrockResponse(body.response);
+        showMessage("Data successfully received!", "success");
 
         if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
@@ -418,12 +413,11 @@ const Filter = () => {
           
         }
 
-        const body = await response.json();
         console.log("API Response:", body);
         
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
-        console.error("Error sending data to Bedrock:", error);
+        console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
       }
     } else {
@@ -446,6 +440,7 @@ const Filter = () => {
     setUserModifiedSentence(false);
     setUserAdditions("");
     setLastGeneratedSentence("");
+    setBedrockResponse(null);
   };
 
 
@@ -555,25 +550,27 @@ const Filter = () => {
 
               {isFilterActive && (
                 <>
-          <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
-            {isEditing ? (
-              <textarea
-                value={editableSentence}
-                onChange={handleSentenceChange}
-                rows={4}
-                className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
-              />
-            ) : (
-              <div 
-                onClick={handleSentenceEdit} 
-                className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
-                title="Click to edit"
-              >
-                {editableSentence || generateSentence()}
-                <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
-              </div>
-            )}
+                  <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
+                    {isEditing ? (
+                      <textarea
+                        value={editableSentence}
+                        onChange={handleSentenceChange}
+                        rows={4}
+                        className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
+                      />
+                    ) : (
+                      <div 
+                        onClick={handleSentenceEdit} 
+                        className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
+                        title="Click to edit"
+                      >
+                        {editableSentence || generateSentence()}
+                        <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
+                      </div>
+                    )}
                   </div>
+                 
+                  
                   {isEditing && (
                     <div className="mt-4 text-center">
                       <button
@@ -584,6 +581,7 @@ const Filter = () => {
                       </button>
                     </div>
                   )}
+                  
                   <div className="mt-6 text-center">
                     <button
                       onClick={handleSubmit}
@@ -602,6 +600,19 @@ const Filter = () => {
               )}
             </>
           )}
+                    {bedrockResponse && (
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4">Analysis Results</h3>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="prose max-w-none">
+                  {bedrockResponse.split('\n').map((paragraph, index) => (
+                    <p key={index} className="mb-4">{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
       </div>
   );
 };
