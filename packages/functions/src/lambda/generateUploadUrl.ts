@@ -4,6 +4,19 @@ import { v4 as uuidv4 } from "uuid";
 const s3 = new AWS.S3();
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
+// Define allowed MIME types
+const ALLOWED_MIME_TYPES = new Set(["application/pdf", "text/csv"]);
+
+// Define exact allowed CSV filenames
+const ALLOWED_CSV_FILENAMES = new Set([
+  "Results of Government Schools Reviews.csv",
+  "Results of Higher Education Reviews.csv",
+  "Results of National Framework Operations.csv",
+  "Results of Private Schools Reviews.csv",
+  "Results of Vocational Reviews.csv",
+  "Results of University Reviews.csv"
+]);
+
 export async function handler(event: any) {
     const { files } = JSON.parse(event.body); // `files` should be an array of { fileName, fileType, fileSize }
     console.log("Bucket Name:", process.env.BUCKET_NAME);
@@ -20,15 +33,37 @@ export async function handler(event: any) {
 
     for (const file of files) {
         const { fileName, fileType, fileSize } = file;
+
+        if (!ALLOWED_MIME_TYPES.has(fileType)) {
+            return {
+              statusCode: 400,
+              body: JSON.stringify({
+                error: `Unsupported file type: ${fileType} for file ${fileName}. Only PDF and CSV files are allowed.`,
+              }),
+            };
+        }
+
         const uniqueId = uuidv4(); 
         // Set the fileKey with the uniqueId
         let fileKey = `Files/${uniqueId}`;
-
         // If the file is a PDF, ensure the key ends with .pdf
         if (fileType === "application/pdf" && !fileKey.endsWith(".pdf")) {
             fileKey = `Files/${uniqueId}.pdf`;
         }
         
+        if (fileType === "text/csv") {
+            // Validate exact CSV filename
+            if (!ALLOWED_CSV_FILENAMES.has(fileName)) {
+              return {
+                statusCode: 400,
+                body: JSON.stringify({
+                  error: `Invalid CSV file name: ${fileName}. Please use one of the allowed filenames.`,
+                }),
+              };
+            }
+            fileKey = `CSVFiles/${fileName}`;
+        }
+
         const params = {
             Bucket: bucketName,
             Key: fileKey,

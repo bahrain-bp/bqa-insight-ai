@@ -58,7 +58,7 @@ export function BedrockStack({ stack, app }: StackContext) {
       actions: [
         "bedrock:InvokeModel"
       ],
-      resources: ["arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-premier-v1:0"]
+      resources: ["arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0"]
     }));
 
     const cfnDataSource = new bedrock.CfnDataSource(stack, 'KnowledgeBaseSSTDataSource', {
@@ -134,7 +134,7 @@ export function BedrockStack({ stack, app }: StackContext) {
           agentName: "BQAInsightAIModel-"+app.stage,
           // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',
           agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
-          foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/amazon.titan-text-premier-v1:0',
+          foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
           idleSessionTtlInSeconds: 600,
           instruction: 'Analyze All reports and produce powerful insights based on that data. Generate data in tables if prompted to as well.',
           knowledgeBases: [{
@@ -151,7 +151,32 @@ export function BedrockStack({ stack, app }: StackContext) {
         agentAliasName: 'BQACfnAgentAlias-'+app.stage,
         agentId: cfnAgent?.attrAgentId || "",
       });
-          
+
+      // llama
+      var cfnAgentLlama = undefined
+      // if (app.stage == "prod" || app.stage == "hasan") {
+        cfnAgentLlama = new bedrock.CfnAgent(stack, "BQACfnAgentLlama", {
+          agentName: "BQAInsightAIModelLlama-"+app.stage,
+          // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',
+          agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
+          foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
+          idleSessionTtlInSeconds: 600,
+          instruction: 'Analyze All reports and produce powerful insights based on that data. Generate data in tables if prompted to as well.',
+          knowledgeBases: [{
+            description: 'Use the newest data as default, unless it is specified otherwise',
+            knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
+            knowledgeBaseState: 'ENABLED',
+            }],
+          }
+        );
+        stack.addOutputs({AgentLLama: cfnAgentLlama.agentName})
+      // }
+
+      const cfnAgentAliasLlama = new bedrock.CfnAgentAlias(stack, 'BQACfnAgentAliasLlama', {
+        agentAliasName: 'BQACfnAgentAliasLlama-'+app.stage,
+        agentId: cfnAgentLlama?.attrAgentId || "",
+      });
+      
 
     syncTopic.addSubscribers(stack, {
         sync: {
@@ -172,5 +197,5 @@ export function BedrockStack({ stack, app }: StackContext) {
         DataSource: cfnDataSource.name,
     });
 
-    return { cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias };
+    return { cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias, cfnAgentLlama, cfnAgentAliasLlama };
 }      

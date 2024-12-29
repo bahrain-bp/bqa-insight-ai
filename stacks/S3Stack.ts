@@ -4,11 +4,13 @@ import { FileMetadataStack } from "./FileMetadataStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
+import { OpenDataStack } from "./OpenDataStack";
 export function S3Stack({ stack }: StackContext) {
     const {fileMetadataTable } = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
     const {programMetadataTable} = use(ProgramMetadataStack);
     const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
+    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -60,9 +62,7 @@ export function S3Stack({ stack }: StackContext) {
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
-        bind: [
-            syncTopic
-        ]
+        bind: [syncTopic]
     });
     const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
         handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
@@ -76,11 +76,9 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        BUCKET_NAME: bucket.bucketName
+        BUCKET_NAME: bucket.bucketName,
         },
-        bind: [
-            syncTopic
-        ]
+        bind: [syncTopic]
     });
 
     const extractReportMetadata = new Function(stack, "claudeExtractReportMetadata", {
@@ -97,9 +95,7 @@ export function S3Stack({ stack }: StackContext) {
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
-        bind: [
-            syncTopic
-        ]
+        bind: [syncTopic]
     });
     const triggerExtractLambda = new Function(stack, "triggerExtractLambda", {
         handler: "packages/functions/src/bedrock/triggerExtractLambda.handler",
@@ -118,7 +114,7 @@ export function S3Stack({ stack }: StackContext) {
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
-        bind: [syncTopic],
+        // bind: [syncTopic],
     });
 
     extractMetadataQueue.addConsumer(stack, {
@@ -207,6 +203,29 @@ export function S3Stack({ stack }: StackContext) {
             function: sendSplitMessage, 
             events: ["object_created"], 
             filters: [{ prefix: "Files/" }, { suffix: ".pdf" }], // Only for PDF files in the "Files/" folder
+        },
+        
+    });
+
+    //Function to process CSV files and store the data in DynamoDB
+    const processCSVHandler = new Function(stack, "ProcessCSVHandler", {
+        handler: "packages/functions/src/lambda/processCSV.handler",
+        environment: {
+            SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
+            HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME: HigherEducationProgrammeReviewsTable.tableName,
+            NATIONAL_FRAMEWORK_OPERATIONS_TABLE_NAME: NationalFrameworkOperationsTable.tableName,
+            VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
+            UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
+        },
+        permissions: [SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable,UniversityReviewsTable], 
+    });
+
+    // S3 Notification for CSV files
+    bucket.addNotifications(stack, {
+        objectCreatedNotification: {
+            function: processCSVHandler, 
+            events: ["object_created"], 
+            filters: [{ prefix: "CSVFiles/" }, { suffix: ".csv" }], 
         },
         
     });
