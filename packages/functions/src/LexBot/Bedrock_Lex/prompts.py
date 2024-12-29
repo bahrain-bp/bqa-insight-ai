@@ -709,120 +709,236 @@ def create_compare_programme(standard, programme_name, institutes):
     return prompt
 
 
-def create_generate_json_prompt(data):
-    heading = """ Your goal is to analyze the given text and provide a relevant title in relation to the given text in JSON format. 
-        Then, extract data from the given text appropriate for chart generation. The chart data you provide must include unified 
-        column names and corresponding values extracted from the analysis, meaning unified points, in JSON format. After that, 
-        provide a chart type (whether it be a line chart, bar graph, scatter line chart, or pie chart) that is the optimum choice 
-        to display the chart data you generated after analyzing the given text in JSON format. Please follow the format given 
-        exactly, but the number of rows could be higher or lower depending on the relevant chart data in JSON format, and columns 
-        must have relevant titles. If there is a range of data, like "...grades 9-10", please type it as individual rows, 
-        like "grade: 9, grade: 10"."""
-    
-    instructions = """<instructions>
-            1. Do not add any clarifying information.
-            2. Use the specified schema and use x and y for column and values.
-        </instructions>"""
-    
-    formatting = """<formatting>
-            {
-                "type": "line",        
-                    "datasets": [
-                        {
-                            "label": "Jidhafs Intermediate Boys School",
-                            "data": {
-                                "2012": 1,
-                                "2014": 2,
-                                "2017": 2,
-                                "2019": 3,
-                                "2022": 4
-                            },
-                        },
-                        {
-                            "label": "Al Sehlah Intermediate Boys School",
-                            "data": {
-                                "2011": 4,
-                                "2014": 4,
-                                "2018": 3,
-                                "2023": 3
-                            },
-                        },
-                        {
-                            "label": "Hamad Town Intermediate Boys School",
-                            "data": {
-                                "2011": 1,
-                                "2014": 1,
-                                "2016": 3,
-                                "2023": 4
-                            },
-                        }
-                    ]
-            }
-            </formatting>"""
-
-
+def create_analyze_vocational_training_centre(instituite_name, aspect):
     prompt = f'''
-        {heading}
-        {instructions}
-        {formatting}
-        Given text: 
-        <text>
-            {data}
-        </text>
-    '''
+        
+Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
+
+    <instructions>
+    1. Ensure that the output contains all the insightful information.
+    2. Do not say that you did not find any information.
+    3. Do not add very negative comments that can ruin the educational instituite reputation. Add constructive ffedback only.
+    </instructions>
+
+    Input 1
+    Question: How Did alrawabi private school and Pakistan Urdu School do in terms of overall effectiveness?
+    Output:
+    Al Rawabi Private School
+
+    Overall Effectiveness: Satisfactory
+    Key Judgements:
+
+    Academic Achievement:
+        High pass rates in internal examinations for Primary and Intermediate schools, but inconsistent performance in High School external exams, particularly in science subjects.
+        Proficiency rates were satisfactory across levels, though High School students faced challenges in rigorous subjects like chemistry and physics.
+        Students' learning skills, particularly critical thinking and technological competencies, were underdeveloped.
+
+    Teaching, Learning, and Assessment:
+        Teachers use diverse strategies, but their effectiveness varied significantly, especially in High School.
+        Assessments and feedback mechanisms require better alignment to individual student needs, particularly for low achievers.
+
+    Leadership and Governance:
+        Regular self-evaluation and strategic planning exist, but operational plans lack robust alignment with priorities.
+        High staff turnover impacts professional development program effectiveness.
+
+    Student Personal Development:
+        Students exhibit good discipline and respect, engaging in activities that promote social responsibility.
+        Opportunities for leadership development in lessons are limited
+
+    Comparative Insights:
+
+    Al Rawabi Private School excels in providing a broad curriculum but struggles with High School performance and teacher retention.
+    Pakistan Urdu School demonstrates stronger academic outcomes in senior grades but requires improvements in integrating critical thinking and modern teaching tools.
+
+    Both schools show a commitment to improving their educational quality but need to address their respective challenges for sustained growth.
+
+    Input 2
+    Question: What are the improvement areas in private schools in the past years?
+    Output:
+    Private schools in Bahrain have focused on significant improvements in recent years:
+
+    Key Strengths:
+    Academic Results:
+    - Boosting academic performance by adopting international curricula such as IB and Cambridge standards.
+
+    Student Well-being:
+    - Supporting student well-being through wellness programs, mental health initiatives, and mindfulness activities.
+
+    Modern Teaching Methods:
+    - Adopting innovative teaching techniques, including project-based learning and digital tools integration.
+
+    Governance:
+    - Enhancing governance practices through partnerships with international accreditation organizations.
+
+    Input 3
+    Question: What are the government schools doing this year to achieve an outstanding grade?
+    Output:
+    Government schools are actively implementing strategies to achieve outstanding ratings:
+
+    Key Strategies:
+    Student Progress Monitoring:
+    - Introducing rigorous assessment practices to track and improve student progress.
+
+    Teacher-Parent Collaboration:
+    - Fostering partnerships between teachers and parents to enhance learning outcomes.
+
+    Leadership Development:
+    - Developing leadership skills among school administrators through advanced training programs.
+
+    Inclusive Education:
+    - Creating inclusive classrooms to cater to diverse student learning needs and abilities.
+
+    Input 4
+    Question: What are the improvements in private schools compared to government schools?
+    Output:
+    A comparative analysis between private and government schools reveals key differences:
+
+    Key Insights:
+    Private Schools:
+    - Advancements in personalized learning approaches and integration of advanced technology, such as AI-driven learning tools.
+    - A strong focus on international curricula and globally recognized teaching frameworks.
+
+    Government Schools:
+    - Prioritization of infrastructure development and updates to the STEM curriculum.
+    - Significant progress in fostering student well-being programs and promoting leadership development among educators.
+
+    Input: How did {instituite_name} do in terms of {aspect}?
+    Output:
+    The performance of {instituite_name} in terms of {aspect} is as follows:
+
+    Key Strengths:
+    Area 1:
+    - 
+    - 
+    - 
+
+    Area 2:
+    - 
+    - 
+    - 
+
+    Key Challenges:
+    1. 
+    2. 
+    3. 
+    
+'''
     
     return prompt
 
-# def create_generate_json_prompt(data):
-#     heading = """
-#     Your objective is to meticulously analyze the provided text, which is Claude's Sonnet 3, and generate a structured JSON output following the specified schema.
+
+def create_compare_vocational_training_centres(instituites, aspect):
+    prompt = f"""
+        Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
+
+    <instructions>
+    1. Ensure that the output contains all the insightful information.
+    2. Do not say that you did not find any information.
+    3. Do not add very negative comments that can ruin the educational instituite reputation. Add constructive ffedback only.
+    </instructions>
+
+    Input 1
+    Question: How Did alrawabi private school and Pakistan Urdu School do in terms of overall effectiveness?
+    Output:
+    Al Rawabi Private School
+
+    Overall Effectiveness: Satisfactory
+    Key Judgements:
+
+    Academic Achievement:
+        High pass rates in internal examinations for Primary and Intermediate schools, but inconsistent performance in High School external exams, particularly in science subjects.
+        Proficiency rates were satisfactory across levels, though High School students faced challenges in rigorous subjects like chemistry and physics.
+        Students' learning skills, particularly critical thinking and technological competencies, were underdeveloped.
+
+    Teaching, Learning, and Assessment:
+        Teachers use diverse strategies, but their effectiveness varied significantly, especially in High School.
+        Assessments and feedback mechanisms require better alignment to individual student needs, particularly for low achievers.
+
+    Leadership and Governance:
+        Regular self-evaluation and strategic planning exist, but operational plans lack robust alignment with priorities.
+        High staff turnover impacts professional development program effectiveness.
+
+    Student Personal Development:
+        Students exhibit good discipline and respect, engaging in activities that promote social responsibility.
+        Opportunities for leadership development in lessons are limited
+
+    Comparative Insights:
+
+    Al Rawabi Private School excels in providing a broad curriculum but struggles with High School performance and teacher retention.
+    Pakistan Urdu School demonstrates stronger academic outcomes in senior grades but requires improvements in integrating critical thinking and modern teaching tools.
+
+    Both schools show a commitment to improving their educational quality but need to address their respective challenges for sustained growth.
+
+    Input 2
+    Question: What are the improvement areas in private schools in the past years?
+    Output:
+    Private schools in Bahrain have focused on significant improvements in recent years:
+
+    Key Strengths:
+    Academic Results:
+    - Boosting academic performance by adopting international curricula such as IB and Cambridge standards.
+
+    Student Well-being:
+    - Supporting student well-being through wellness programs, mental health initiatives, and mindfulness activities.
+
+    Modern Teaching Methods:
+    - Adopting innovative teaching techniques, including project-based learning and digital tools integration.
+
+    Governance:
+    - Enhancing governance practices through partnerships with international accreditation organizations.
+
+    Input 3
+    Question: What are the government schools doing this year to achieve an outstanding grade?
+    Output:
+    Government schools are actively implementing strategies to achieve outstanding ratings:
+
+    Key Strategies:
+    Student Progress Monitoring:
+    - Introducing rigorous assessment practices to track and improve student progress.
+
+    Teacher-Parent Collaboration:
+    - Fostering partnerships between teachers and parents to enhance learning outcomes.
+
+    Leadership Development:
+    - Developing leadership skills among school administrators through advanced training programs.
+
+    Inclusive Education:
+    - Creating inclusive classrooms to cater to diverse student learning needs and abilities.
+
+    Input 4
+    Question: What are the improvements in private schools compared to government schools?
+    Output:
+    A comparative analysis between private and government schools reveals key differences:
+
+    Key Insights:
+    Private Schools:
+    - Advancements in personalized learning approaches and integration of advanced technology, such as AI-driven learning tools.
+    - A strong focus on international curricula and globally recognized teaching frameworks.
+
+    Government Schools:
+    - Prioritization of infrastructure development and updates to the STEM curriculum.
+    - Significant progress in fostering student well-being programs and promoting leadership development among educators.
+
+    Input: How did {instituites} do in terms of {aspect}?
+    Output:
+    The performance of {instituites} in terms of {aspect} is as follows:
+
+    Key Strengths:
+    Area 1:
+    - 
+    - 
+    - 
+
+    Area 2:
+    - 
+    - 
+    - 
+
+    Key Challenges:
+    1. 
+    2. 
+    3. 
     
-#     1. **Title Extraction**: Derive a relevant and concise title that encapsulates the essence of the sonnet.
-    
-#     2. **Data Extraction for Chart Generation**:
-#         - Identify key thematic elements, literary devices, or metrics pertinent to the sonnet.
-#         - Organize the extracted data with unified column names (`x` for categories and `y` for corresponding values).
-#         - Ensure that each data point is represented individually, especially when dealing with ranges or multiple related elements.
-    
-#     3. **Optimal Chart Type Recommendation**:
-#         - Analyze the extracted data to determine the most suitable chart type (e.g., line chart, bar graph, scatter plot, pie chart) that effectively visualizes the information.
-    
-#     **Please adhere strictly to the JSON structure provided below. The number of rows may vary based on the data extracted, but ensure that all columns are aptly titled and relevant.**
-#     """
-    
-#     instructions = """
-#     <instructions>
-#         1. Do not include any additional or clarifying information beyond what is specified.
-#         2. Utilize the provided schema accurately, using 'x' for column categories and 'y' for their corresponding values.
-#         3. Maintain consistency in data representation, especially for ranges or grouped items.
-#     </instructions>
-#     """
-    
-#     formatting = """
-#     <formatting>
-#     {
-#         "title": "Your Extracted Title Here",
-#         "chartData": {
-#             "columns": ["x", "y"],
-#             "rows": [
-#                 {"x": "Category 1", "y": Value1},
-#                 {"x": "Category 2", "y": Value2},
-#                 // Add more rows as necessary
-#             ]
-#         },
-#         "chartType": "bar" // Choose from "line", "bar", "scatter", "pie"
-#     }
-#     </formatting>
-#     """
-    
-#     prompt = f'''
-#     {heading}
-#     {instructions}
-#     {formatting}
-#     Given text: 
-#     <text>
-#         {data}
-#     </text>
-#     '''
-    
-#     return prompt
+    """
+
+    return prompt

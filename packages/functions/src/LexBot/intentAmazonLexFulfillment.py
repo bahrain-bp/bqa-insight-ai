@@ -112,12 +112,6 @@ def dispatch(intent_request):
     agent_id = os.getenv("agentId")
     agent_alias_id = os.getenv("agentAliasId")
 
-    llama_agent_id = os.getenv("llamaAgentId")
-    llama_agent_alias_id = os.getenv("llamaAgentAliasId")
-
-    llama_agent_alias_id = os.getenv("llamaAgentAliasId")
-    knowledgeBase = os.getenv("KNOWLEDGEBASE_ID")
-
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
     returnToMenu = get_session_attributes(intent_request)['return'] == "true"
@@ -221,7 +215,6 @@ def dispatch(intent_request):
              message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_school_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
-             session_attributes['chartData'] = "put chart data here"
              return close(
                  intent_request,
                  'Fulfilled',
@@ -244,10 +237,12 @@ def dispatch(intent_request):
                     'VocationalAspectSlot',
                     slots=get_slots(intent_request)
                 ) 
-             message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+            #  message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+             analyze_training_center_prompt = create_compare_vocational_training_centres(comparevocational_type, comparevocationalaspect)
+             message = invoke_agent(agent_id, agent_alias_id, "123", analyze_training_center_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
-             session_attributes['chartData'] = "put chart data here"
+             
              return close(
                  intent_request,
                  'Fulfilled',
@@ -293,7 +288,7 @@ def dispatch(intent_request):
                 message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_programme_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
-                session_attributes['chartData'] = "put chart data here bro"
+                
                 return close(
                     intent_request,
                     'Fulfilled',
@@ -326,7 +321,7 @@ def dispatch(intent_request):
         message = f"the standared of the program is: {standard}"
         response = create_message(message)
         session_attributes = get_session_attributes(intent_request)
-        session_attributes['chartData'] = "put chart data here bro"
+        
         return close(
             intent_request,
             'Fulfilled',
@@ -372,7 +367,7 @@ def dispatch(intent_request):
                 message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
-                session_attributes['chartData'] = "put chart data here "
+                
                 return close(
                     intent_request,
                     'Fulfilled',
@@ -395,7 +390,7 @@ def dispatch(intent_request):
                 message = invoke_agent(agent_id, agent_alias_id, session_id, compare_uni_programmes_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
-                session_attributes['chartData'] = "put chart data here "
+                
                 return close(
                         intent_request,
                         'Fulfilled',
@@ -423,7 +418,7 @@ def dispatch(intent_request):
                 message = f"the governorate you selected is: {governorate_name}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
-                session_attributes['chartData'] = "put chart data here "
+                
                 return close(
                         intent_request,
                         'Fulfilled',
@@ -443,7 +438,7 @@ def dispatch(intent_request):
                 message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
-                session_attributes['chartData'] = "put chart data here "
+                
                 return close(
                         intent_request,
                         'Fulfilled',
@@ -455,7 +450,7 @@ def dispatch(intent_request):
                 message = f"Comparision of schools: {compareschool_type}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
-                session_attributes['chartData'] = "put chart data here "
+                
                 return close(
                         intent_request,
                         'Fulfilled',
@@ -478,10 +473,12 @@ def dispatch(intent_request):
                     'CompareVocationalaspectSlot',
                     slots=get_slots(intent_request)
                 ) 
-            message = f"the vocational training center : {comparevocational_type} choosen for the {comparevocationalaspect} aspect"
+            # message = f"the vocational training center : {comparevocational_type} choosen for the {comparevocationalaspect} aspect"
+            compare_training_center_prompt = create_compare_vocational_training_centres(comparevocational_type, comparevocationalaspect)
+            message = invoke_agent(agent_id, agent_alias_id, "123", compare_training_center_prompt)
             response = create_message(message)
             session_attributes = get_session_attributes(intent_request)
-            session_attributes['chartData'] = "put chart data here"
+            
             return close(
                  intent_request,
                  'Fulfilled',
@@ -491,13 +488,14 @@ def dispatch(intent_request):
                  
     # Handle OtherIntent
     elif intent_name == 'OtherIntent':
-        slots = get_slots(intent_request)
         other_question = get_slot(intent_request, 'OtherQuestionsSlot')
-        if other_question:
-            response = f"You asked: '{other_question}'. Processing your request."
-        else:
-            response = "What are the questions in your mind?"
-
+        if not other_question:
+            elicit_slot(
+                intent_request,
+                "OtherQuestionsSlot",
+            )
+        # response = f"You asked: '{other_question}'. Processing your request."
+        response = invoke_agent(agent_id, agent_alias_id, "123", other_question)
         message = create_message(response)
         return close(
             intent_request,
