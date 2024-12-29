@@ -4,6 +4,7 @@ import { emptySchoolTable } from './CSV-Functions/emptySchoolTable';
 import { processVocationalReviews } from './CSV-Functions/processVocationalReviews';
 import { processHigherEducationProgrammeReviews } from './CSV-Functions/processHigherEducationProgrammeReviews';
 import { emptyTable } from './CSV-Functions/emptyTable';
+import { processUniversityReviews } from './CSV-Functions/processUniversities';
 
 export async function handler(event: S3Event, context: Context): Promise<void> {
     for (const record of event.Records) {
@@ -29,6 +30,10 @@ export async function handler(event: S3Event, context: Context): Promise<void> {
             case 'CSVFiles/Results of Vocational Reviews.csv':
                 await emptyTable(process.env.VOCATIONAL_REVIEWS_TABLE_NAME!);
                 await processVocationalReviews(bucketName, objectKey, process.env.VOCATIONAL_REVIEWS_TABLE_NAME!);
+                break;
+                case 'CSVFiles/Results of University Reviews.csv':
+                await emptyTable(process.env.UNIVERSITY_REVIEWS_TABLE_NAME!);
+                await processUniversityReviews(bucketName, objectKey, process.env.UNIVERSITY_REVIEWS_TABLE_NAME!);
                 break;
             default:
                 console.warn(`No processing function defined for file: ${objectKey}`);

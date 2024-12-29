@@ -7,6 +7,8 @@ const Filter = () => {
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
+
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
     "Institute Level": [],
@@ -322,30 +324,7 @@ const Filter = () => {
         showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
         return;
       }
-    
-      if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
-        // Check multi-select for Institute Name in schools table
-        if (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2) {
-          showMessage("Please select at least two institutes in Compare mode.", "error");
-          return;
-        }
-        console.log("Comparing the following institutes:", selectedOptions["Institute Name"]);
-      } else if (educationType === "universities") {
-        // Check multi-select for University Name in universities table
-        if (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2) {
-          showMessage("Please select at least two universities in Compare mode.", "error");
-          return;
-        }
-        console.log("Comparing the following universities:", selectedOptions["University Name"]);
-      } else {
-        showMessage("Invalid education type selected.", "error");
-        return;
-      }
-    
-      // Proceed with comparison logic based on selected items
-      console.log("Comparison successful for education type:", educationType);
-    } 
-    
+    }
 
     const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
     const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
@@ -379,11 +358,11 @@ const Filter = () => {
           body: JSON.stringify(prompt),
         });
 
-        const body = await response.json();
-        console.log("API Response:", body);
-        showMessage("Data successfully sent to the server!", "success");
+        const data = await response.json();
+        setBedrockResponse(data.response);
+        showMessage("Data successfully received!", "success");
       } catch (error) {
-        console.error("Error sending data to Bedrock:", error);
+        console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
       }
     } else {
@@ -405,6 +384,7 @@ const Filter = () => {
     setUserModifiedSentence(false);
     setUserAdditions("");
     setLastGeneratedSentence("");
+    setBedrockResponse(null);
   };
 
 
@@ -526,8 +506,11 @@ const Filter = () => {
                       <span onClick={handleSentenceEdit} className="cursor-pointer">
                         {editableSentence || generateSentence()}
                       </span>
+                      
                     )}
                   </div>
+                 
+                  
                   {isEditing && (
                     <div className="mt-4 text-center">
                       <button
@@ -538,6 +521,7 @@ const Filter = () => {
                       </button>
                     </div>
                   )}
+                  
                   <div className="mt-6 text-center">
                     <button
                       onClick={handleSubmit}
@@ -556,6 +540,19 @@ const Filter = () => {
               )}
             </>
           )}
+                    {bedrockResponse && (
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4">Analysis Results</h3>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="prose max-w-none">
+                  {bedrockResponse.split('\n').map((paragraph, index) => (
+                    <p key={index} className="mb-4">{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
       </div>
   );
 };
