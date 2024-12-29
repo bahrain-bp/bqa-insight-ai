@@ -338,7 +338,6 @@ def create_uni_analyze_prompt(program_name, standard):
     return prompt
 
 
-
 def create_compare_uni_prompt(university_names, standard="Quality of Teaching and Learning"):
     prompt = f"""
         Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
@@ -473,6 +472,7 @@ def create_compare_uni_prompt(university_names, standard="Quality of Teaching an
         Conclusion:
         """
     return prompt
+
 
 def create_program_uni_analyze_prompt(standard, programme_name, institute_name):
     prompt = f"""
