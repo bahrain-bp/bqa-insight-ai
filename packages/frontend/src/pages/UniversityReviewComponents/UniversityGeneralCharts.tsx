@@ -134,6 +134,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
+        datalabels: {display: false},
         legend: { position: 'right' as const },
         title: { 
           display: true,
@@ -146,6 +147,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
+        datalabels: {display: false},
         legend: { position: 'right' as const },
         title: { 
           display: true,
@@ -158,6 +160,7 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
+        datalabels: {display: false},
         legend: { position: 'top' as const },
         title: { 
           display: true,
