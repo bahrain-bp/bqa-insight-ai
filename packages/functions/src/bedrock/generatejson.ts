@@ -1,3 +1,4 @@
+
 import {
     BedrockAgentRuntimeClient,
     InvokeAgentCommand,
@@ -187,8 +188,20 @@ export const generateJson = async (event :  string ) => {
                             }
                     </formatting>
                     Given text: ${event}
+
+                    
                     `, 
+                    
     });
+    console.log("Generated Output:",generateJson );
+
+
+
+    
+
+
+
+    
 
     try {
         let completion = "";
@@ -228,6 +241,7 @@ export const generateJson = async (event :  string ) => {
       }
 
         return {
+
            decodedResponse // Handle the result here
        
         };
@@ -240,3 +254,5 @@ export const generateJson = async (event :  string ) => {
     console.log(error);
   }
 };
+
+
