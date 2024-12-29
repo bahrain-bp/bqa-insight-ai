@@ -35,19 +35,19 @@ export const handler: APIGatewayProxyHandler = async () => {
       TableName: tableName,
     };
 
-    console.log("Scan parameters:", JSON.stringify(scanParams, null, 2));
+    // console.log("Scan parameters:", JSON.stringify(scanParams, null, 2));
 
     const command = new ScanCommand(scanParams);
     const response = await client.send(command);
 
-    console.log("Raw response from DynamoDB:", JSON.stringify(response, null, 2));
+    // console.log("Raw response from DynamoDB:", JSON.stringify(response, null, 2));
 
     // Transform the data to match frontend expectations
     const items: UniversityData[] = response.Items?.map((item) => {
-      console.log("Processing item:", JSON.stringify(item, null, 2));
+      // console.log("Processing item:", JSON.stringify(item, null, 2));
       
       const reviews = parseReviews(item.Reviews);
-      console.log("Parsed reviews:", JSON.stringify(reviews, null, 2));
+      // console.log("Parsed reviews:", JSON.stringify(reviews, null, 2));
       
       // Calculate average judgement
       const averageJudgement = calculateAverageJudgement(reviews);
@@ -63,14 +63,10 @@ export const handler: APIGatewayProxyHandler = async () => {
     // Filter out items with empty institution names
     const validItems = items.filter(item => item.InstitutionName !== "");
     
-    console.log("Final processed items:", JSON.stringify(validItems, null, 2));
+    // console.log("Final processed items:", JSON.stringify(validItems, null, 2));
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
       body: JSON.stringify({
         success: true,
         data: validItems,
@@ -80,13 +76,10 @@ export const handler: APIGatewayProxyHandler = async () => {
     console.error("Error retrieving university reviews:", error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
       body: JSON.stringify({
         success: false,
-        error: (error as Error).message,
+        message: "Could not retrieve universities",
+        error,
       }),
     };
   }
