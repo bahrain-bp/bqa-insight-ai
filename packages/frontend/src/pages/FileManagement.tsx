@@ -240,7 +240,7 @@ const FileManagement: React.FC = () => {
         {/* Sticky Header for Buttons and Search */}
         <div className="sticky top-[64px] bg-white z-10 shadow-sm p-4 border-b border-stroke dark:bg-boxdark dark:border-strokedark">
           {/* Upload Section */}
-          <div className="flex items-center justify-center mb-4 space-x-2">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-4">
             <label
               htmlFor="fileUpload"
               className="bg-primary flex cursor-pointer items-center justify-center gap-2 rounded py-1 px-3 text-sm font-medium text-white hover:bg-opacity-90"
@@ -276,7 +276,7 @@ const FileManagement: React.FC = () => {
             </label>
             {/* Disclaimer Button */}
             <button
-              className="flex items-center justify-center w-8 h-8 bg-yellow-500 text-white rounded-full hover:bg-yellow-600"
+              className="flex items-center justify-center self-center w-8 h-8 bg-yellow-500 text-white rounded-full hover:bg-yellow-600"
               onClick={() => setShowDisclaimer(true)}
               title="File Upload Guidelines"
             >
@@ -285,9 +285,9 @@ const FileManagement: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between mb-4">
+          <div className="flex flex-col sm:flex-row gap-3 justify-between mb-4">
             <button
-              className="flex items-center gap-2 rounded bg-danger py-1 px-3 text-white disabled:bg-gray-300"
+              className="flex items-center justify-center gap-2 rounded bg-danger py-1 px-3 text-white disabled:bg-gray-300"
               onClick={() => setDeletePrompt(true)}
               disabled={deleting || selectedFiles.length === 0}
             >
@@ -295,7 +295,7 @@ const FileManagement: React.FC = () => {
               Delete Selected
             </button>
             <button
-              className="flex items-center gap-2 rounded bg-secondary py-1 px-3 text-white disabled:bg-gray-300"
+              className="flex items-center justify-center gap-2 rounded bg-secondary py-1 px-3 text-white disabled:bg-gray-300"
               onClick={handleDownload}
               disabled={selectedFiles.length === 0 || downloading}
             >
