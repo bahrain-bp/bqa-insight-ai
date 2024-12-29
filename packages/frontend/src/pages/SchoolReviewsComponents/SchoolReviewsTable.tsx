@@ -92,12 +92,13 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
+        g
       }
       .pdf-export th, .pdf-export td {
         border: 1px solid #ddd;
         padding: 8px;
         font-size: 12px;
-        direction: auto; /* Ensures proper text direction for Arabic */
+        direction: auto;
       }
       .pdf-export th {
         background-color: #f5f5f5;
