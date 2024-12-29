@@ -388,7 +388,7 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
             </button>
             <button
               onClick={exportToPDF}
-              className="bg-primary hover:bg-[#1E3A8A] text-white px-4 py-2 rounded"
+              className="bg-primary hover:bg-primary text-white px-4 py-2 rounded"
             >
               Export to PDF
             </button>

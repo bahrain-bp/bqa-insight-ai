@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import * as XLSX from 'xlsx';
+import LogoIcon from '../../images/BQA.png';
 
 interface Review {
   Title: string;
@@ -38,6 +40,162 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     if (!Array.isArray(reviews) || reviews.length === 0) return null;
     return reviews[reviews.length - 1];
   }
+
+  const exportToExcel = () => {
+    const exportData = displayedData.map(university => {
+      const latestReview = getLatestReview(university.Reviews);
+      
+      return {
+        'Institution Code': university.InstitutionCode,
+        'Institution Name': university.InstitutionName,
+        'Latest Program': latestReview?.Program || 'N/A',
+        'Latest Judgement': latestReview?.Judgement || 'N/A',
+        'Number of Reviews': university.Reviews.length,
+        'Latest Review Type': latestReview?.Type || 'N/A',
+        'Latest Study Field': latestReview?.UnifiedStudyField || 'N/A',
+        'Latest Cycle': latestReview?.Cycle || 'N/A'
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Universities');
+    const fileName = `Universities_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  };
+
+  const exportToPDF = async () => {
+    const printDiv = document.createElement('div');
+    printDiv.className = 'pdf-export';
+  
+    const style = document.createElement('style');
+    style.textContent = `
+      .pdf-export {
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        margin-bottom: 40px;
+      }
+      .pdf-header {
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 20px;
+        padding-top: 0;
+        margin-top: -15px;
+        margin-bottom: 40px;
+      }
+      .pdf-header img {
+        max-height: 60px;
+        object-fit: contain;
+      }
+      .pdf-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px 0;
+        padding-bottom: 20px;
+        clear: both;
+      }
+      .pdf-export table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+      .pdf-export th, .pdf-export td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        font-size: 12px;
+        direction: auto;
+      }
+      .pdf-export th {
+        background-color: #f5f5f5;
+        font-weight: bold;
+      }
+      .pdf-export tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+      .pdf-export tr {
+        page-break-inside: avoid;
+      }
+    `;
+    printDiv.appendChild(style);
+
+    const header = document.createElement('div');
+    header.className = 'pdf-header';
+    const logo = document.createElement('img');
+    logo.src = LogoIcon;
+    header.appendChild(logo);
+    printDiv.appendChild(header);
+
+    const title = document.createElement('div');
+    title.className = 'pdf-title';
+    title.textContent = 'University Reviews Summary';
+    printDiv.appendChild(title);
+
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const headers = [
+      'Institution Code',
+      'Institution Name',
+      'Latest Program',
+      'Latest Judgement',
+      'Number of Reviews',
+      'Latest Study Field',
+      'Latest Cycle'
+    ];
+    
+    headers.forEach(header => {
+      const th = document.createElement('th');
+      th.textContent = header;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    displayedData.forEach(university => {
+      const latestReview = getLatestReview(university.Reviews);
+      const row = document.createElement('tr');
+      
+      const rowData = [
+        university.InstitutionCode,
+        university.InstitutionName,
+        latestReview?.Program || 'N/A',
+        latestReview?.Judgement || 'N/A',
+        university.Reviews.length,
+        latestReview?.UnifiedStudyField || 'N/A',
+        latestReview?.Cycle || 'N/A'
+      ];
+
+      rowData.forEach(text => {
+        const td = document.createElement('td');
+        td.textContent = String(text);
+        row.appendChild(td);
+      });
+      
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+    printDiv.appendChild(table);
+
+    await new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = resolve;
+      document.head.appendChild(script);
+    });
+
+    const opt = {
+      margin: 1,
+      filename: `Universities_Export_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+    };
+
+    // @ts-ignore (html2pdf is loaded dynamically)
+    await html2pdf().set(opt).from(printDiv).save();
+  };
 
   const filteredData = useMemo(() => {
     return data.filter((university) => {
@@ -117,18 +275,34 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
   return (
     <div className="w-full">
       <div className="mb-4 flex flex-col space-y-4">
-        <div>
-          <span className="font-semibold mr-2">Filter by Judgement:</span>
-          <select
-            value={judgementFilter}
-            onChange={(e) => setJudgementFilter(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1"
-          >
-            <option value="all">All Judgements</option>
-            <option value="confidence">Confidence</option>
-            <option value="limited confidence">Limited Confidence</option>
-            <option value="no confidence">No Confidence</option>
-          </select>
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="font-semibold mr-2">Filter by Judgement:</span>
+            <select
+              value={judgementFilter}
+              onChange={(e) => setJudgementFilter(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-1"
+            >
+              <option value="all">All Judgements</option>
+              <option value="confidence">Confidence</option>
+              <option value="limited confidence">Limited Confidence</option>
+              <option value="no confidence">No Confidence</option>
+            </select>
+          </div>
+          <div className="space-x-2">
+            <button
+              onClick={exportToExcel}
+              className="bg-[#0F7E0F] hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
+            >
+              Export to Excel
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="bg-primary hover:bg-primary text-white px-4 py-2 rounded"
+            >
+              Export to PDF
+            </button>
+          </div>
         </div>
 
         <div>

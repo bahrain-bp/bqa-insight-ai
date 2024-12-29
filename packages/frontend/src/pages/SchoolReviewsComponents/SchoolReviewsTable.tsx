@@ -460,7 +460,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
           </button>
           <button
             onClick={exportToPDF}
-            className="bg-primary hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
+            className="bg-primary hover:bg-primary text-white px-4 py-2 rounded"
           >
             Export to PDF
           </button>
