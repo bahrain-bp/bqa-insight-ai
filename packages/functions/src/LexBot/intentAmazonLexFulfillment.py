@@ -232,7 +232,7 @@ def dispatch(intent_request):
           
 
             # If Program is selected, check ProgramNameSlot
-            if analysis_type == 'Program':
+            if analysis_type == 'Program Review':
                 program_name = get_slot(intent_request, 'ProgramNameSlot')
                 if program_name is None :
                     return elicit_slot(
@@ -249,7 +249,7 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request),
                     )
 
-                message = f"Put hte damn response here bro: {program_name} {standard}"
+                message = f"for the following {standard} the standard {program_name} "
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here bro"
@@ -260,7 +260,7 @@ def dispatch(intent_request):
                     session_attributes,
                 )
 
-            elif analysis_type == 'Standard':
+            elif analysis_type == 'Institutional Review':
                 return elicit_intent(
                     intent_request,
                     'StandardSlot',
@@ -307,25 +307,42 @@ def dispatch(intent_request):
             )
         
         if institutecompare_type == 'University':
-            compare_type = get_slot(intent_request,'CompareUniversitySlot')
-            if not compare_type:
+            compare_types = get_slot(intent_request,'CompareUniversitySlot')
+            if not compare_types:
                   return elicit_slot(
                 intent_request,
                 'CompareUniversitySlot',
                 slots=get_slots(intent_request),
             )
 
+            # comp_type = get_slot(intent_request, 'CompareUniSlot')
+            # if not comp_type:
+            #       return elicit_slot(
+            #         intent_request,
+            #         'CompareUniSlot',
+            #         slots=get_slots(intent_request)
+            #  )
 
-            if compare_type == 'Universities':
-                Uni_name = get_slot(intent_request,'CompareUniversityWUniSlot')
+
+            if compare_types == 'Institutional review':
+                Uni_name = get_slot(intent_request,'CompareUniSlot')
                 if Uni_name is None:
                     return elicit_slot(
                         intent_request,
-                        'CompareUniversityWUniSlot',
+                        'CompareUniSlot',
                         slots=get_slots(intent_request),
                     )
+                
+                comp_type = get_slot(intent_request,'CompareUniversityWUniSlot')
+                if not comp_type:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareUniversityWUniSlot',
+                        slots=get_slots(intent_request)
+                    )
+                
 
-                message = f"the universities are: {Uni_name}"
+                message = f"based on {Uni_name} and the universities: {comp_type}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
@@ -336,16 +353,26 @@ def dispatch(intent_request):
                     session_attributes,
                 )
         
-            elif compare_type == 'Programs':
-                programs_names = get_slot(intent_request,'CompareUniversityWProgramsSlot')
-                if programs_names is None:
+            elif compare_types == 'Programs':
+                programs_st = get_slot(intent_request,'CompareUniversityWProgramsSlot')
+                if programs_st is None:
                     return elicit_slot(
                         intent_request,
                         'CompareUniversityWProgramsSlot',
                         slots=get_slots(intent_request),
                     )
+                
+                program_names = get_slot(intent_request,'CompareUniversityWprogSlot')
+                if program_names is None:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareUniversityWprogSlot',
+                        slots=get_slots(intent_request)
+                    )
+                
+
         
-                message = f"the programs are: {programs_names}"
+                message = f"the program standatd {programs_st} for the {program_names}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
