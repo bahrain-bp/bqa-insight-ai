@@ -456,11 +456,11 @@ const Filter = () => {
           {submittedMessage}
         </div>
       )}
-        <div className="flex items-center mb-4 space-x-8">
-          <div className="flex items-center flex-1">
-            <label className="block font-semibold text-2xl mr-4">Insighting To</label>
+        <div className="flex flex-wrap items-center mb-4 gap-4">
+          <div className="flex gap-3 flex-col sm:flex-row flex-1">
+            <label className="block font-semibold text-2xl mr-4 text-nowrap">Insight</label>
             <select
-              className="p-2 border rounded text-sm w-48"
+              className="p-2 border rounded text-sm grow max-w-48"
               value={mode}
               onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
             >
@@ -470,10 +470,10 @@ const Filter = () => {
             </select>
           </div>
 
-          <div className="flex items-center flex-1">
-            <label className="block font-semibold text-2xl mr-4">Education Level</label>
+          <div className="flex gap-3 flex-col sm:flex-row flex-1">
+            <label className="block font-semibold text-2xl mr-4 text-nowrap">Education Level</label>
             <select
-              className="p-2 border rounded text-sm w-48"
+              className="p-2 border rounded text-sm grow max-w-48"
               value={educationType}
               onChange={handleEducationTypeChange}
             >
@@ -486,7 +486,7 @@ const Filter = () => {
 
         {mode && educationType && (
           <>
-            <div className="grid grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {Object.keys(getCurrentFilters()).map((header) => (
                 <div key={header} className="w-full">
                   <label className="block text-sm font-semibold mb-2">{header}</label>
