@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useContext } from "react";
+import { LexChartSlotsContext } from "../components/RouterRoot"; // Import the context
 
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
@@ -9,6 +9,10 @@ const Filter = () => {
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
 
+  const [latestYear, setLatestYear] = useState<string>("");
+  const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
+
+  
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
     "Institute Level": [],
@@ -77,6 +81,12 @@ const Filter = () => {
         
         if (educationType === "schools") {
           setFilterOptions(data.filters);
+          // Find and store the latest year
+          if (data.filters["Report Year"]?.length > 0) {
+            const years = data.filters["Report Year"].map(Number);
+            const maxYear = Math.max(...years).toString();
+            setLatestYear(maxYear);
+          }
         } else if (educationType === "universities") {
           setUniversityFilters(data.universityFilters);
         }
@@ -89,7 +99,6 @@ const Filter = () => {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
-
   useEffect(() => {
     if (!userModifiedSentence) {
       const newSentence = generateSentence();
@@ -314,6 +323,9 @@ const Filter = () => {
     }, 3000);
   };
 
+
+  
+
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const sentence = editableSentence;
@@ -323,6 +335,16 @@ const Filter = () => {
       if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
         showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
         return;
+      }
+    
+      if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
+        if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
+          showMessage("Please select at least two institutes in Compare mode.", "error");
+          return;
+        } else if (educationType === "universities" && (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2)) {
+          showMessage("Please select at least two universities in Compare mode.", "error");
+          return;
+        }
       }
     }
 
@@ -336,19 +358,30 @@ const Filter = () => {
 
     if (sentence) {
       try {
+        // Create a copy of selectedOptions for submission
+        let submissionOptions = { ...selectedOptions };
+        
+        // If it's schools and no year is selected, use the latest year
+        if (educationType === "schools" && (!selectedOptions["Report Year"]?.length) && latestYear) {
+          submissionOptions = {
+            ...submissionOptions,
+            "Report Year": [latestYear]
+          };
+        }
+
         const prompt = {
           userMessage: sentence,
           educationType,
           ...(educationType === "schools" ? {
-            classification: selectedOptions["Institute Classification"],
-            level: selectedOptions["Institute Level"],
-            location: selectedOptions["Location"],
-            instituteName: selectedOptions["Institute Name"],
-            reportYear: selectedOptions["Report Year"]
+            classification: submissionOptions["Institute Classification"],
+            level: submissionOptions["Institute Level"],
+            location: submissionOptions["Location"],
+            instituteName: submissionOptions["Institute Name"],
+            reportYear: submissionOptions["Report Year"]
           } : {
-            universityName: selectedOptions["University Name"],
-            programmeName: selectedOptions["Programme Name"],
-            programmeJudgment: selectedOptions["Programme Judgment"]
+            universityName: submissionOptions["University Name"],
+            programmeName: submissionOptions["Programme Name"],
+            programmeJudgment: submissionOptions["Programme Judgment"]
           })
         };
 
@@ -358,9 +391,31 @@ const Filter = () => {
           body: JSON.stringify(prompt),
         });
 
-        const data = await response.json();
-        setBedrockResponse(data.response);
+        const body = await response.json();
+        setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
+
+        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
+          const slots = {
+            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            CompareSpecificInstitutesSlot:
+              mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
+            ProgramNameSlot: undefined,
+            AnalyzeVocationalSlot: undefined,
+            CompareUniversityWUniSlot: undefined,
+            CompareUniversityWProgramsSlot: undefined,
+            CompareSchoolSlot: undefined,
+            CompareVocationalSlot: undefined,
+          };
+          
+          setChartSlots(slots); // Update context with selected filters
+          console.log("Updated chart slots:", slots);
+          
+        }
+
+        console.log("API Response:", body);
+        
+        showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
         console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
@@ -369,6 +424,7 @@ const Filter = () => {
       showMessage("Please select options.", "error");
     }
   };
+
 
   const handleClear = () => {
     const currentFilters = getCurrentFilters();
@@ -503,10 +559,14 @@ const Filter = () => {
                         className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
                       />
                     ) : (
-                      <span onClick={handleSentenceEdit} className="cursor-pointer">
+                      <div 
+                        onClick={handleSentenceEdit} 
+                        className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
+                        title="Click to edit"
+                      >
                         {editableSentence || generateSentence()}
-                      </span>
-                      
+                        <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
+                      </div>
                     )}
                   </div>
                  

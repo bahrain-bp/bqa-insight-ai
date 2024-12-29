@@ -125,7 +125,7 @@ function App() {
           path="/UniversityReviews"
           element={
               <>
-                  <PageTitle title="Vocational Reviews" />
+                  <PageTitle title="University Reviews" />
                   <UniversityReviews />
               </>
               }

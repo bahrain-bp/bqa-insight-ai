@@ -17,7 +17,7 @@ export function UniversityReviews() {
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchUniversityReviews`);
         if (!response.ok) {
-          throw new Error(`Network response was not ok: ${response.statusText}`);
+          throw new Error(`Network response was not ok: ${response.body}`);
         }
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
