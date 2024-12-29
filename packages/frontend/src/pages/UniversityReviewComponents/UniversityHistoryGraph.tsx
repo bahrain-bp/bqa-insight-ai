@@ -153,6 +153,9 @@ export function UniversityHistoryGraph({ data }: UniversityHistoryGraphProps) {
       },
       y: {
         stacked: true,
+        ticks: {
+          precision: 0,
+        },
         title: {
           display: true,
           text: 'Number of Reviews',
