@@ -60,34 +60,34 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
   const exportToPDF = async () => {
     const printDiv = document.createElement('div');
     printDiv.className = 'pdf-export';
-    
+  
     const style = document.createElement('style');
     style.textContent = `
       .pdf-export {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  margin-bottom: 40px; /* Added to prevent table cutoff */
-}
-.pdf-header {
-  display: flex;
-  justify-content: flex-end;
-  padding-right: 20px;
-  padding-top: 0;
-  margin-top: -15px;
-  margin-bottom: 40px; /* Increased space between logo and title */
-}
-.pdf-header img {
-  max-height: 60px;
-  object-fit: contain;
-}
-.pdf-title {
-  text-align: center;
-  font-size: 24px;
-  font-weight: bold;
-  margin: 20px 0;
-  padding-bottom: 20px;
-  clear: both; /* Ensures proper spacing after logo */
-}
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        margin-bottom: 40px; /* Added to prevent table cutoff */
+      }
+      .pdf-header {
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 20px;
+        padding-top: 0;
+        margin-top: -15px;
+        margin-bottom: 40px; /* Increased space between logo and title */
+      }
+      .pdf-header img {
+        max-height: 60px;
+        object-fit: contain;
+      }
+      .pdf-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 20px 0;
+        padding-bottom: 20px;
+        clear: both; /* Ensures proper spacing after logo */
+      }
       .pdf-export table {
         width: 100%;
         border-collapse: collapse;
@@ -97,6 +97,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
         border: 1px solid #ddd;
         padding: 8px;
         font-size: 12px;
+        direction: auto; /* Ensures proper text direction for Arabic */
       }
       .pdf-export th {
         background-color: #f5f5f5;
@@ -104,6 +105,9 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
       }
       .pdf-export tr:nth-child(even) {
         background-color: #f9f9f9;
+      }
+      .pdf-export tr {
+        page-break-inside: avoid; /* Prevents row splitting across pages */
       }
     `;
     printDiv.appendChild(style);
@@ -456,7 +460,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
           </button>
           <button
             onClick={exportToPDF}
-            className="bg-[#0F7E0F] hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
+            className="bg-primary hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
           >
             Export to PDF
           </button>
