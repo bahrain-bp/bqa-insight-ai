@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef, useContext} from "react";
 import "../../css/chatbot.css"; // Ensure to include your CSS here
 
 // import DynamicChart from "../../pages/Dashboard/dynamicChart.tsx";
-import {ChartContext} from "../RouterRoot.tsx";
+import {LexChartSlots, LexChartSlotsContext} from "../RouterRoot.tsx";
 
 
 type ImageResponseCard = {
@@ -19,7 +19,6 @@ type Message = {
     timeout?: number; // Optional timeout
 };
 
-let graph = "";
 
 // const ChatBot = () => {
 //     const {isChatOpen, setIsChatOpen} = useContext(ChatContext)
@@ -69,7 +68,7 @@ export const Chat = () => {
                 },
             ],
         }]);*/
-    const {chartJson, setChartJson} = useContext(ChartContext)
+    const {setChartSlots} = useContext(LexChartSlotsContext)
 
     const addMessage = (item: Message) => {
         const messageWithDefaults = {timeout: 0, ...item}; // Ensure default timeout is applied
@@ -126,6 +125,18 @@ export const Chat = () => {
             throw error
         }
     }
+    const getLexChartSlots = (lexResponse: any): LexChartSlots => {
+        const lexSlots = lexResponse.sessionState.intent.slots
+        const lexChartSlots: LexChartSlots = {ProgramNameSlot: undefined, AnalyzeSchoolSlot: undefined, CompareSchoolSlot: undefined, AnalyzeVocationalSlot: undefined, CompareVocationalSlot: undefined, CompareUniversityWUniSlot: undefined, CompareSpecificInstitutesSlot: undefined, CompareUniversityWProgramsSlot: undefined}
+        Object.keys(lexSlots).map((slot) => {
+            console.log("Checking slot " + slot)
+            if (slot in lexChartSlots) {
+                console.log(`Found slot ${slot}`)
+                lexChartSlots[slot as keyof LexChartSlots] = lexSlots[slot].value.interpretedValue
+            }
+        })
+        return lexChartSlots
+    }
 
     const messageLex = async (message: string) => {
         try {
@@ -146,6 +157,7 @@ export const Chat = () => {
             }
             const result = await lexResponse.json()
             const body = result.response
+            setChartSlots(getLexChartSlots(body))
             console.log("lex response: ", body)
             const hasImageResponseCard = body.messages[0].contentType === "ImageResponseCard"
             if (hasImageResponseCard) {
@@ -162,194 +174,13 @@ export const Chat = () => {
         } 
     }
 
-    // @ts-expect-error it will not be used
-    const replaceLastMessageGraph = (item: Message) => {
-        try {
-            // Use the hardcoded JSON or your dynamic JSON data
-
-            //const validJson = "{\"title\": \"Overall Effectiveness of Sar Primary Boys School\", \"chartType\": \"line\", \"data\": [{\"reviewYear\": \"2019\", \"score\": \"3\"}, {\"reviewYear\": \"2020\", \"score\": \"4\"}, {\"reviewYear\": \"2021\", \"score\": \"3.5\"}, {\"reviewYear\": \"2022\", \"score\": \"4.2\"}, {\"reviewYear\": \"2023\", \"score\": \"4.5\"}]}";
-
-            if (typeof item.body !== "string") {
-                return;
-            }
-            //sorry for the sin I commited here *those who knows*
-            const validJsonArr: Array<string> = [
-                JSON.stringify({
-                    "title": "School Performance Trends Over Time",
-                    "chartType": "line",
-                    "data": [
-                        {"school": "The Indian School", "year": 2011, "score": 3},
-                        {"school": "The Indian School", "year": 2014, "score": 3},
-                        {"school": "The Indian School", "year": 2018, "score": 3},
-                        {"school": "Arabian Pearl Gulf School", "year": 2011, "score": 2},
-                        {"school": "Arabian Pearl Gulf School", "year": 2015, "score": 2},
-                        {"school": "Arabian Pearl Gulf School", "year": 2019, "score": 2},
-                        {"school": "Alia National School", "year": 2011, "score": 3},
-                        {"school": "Alia National School", "year": 2014, "score": 3},
-                        {"school": "Alia National School", "year": 2018, "score": 3},
-                        {"school": "Abdul Rahman Kanoo School", "year": 2011, "score": 2},
-                        {"school": "Abdul Rahman Kanoo School", "year": 2014, "score": 2},
-                        {"school": "Abdul Rahman Kanoo School", "year": 2017, "score": 3},
-                        {"school": "Al Hekma School", "year": 2013, "score": 3},
-                        {"school": "Al Hekma School", "year": 2015, "score": 3},
-                        {"school": "Al Hekma School", "year": 2019, "score": 3}
-                    ]
-                }),
-                JSON.stringify({
-                    "title": "School Performance Comparison",
-                    "chartType": "bar",
-                    "data": [
-                        {"school": "The Indian School", "reviewCycle": "2018", "score": 3},
-                        {"school": "Arabian Pearl Gulf School", "reviewCycle": "2019", "score": 2},
-                        {"school": "Alia National School", "reviewCycle": "2018", "score": 3},
-                        {"school": "Abdul Rahman Kanoo School", "reviewCycle": "2017", "score": 3},
-                        {"school": "Al Hekma School", "reviewCycle": "2019", "score": 3}
-                    ]
-                }),
-                JSON.stringify({
-                    "title": "Score Distribution in 2018 Review Cycle",
-                    "chartType": "pie",
-                    "data": [
-                        {"school": "The Indian School", "score": 3},
-                        {"school": "Arabian Pearl Gulf School", "score": 2},
-                        {"school": "Alia National School", "score": 3},
-                        {"school": "Abdul Rahman Kanoo School", "score": 3},
-                        {"school": "Al Hekma School", "score": 3}
-                    ]
-                }),
-                JSON.stringify({
-                    "title": "School Performance Comparison by Metrics",
-                    "chartType": "radar",
-                    "data": [
-                        {
-                            "metric": "Teaching Quality",
-                            "The Indian School": 3,
-                            "Arabian Pearl Gulf School": 2,
-                            "Alia National School": 3,
-                            "Abdul Rahman Kanoo School": 3,
-                            "Al Hekma School": 3
-                        },
-                        {
-                            "metric": "Student Development",
-                            "The Indian School": 3,
-                            "Arabian Pearl Gulf School": 3,
-                            "Alia National School": 3,
-                            "Abdul Rahman Kanoo School": 3,
-                            "Al Hekma School": 3
-                        },
-                        {
-                            "metric": "Governance",
-                            "The Indian School": 3,
-                            "Arabian Pearl Gulf School": 2,
-                            "Alia National School": 3,
-                            "Abdul Rahman Kanoo School": 3,
-                            "Al Hekma School": 3
-                        }
-                    ]
-                }),
-                JSON.stringify({
-                    "title": "Scores Over Time",
-                    "chartType": "scatter",
-                    "data": [
-                        {"school": "The Indian School", "year": 2011, "score": 3},
-                        {"school": "The Indian School", "year": 2014, "score": 3},
-                        {"school": "The Indian School", "year": 2018, "score": 3},
-                        {"school": "Arabian Pearl Gulf School", "year": 2011, "score": 2},
-                        {"school": "Arabian Pearl Gulf School", "year": 2015, "score": 2},
-                        {"school": "Arabian Pearl Gulf School", "year": 2019, "score": 2},
-                        {"school": "Alia National School", "year": 2011, "score": 3},
-                        {"school": "Alia National School", "year": 2014, "score": 3},
-                        {"school": "Alia National School", "year": 2018, "score": 3},
-                        {"school": "Abdul Rahman Kanoo School", "year": 2011, "score": 2},
-                        {"school": "Abdul Rahman Kanoo School", "year": 2014, "score": 2},
-                        {"school": "Abdul Rahman Kanoo School", "year": 2017, "score": 3},
-                        {"school": "Al Hekma School", "year": 2013, "score": 3},
-                        {"school": "Al Hekma School", "year": 2015, "score": 3},
-                        {"school": "Al Hekma School", "year": 2019, "score": 3}
-                    ]
-                })
-            ];
-
-
-            const mappedType = {
-                "line": 0,
-                "bar": 1,
-                "pie": 2,
-                "radar": 3,
-                "scatter": 4
-            };
-            let validJson = "";
-            for (const [key, value] of Object.entries(mappedType)) {
-                if (graph.includes(key)) {
-                    validJson = validJsonArr[value];
-                    break; // Exit the loop once we find a match
-                }
-            }
-
-
-            if (!validJson) {
-                throw new Error("Invalid JSON data");
-            }
-
-            setChartJson([...chartJson, JSON.parse(validJson)])
-
-
-            if (typeof item.body !== "string") {
-                return;
-            }
-
-            // Modify the message to accumulate chart data
-            const messageWithDefaults: Message = {
-                timeout: 0,
-                ...item,
-                body: "Generated Chart Displayed on Home Page",
-                dynamicChartData: validJson
-            };
-
-            setMessages((prev) => {
-                // Create a new array with the updated last message
-                const updatedMessages = [...prev];
-                const lastMessageIndex = updatedMessages.length - 1;
-
-                // If the last message already has chart data, append to it
-                if (updatedMessages[lastMessageIndex].dynamicChartData) {
-                    const existingChartData = JSON.parse(updatedMessages[lastMessageIndex].dynamicChartData || '[]');
-                    const newChartData = JSON.parse(validJson);
-
-                    // Combine the chart data
-                    const combinedChartData = JSON.stringify({
-                        ...newChartData,
-                        data: [...existingChartData.data, ...newChartData.data]
-                    });
-
-                    updatedMessages[lastMessageIndex] = {
-                        ...updatedMessages[lastMessageIndex],
-                        dynamicChartData: combinedChartData
-                    };
-                } else {
-                    // If no existing chart data, set the new data
-                    updatedMessages[lastMessageIndex] = messageWithDefaults;
-                }
-
-                return updatedMessages;
-            });
-        } catch (error) {
-            console.error("Error parsing graph data:", error);
-        }
-    };
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const input = (e.target as HTMLFormElement).elements.namedItem(
             "input"
         ) as HTMLInputElement;
-        let message = input.value;
-        const hasGraph = message.includes("graph") || message.includes("bar") || message.includes("line") || message.includes("pie") || message.includes("radar") || message.includes("scatter");
-         graph = "";
+        const message = input.value;
         const inputPlaceholder = input.placeholder
-        if (hasGraph) {
-            message = message + " in json format. do not include and clarifying information. Use the following schema: {'reviewYear': '2019', 'score': '3'}";
-            graph = message;
-        }
 
         input.value = "";
         input.disabled = true;
