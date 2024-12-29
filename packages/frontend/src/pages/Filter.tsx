@@ -12,7 +12,6 @@ const Filter = () => {
   const [latestYear, setLatestYear] = useState<string>("");
   const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
 
-  
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
     "Institute Level": [],
