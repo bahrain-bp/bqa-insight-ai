@@ -122,6 +122,7 @@ def dispatch(intent_request):
     intent_name = intent_request['sessionState']['intent']['name']
     returnToMenu = get_session_attributes(intent_request)['return'] == "true"
     retrySlots = get_session_attributes(intent_request)['retry'] == "true"
+    session_id = intent_request['sessionId']
 
     # If user wants to go back to the main menu, elicit BQAIntent
     if returnToMenu:
@@ -217,7 +218,7 @@ def dispatch(intent_request):
                 ) 
             #  message = f"the school : {school} choosen for the {schoolaspect} aspect"
              analyze_school_prompt = create_analyze_prompt(school, schoolaspect)
-             message = invoke_agent(agent_id, agent_alias_id, "123", analyze_school_prompt)
+             message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_school_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              session_attributes['chartData'] = "put chart data here"
@@ -289,7 +290,7 @@ def dispatch(intent_request):
                 # message = invoke_agent(agent_id, agent_alias_id, "1234", analyze_Uni_prompt)
 
                 analyze_programme_prompt = create_program_uni_analyze_prompt(standard, program_name, "Bahrain Polytechnic")
-                message = invoke_agent(agent_id, agent_alias_id, "123", analyze_programme_prompt)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_programme_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here bro"
@@ -368,7 +369,7 @@ def dispatch(intent_request):
                     )
 
                 prompt = create_compare_uni_prompt(Uni_name)
-                message = invoke_agent(agent_id, agent_alias_id, "123", prompt)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
@@ -391,7 +392,7 @@ def dispatch(intent_request):
                 # message = f"the programs are: {programs_names}"
                 
                 compare_uni_programmes_prompt = create_compare_programme(standard, programs_names, Uni_name)
-                message = invoke_agent(agent_id, agent_alias_id, "123", compare_uni_programmes_prompt)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_uni_programmes_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
@@ -439,7 +440,7 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request),
                     )
                 prompt = create_compare_schools_prompt(specificInstitutes_name)
-                message = invoke_agent(agent_id, agent_alias_id, "123", prompt)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
