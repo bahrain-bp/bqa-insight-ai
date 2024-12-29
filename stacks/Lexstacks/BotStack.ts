@@ -3,7 +3,6 @@ import * as cdk from "aws-cdk-lib";
 import { aws_lambda as lambda } from 'aws-cdk-lib';
 import { ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { Duration, aws_iam as iam } from "aws-cdk-lib";
-
 import {
     LexCustomResource,
     LexBotDefinition,
@@ -29,18 +28,17 @@ export function BotStack({stack}: StackContext) {
         'BQABot',
         provider.serviceToken(),
         {
-            botName: stack.stackName + '-Lex',
+            botName: stack.stackName + '-BQA-Bot',
             dataPrivacy: {
                 childDirected: false,
             },
-            description: 'A Bot for comparing educational institutes for BQA 2',
+            description: 'Educational Institute Comparison and Analysis Bot for BQA',
             idleSessionTTLInSeconds: 300,
             roleArn: provider.serviceLinkedRoleArn(),
         }
     );
 
     // Add a language for our bot to which we can add intents/slots and slot types.
-
     const locale = botDefinition.addLocale({
         localeId: 'en_US',
         nluIntentConfidenceThreshold: 0.40,
@@ -48,9 +46,6 @@ export function BotStack({stack}: StackContext) {
             voiceId: 'Ivy',
         },
     });
-
-
-    // Slot to select type of analysis
 
     locale.addSlotType({
         slotTypeName: 'BQASlotType',
@@ -72,76 +67,34 @@ export function BotStack({stack}: StackContext) {
             resolutionStrategy: 'OriginalValue'
         },
         slotTypeValues: [
-            {sampleValue: {value: 'School'}},
             {sampleValue: {value: 'Institute'}},
         ],
     })
 
-    locale.addSlotType({
-        slotTypeName: 'MetricSlotType',
-        description: 'Slot for choosing a metric for the analysis',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
-        },
-        slotTypeValues: [
-            {sampleValue: {value: 'Overall Performance'}},
-            {sampleValue: {value: 'Other'}},
-        ],
-    })
 
     const BQAIntent = locale.addIntent({
         intentName: 'BQAIntent',
-        description: 'Intent to provide user with detailed comparision of educational institutes.',
+        description: 'Main intent for educational institute comparison and analysis',
         sampleUtterances: [
             {utterance: 'Hello BQA'},
-            {utterance: 'compare'},
+            {utterance: 'Hello'},
+            {utterance: 'Hi'},
             { utterance: 'Hi BQA' },
-            { utterance: 'About' },
-            { utterance: 'Tell me more' },
-            { utterance: 'What is this?' },
-            { utterance: 'How can I get started?' },
-            { utterance: 'Good morning' },
-            { utterance: 'Explain' },
-            { utterance: 'Another' },
-            { utterance: 'Next' },
-            { utterance: 'Again' },
-            { utterance: 'Help' },
+            {utterance: 'Back'},              // Added Back utterance
+            {utterance: 'Back to the main menu'}, // Added Back to main menu utterance
+            {utterance: 'Start over'},        // Added for additional clarity
+            {utterance: 'Return to menu'}, 
         ],
         fulfillmentCodeHook: {
             enabled: true,
         },
-        // intentConfirmationSetting: {
-        //     promptSpecification: {
-        //         messageGroups: [
-        //             {
-        //                 message: {
-        //                     plainTextMessage: {
-        //                         value: 'Okay, your selected category is "{BQASlot}", please type "Confirm".',
-        //                     },
-        //                 },
-        //             },
-        //         ],
-        //         maxRetries: 2,
-        //     },
-        //     declinationResponse: {
-        //         messageGroups: [
-        //             {
-        //                 message: {
-        //                     plainTextMessage: {
-        //                         value: 'Okay, please choose another category.',
-        //                     },
-        //                 },
-        //             },
-        //         ],
-        //     },
-        // },
-
     });
+
 
     BQAIntent.addSlot({
         slotName: 'BQASlot',
         slotTypeName: 'BQASlotType',
-        description: 'The type of category to learn about',
+        description: 'The main menu of BQA',
         valueElicitationSetting: {
             slotConstraint: 'Required',
             promptSpecification: {
@@ -174,14 +127,11 @@ export function BotStack({stack}: StackContext) {
         },
     });
 
-    // New intents for each button option
     const analyzingIntent = locale.addIntent({
         intentName: 'AnalyzingIntent',
         description: 'Provide information about analyzing educational institutes',
         sampleUtterances: [
             { utterance: 'Tell me more about analyzing' },
-            { utterance: 'Analyze' },
-            { utterance: 'Analyzing' },
         ],
         fulfillmentCodeHook: {
             enabled: true,
@@ -189,17 +139,102 @@ export function BotStack({stack}: StackContext) {
     });
 
     analyzingIntent.addSlot({
-        slotName: 'InstituteSlot',
+        slotName: 'InstituteTypeSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
-        description: 'Name of the institute to analyze',
+        description: 'Type of educational institute to analyze',
         valueElicitationSetting: {
             slotConstraint: 'Required',
             promptSpecification: {
                 messageGroups: [
                     {
                         message: {
+                            imageResponseCard: { 
+                                buttons: [ 
+                                   { 
+                                      text: "University",
+                                      value: "University"
+                                   },
+                                   { 
+                                      text: "School",
+                                      value: "School"
+                                   },
+                                   { 
+                                      text: "Vocational training center",
+                                      value: "Vocational training center"
+                                   },
+                                ],
+                                title: "Which type of educational institute would you like to analyze?"
+                             },
+                          },
+                      },
+                ],
+                maxRetries: 2,
+            },
+        },
+    });
+    
+    analyzingIntent.addSlot({
+        slotName: 'AnalyzeUniversitySlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing universitie',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "Do you want to analyze based on program or standard??",
+                                buttons: [
+                                    {
+                                        text: "Program",
+                                        value: "Program"
+                                    },
+                                    {
+                                        text: "Standard",
+                                        value: "Standard"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+    analyzingIntent.addSlot({
+        slotName: 'ProgramNameSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing Universities based on program',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
                             plainTextMessage: {
-                                value: 'What school or university would you like to analyze?'
+                                value: 'write the name of the program and the university you want to analyze.',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+    analyzingIntent.addSlot({
+        slotName: 'StandardProgSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Standard to analyze',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the standard of the specific program?'
                             }
                         },
                     },
@@ -209,10 +244,21 @@ export function BotStack({stack}: StackContext) {
         },
     })
 
-    analyzingIntent.addSlot({
-        slotName: 'MetricSlot',
+    const uniStandard = locale.addIntent({
+        intentName: 'StandardIntent',
+        description: 'Intent about standards for universitites',
+        sampleUtterances: [
+            { utterance: 'Standard' },
+        ],
+        fulfillmentCodeHook: {
+            enabled: true,
+        },
+    });
+
+    uniStandard.addSlot({
+        slotName: 'StandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
-        description: 'Metric to analyze',
+        description: 'Standard to analyze',
         valueElicitationSetting: {
             slotConstraint: 'Required',
             promptSpecification: {
@@ -220,7 +266,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'What aspect would you like to analyze?'
+                                value: 'What is the standard for analysis?'
                             }
                         },
                     },
@@ -228,6 +274,89 @@ export function BotStack({stack}: StackContext) {
                 maxRetries: 2,
             },
         },
+    })
+    analyzingIntent.addSlot({
+        slotName: 'AnalyzeSchoolSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing Schools for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the name of the school you want to analyze?',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    analyzingIntent.addSlot({
+        slotName: 'SchoolAspectSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'school aspect for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'what is the aspect you want?',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    analyzingIntent.addSlot({
+        slotName: 'AnalyzeVocationalSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing Vocational training centers for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the name of the Vocational training center you want to analyze?',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    analyzingIntent.addSlot({
+        slotName: 'VocationalAspectSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'vocational aspect for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'what is the aspect you want?',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
     })
 
     const comparingIntent = locale.addIntent({
@@ -235,8 +364,6 @@ export function BotStack({stack}: StackContext) {
         description: 'Provide information about comparing educational institutes',
         sampleUtterances: [
             { utterance: 'Tell me more about comparing' },
-            { utterance: 'Compare' },
-            { utterance: 'Comparing' },
         ],
         fulfillmentCodeHook: {
             enabled: true,
@@ -244,25 +371,60 @@ export function BotStack({stack}: StackContext) {
     });
 
     comparingIntent.addSlot({
-        slotName: 'CompareInstituteSlot',
+        slotName: 'InstituteCompareTypeSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
-        description: 'Compare 2 or more institutes',
+        description: 'Type of educational institute to analyze',
         valueElicitationSetting: {
             slotConstraint: 'Required',
             promptSpecification: {
                 messageGroups: [
                     {
                         message: {
+                            imageResponseCard: { 
+                                buttons: [ 
+                                   { 
+                                      text: "University",
+                                      value: "University"
+                                   },
+                                   { 
+                                      text: "School",
+                                      value: "School"
+                                   },
+                                   { 
+                                      text: "Vocational training center",
+                                      value: "Vocational training center"
+                                   },
+                                ],
+                                title: "Which type of educational institute would you like to compare?"
+                             },
+                          },
+                      },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareUniversitySlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Compare universities based on universities or program',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
                             imageResponseCard: {
-                                title: "Do you want to compare based on governorate or specific institute's?",
+                                title: "would you like to compare universties or programs within universities?",
                                 buttons: [
                                     {
-                                        text: "Governorate",
-                                        value: "Governorate"
+                                        text: "Universities",
+                                        value: "Universities"
                                     },
                                     {
-                                        text: "Specific Institutes",
-                                        value: "Specific Institutes"
+                                        text: "Programs",
+                                        value: "Programs"
                                     }
                                 ]
                             }
@@ -274,91 +436,93 @@ export function BotStack({stack}: StackContext) {
         }
     })
 
-      
-      const compareInstitutesIntent = locale.addIntent({
-        intentName: 'CompareInstitutesIntent',
-        description: 'Provide comparison of educational institutes based on governorate',
-        sampleUtterances: [
-            { utterance: 'Specific Institutes' },
-            { utterance: 'Institute comparison' },
-            { utterance: 'Compare Institutes' },
-        ],
-        fulfillmentCodeHook: {
-            enabled: true,
-        },
-      })
-      compareInstitutesIntent.addSlot(
-        {
-          slotName: 'CompareInstitutesSlot',
-          slotTypeName: 'AMAZON.FreeFormInput',
-          valueElicitationSetting: {
-              slotConstraint: 'Required',
-              promptSpecification: {
-                  messageGroups: [
+    comparingIntent.addSlot({
+        slotName: 'CompareUniversityWUniSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'names of universities to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
                     {
                         message: {
-                          plainTextMessage: {
-                            value: "What are the names of institutes you would like to compare?"
-                          }
+                            plainTextMessage: {
+                                value: 'what are the names of universites you would like to compare'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareUniversityWProgramsSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'names of universities to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What are the programs you would like to compare? You can choose any program from any university in Bahrain'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareSchoolSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Compare schools for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "Based on what you would like to compare schools?",
+                                buttons: [
+                                    {
+                                        text: "Governorate",
+                                        value: "Governorate"
+                                    },
+                                    {
+                                        text: "Specific Institutes",
+                                        value: "Specific Institutes"
+                                    },
+                                    {
+                                        text: "All Government Schools",
+                                        value: "All Government Schools"
+                                    },
+                                    {
+                                        text: "All Private Schools",
+                                        value: "All Private Schools"
+                                    },
+                                ]
+                            }
                         }
                     }
                 ],
                 maxRetries: 2
-                }
             }
-        })
-
-    const comparedGovernorateIntent = locale.addIntent({
-        intentName: 'CompareGovernorateIntent',
-        description: 'Provide comparison of educational institutes based on governorate',
-        sampleUtterances: [
-            { utterance: 'Compare by governorate' },
-            { utterance: 'Governorate comparison' },
-            { utterance: 'Compare governorates' },
-        ],
-        fulfillmentCodeHook: {
-            enabled: true,
-        },
+        }
     })
 
-    const otherIntent = locale.addIntent({
-        intentName: 'OtherIntent',
-        description: 'Handle other inquiries about educational institutes',
-        sampleUtterances: [
-            { utterance: 'I have another question' },
-            { utterance: 'Other' },
-        ],
-        fulfillmentCodeHook: {
-            enabled: true,
-        },
-    });
-
-    otherIntent.addSlot({
-        slotName: 'OtherQuestionsSlot',
-        slotTypeName: 'AMAZON.FreeFormInput',
-        valueElicitationSetting: {
-            slotConstraint: 'Required',
-            promptSpecification: {
-                messageGroups: [
-                  {
-                      message: {
-                        plainTextMessage: {
-                          value: "What are the questions in your mind?"
-                        }
-                      }
-                  }
-              ],
-              maxRetries: 2
-              }
-          }
-    })
-
-    comparedGovernorateIntent.addSlot({
+    comparingIntent.addSlot({
         slotName: 'GovernorateSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Select the governorate to compare institutes',
         valueElicitationSetting: {
-            slotConstraint: 'Required',
+            slotConstraint: 'Optional',
             promptSpecification: {
                 messageGroups: [
                     {
@@ -392,63 +556,141 @@ export function BotStack({stack}: StackContext) {
         }
     })
 
-    
- 
-    const handleNoResponse = locale.addIntent({
-        intentName: 'HandleNoResponse',
-        description: 'Manage user response when they say no',
-        sampleUtterances: [{ utterance: 'no' }],
+    comparingIntent.addSlot({
+        slotName: 'CompareSpecificInstitutesSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'names of specific institutes to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What are the names of institutes you would like to compare?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareVocationalSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'name of vocational training center to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the names of the Vocational training centers you want to compare?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareVocationalaspectSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'name of vocational training center to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the aspects of Vocational training centers you want to compare?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    const otherIntent = locale.addIntent({
+        intentName: 'OtherIntent',
+        description: 'Handle other inquiries about educational institutes',
+        sampleUtterances: [
+            { utterance: 'I have another question' },
+            { utterance: 'Other' },
+        ],
         fulfillmentCodeHook: {
             enabled: true,
         },
     });
-    
 
-
-    // Calculation Intent
-
-/*    locale.addSlotType({
-        slotTypeName: 'ElectricityConsumptionSlot',
-        description: 'Types of electricity consumption levels',
-        valueSelectionSetting: {
-            resolutionStrategy: 'OriginalValue'
+    otherIntent.addSlot({
+        slotName: 'OtherQuestionsSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'The user\'s other questions',
+        valueElicitationSetting: {
+            slotConstraint: 'Required',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What are the questions in your mind?',
+                            },
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
         },
-        slotTypeValues: [
-            {sampleValue: {value: 'Low'}},
-            {sampleValue: {value: 'Medium'}},
-            {sampleValue: {value: 'High'}},
-            {sampleValue: {value: '300 kilowatt'}},
-        ],
-    });*/
+    });
 
-
-    // create/update the bot resource
-    const bot = botDefinition.build();
-
-    // create a version that automatically is built when the bot changes
-    const version = bot.automaticVersion();
-
-    // const fulfillmentFunction = new Function(stack, "FulfillmentFunction", {
-    //     handler: "packages/functions/src/LexBot/intentAmazonLexFulfillment.lambda_handler",
-    //     runtime: "python3.11", // SST automatically maps this
-    //     memorySize: 512,
-    //     timeout: 60,
-    //     environment: {
+    // const FallbackIntent = locale.addIntent({
+    //     intentName: 'FallbackIntent',
+    //     description: 'Default fallback intent',
+    //     parentIntentSignature: 'AMAZON.FallbackIntent',
+    //     fulfillmentCodeHook: {
+    //         enabled: true,
     //     },
-    //     permissions: ["lex"], // SST automatically configures IAM permissions
-    //
+    //     dialogCodeHook: {
+    //         enabled: true
+    //     }
+    // });
+    
+    // FallbackIntent.addSlot({
+    //     slotName: 'FallbackContext',
+    //     slotTypeName: 'BQASlotType',
+    //     valueElicitationSetting: {
+    //         slotConstraint: 'Required',
+    //         promptSpecification: {
+    //             messageGroups: [{
+    //                 message: {
+    //                     imageResponseCard: {
+    //                         buttons: [
+    //                             { text: "Analyze", value: "Analyze" },
+    //                             { text: "Compare", value: "Compare" },
+    //                             { text: "Other", value: "Other" }
+    //                         ],
+    //                         subtitle: "I didn't quite understand. What would you like me to do for you?",
+    //                         title: "Learn About Educational Institutes"
+    //                     },
+    //                 },
+    //             }],
+    //             maxRetries: 2,
+    //             allowInterrupt: true
+    //         }
+    //     }
     // });
 
-    // const lexInvokeBedrock = new iam.Role(stack, 'LexInvokeBedrock', {
-    //     assumedBy: new iam.ArnPrincipal('arn_for_trusted_principal'),
-    //   });
-    //   lexInvokeBedrock.addToPolicy(new iam.PolicyStatement({
-    //     actions: [
-    //       'bedrock:invokeModel',
-    //   ],
-    //     resources: [ "anthropic.claude-3-sonnet-20240229-v1:0" ],
-    //   }));
-
+    const bot = botDefinition.build();
+    const version = bot.automaticVersion();
     const fulfillmentPermission = {
         action: 'lambda:InvokeFunction',
         principal: new iam.ServicePrincipal('lex.amazonaws.com')
@@ -496,17 +738,7 @@ export function BotStack({stack}: StackContext) {
     // Grant permission for the Lambda function to interact with Amazon Lex
     fulfillmentFunction.grantInvoke(fulfillmentPrincipal);
 
-    fulfillmentFunction.addPermission('lex-fulfillment', fulfillmentPermission)    // const communicationFunction = new Function(stack, "CommunicationFunction", {
-    //     handler: "packages/functions/src/LexBot/communicateAmazonLexLambda.lambda_handler",
-    //     runtime: "python3.11",
-    //     memorySize: 512,
-    //     timeout: 60,
-    //     environment: {
-    //         BOT_ID: bot.resource.ref,
-    //     },
-    //     permissions: ["lex"], // SST automatically configures IAM permissions
-    // });
-    // create an alias and assign it to the latest bot version
+    fulfillmentFunction.addPermission('lex-fulfillment', fulfillmentPermission)    
     const alias = bot.addAlias({
         botAliasName: 'liveAlias',
         botVersion: version.botVersion(),
@@ -522,7 +754,6 @@ export function BotStack({stack}: StackContext) {
             },
         },
     });
-    // communicationFunction.addEnvironment("BOT_ALIAS_ID", alias.resource.ref);
     return {
         bot,
         alias

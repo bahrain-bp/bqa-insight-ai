@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useContext } from "react";
+import { LexChartSlotsContext } from "../components/RouterRoot"; // Import the context
 
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
@@ -10,6 +10,7 @@ const Filter = () => {
   const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
 
   const [latestYear, setLatestYear] = useState<string>("");
+  const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
 
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
@@ -54,9 +55,6 @@ const Filter = () => {
   const [userAdditions, setUserAdditions] = useState<string>("");
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
 
-
-
-
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
@@ -100,10 +98,6 @@ const Filter = () => {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
-
-
-
-
   useEffect(() => {
     if (!userModifiedSentence) {
       const newSentence = generateSentence();
@@ -396,9 +390,31 @@ const Filter = () => {
           body: JSON.stringify(prompt),
         });
 
-        const data = await response.json();
-        setBedrockResponse(data.response);
+        const body = await response.json();
+        setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
+
+        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
+          const slots = {
+            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            CompareSpecificInstitutesSlot:
+              mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
+            ProgramNameSlot: undefined,
+            AnalyzeVocationalSlot: undefined,
+            CompareUniversityWUniSlot: undefined,
+            CompareUniversityWProgramsSlot: undefined,
+            CompareSchoolSlot: undefined,
+            CompareVocationalSlot: undefined,
+          };
+          
+          setChartSlots(slots); // Update context with selected filters
+          console.log("Updated chart slots:", slots);
+          
+        }
+
+        console.log("API Response:", body);
+        
+        showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
         console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
@@ -533,24 +549,24 @@ const Filter = () => {
 
               {isFilterActive && (
                 <>
-          <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
-            {isEditing ? (
-              <textarea
-                value={editableSentence}
-                onChange={handleSentenceChange}
-                rows={4}
-                className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
-              />
-            ) : (
-              <div 
-                onClick={handleSentenceEdit} 
-                className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
-                title="Click to edit"
-              >
-                {editableSentence || generateSentence()}
-                <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
-              </div>
-            )}
+                  <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
+                    {isEditing ? (
+                      <textarea
+                        value={editableSentence}
+                        onChange={handleSentenceChange}
+                        rows={4}
+                        className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
+                      />
+                    ) : (
+                      <div 
+                        onClick={handleSentenceEdit} 
+                        className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
+                        title="Click to edit"
+                      >
+                        {editableSentence || generateSentence()}
+                        <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
+                      </div>
+                    )}
                   </div>
                  
                   

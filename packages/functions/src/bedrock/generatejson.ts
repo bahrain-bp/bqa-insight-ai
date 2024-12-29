@@ -188,8 +188,16 @@ export const generateJson = async (event :  string ) => {
                             }
                     </formatting>
                     Given text: ${event}
+
+                    
                     `, 
+                    
     });
+    console.log("Generated Output:",generateJson );
+
+
+
+    
 
 
 

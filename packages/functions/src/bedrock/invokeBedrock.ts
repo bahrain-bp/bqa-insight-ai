@@ -124,6 +124,7 @@ export const invokeBedrockAgent = async (event: APIGatewayEvent) => {
     }
 
     // const generatedJson = generateJson(completion);
+
     return {
       statusCode: 200,
       body: JSON.stringify({
