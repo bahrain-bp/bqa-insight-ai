@@ -26,9 +26,9 @@ ChartJS.register(
 );
 
 const COLORS = {
-  'Confidence': '#4CAF50',
-  'Limited Confidence': '#FFA726',
-  'No Confidence': '#EF5350',
+  'Confidence': '#30C5A2',
+  'Limited Confidence': '#FFA600',
+  'No Confidence': '#D34F4F',
 };
 
 interface Review {
@@ -62,9 +62,9 @@ export function UniversityGeneralCharts({ data }: { data: UniversityData[] }) {
       datasets: [{
         data: Object.values(cycleCounts),
         backgroundColor: [
-          '#E68835',
-          '#397B26',
-          '#D32F2F',
+          '#30C5A2',
+          '#FFA600',
+          '#D34F4F',
           '#E68835',
         ],
         label: 'Programs by Cycle'
