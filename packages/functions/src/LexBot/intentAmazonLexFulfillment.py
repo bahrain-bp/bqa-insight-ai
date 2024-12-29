@@ -169,21 +169,21 @@ def dispatch(intent_request):
             )
         
         if institute_type == 'School':
-             school = get_slot(intent_request, "AnalyzeSchoolSlot")
-             if school is None:
-                return elicit_slot(
-                    intent_request,
-                    'AnalyzeSchoolSlot',
-                    slots=get_slots(intent_request)
-                ) 
              schoolaspect = get_slot(intent_request, "SchoolAspectSlot")
              if schoolaspect is None:
-                  return elicit_slot(
+                return elicit_slot(
                     intent_request,
                     'SchoolAspectSlot',
                     slots=get_slots(intent_request)
                 ) 
-             message = f"the school : {school} choosen for the {schoolaspect} aspect"
+             schoolname = get_slot(intent_request, "AnalyzeSchoolSlot")
+             if schoolname is None:
+                  return elicit_slot(
+                    intent_request,
+                    'AnalyzeSchoolSlot',
+                    slots=get_slots(intent_request)
+                ) 
+             message = f"the school aspect : {schoolaspect} choosen for the {schoolname} school"
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              session_attributes['chartData'] = "put chart data here"
@@ -195,18 +195,18 @@ def dispatch(intent_request):
              )
         
         elif institute_type == 'Vocational training center':
-             vocational = get_slot(intent_request, "AnalyzeVocationalSlot")
-             if vocational is None:
-                return elicit_slot(
-                    intent_request,
-                    'AnalyzeVocationalSlot',
-                    slots=get_slots(intent_request)
-                ) 
              vocationalaspect = get_slot(intent_request, "VocationalAspectSlot")
              if vocationalaspect is None:
-                  return elicit_slot(
+                return elicit_slot(
                     intent_request,
                     'VocationalAspectSlot',
+                    slots=get_slots(intent_request)
+                ) 
+             vocational = get_slot(intent_request, "AnalyzeVocationalSlot")
+             if vocational is None:
+                  return elicit_slot(
+                    intent_request,
+                    'AnalyzeVocationalSlot',
                     slots=get_slots(intent_request)
                 ) 
              message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
@@ -384,13 +384,21 @@ def dispatch(intent_request):
                     )
     
         elif institutecompare_type == 'School':
+            compareschool_aspect = get_slot(intent_request,'CompareSchoolAspectlSlot')
+            if compareschool_aspect is None:
+                return elicit_slot(
+                    intent_request,
+                    'CompareSchoolAspectlSlot',
+                    slots=get_slots(intent_request),
+                )  
+            
             compareschool_type = get_slot(intent_request,'CompareSchoolSlot')
             if compareschool_type is None:
                 return elicit_slot(
                     intent_request,
                     'CompareSchoolSlot',
-                    slots=get_slots(intent_request),
-                )  
+                    slots=get_slots(intent_request)
+                )
             
             if compareschool_type == 'Governorate':
                 governorate_name = get_slot(intent_request,'GovernorateSlot')
@@ -400,7 +408,7 @@ def dispatch(intent_request):
                         'GovernorateSlot',
                         slots=get_slots(intent_request),
                     )
-                message = f"the governorate you selected is: {governorate_name}"
+                message = f"the governorate you selected is: {governorate_name} for the aspect {compareschool_aspect}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
@@ -419,7 +427,7 @@ def dispatch(intent_request):
                         'CompareSpecificInstitutesSlot',
                         slots=get_slots(intent_request),
                     )
-                message = f"Comparision of Institutes: {specificInstitutes_name}"
+                message = f"Comparision of Institutes: {specificInstitutes_name} for the aspect {compareschool_aspect}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
@@ -431,7 +439,7 @@ def dispatch(intent_request):
                     )
             
             elif compareschool_type == "All Government Schools" or compareschool_type == 'All Private Schools':
-                message = f"Comparision of schools: {compareschool_type}"
+                message = f"Comparision of schools: {compareschool_type} for the aspect {compareschool_aspect}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 session_attributes['chartData'] = "put chart data here "
@@ -443,18 +451,18 @@ def dispatch(intent_request):
                     )
             
         elif institutecompare_type == 'Vocational training center':
-            comparevocational_type = get_slot(intent_request,'CompareVocationalSlot')
-            if comparevocational_type is None:
+            comparevocationalaspect = get_slot(intent_request,'CompareVocationalaspectSlot')
+            if comparevocationalaspect is None:
                 return elicit_slot(
                     intent_request,
-                    'CompareVocationalSlot',
+                    'CompareVocationalaspectSlot',
                     slots=get_slots(intent_request),
                 )  
-            comparevocationalaspect = get_slot(intent_request, "CompareVocationalaspectSlot")
-            if comparevocationalaspect is None:
+            comparevocational_type = get_slot(intent_request, "CompareVocationalSlot")
+            if comparevocational_type is None:
                   return elicit_slot(
                     intent_request,
-                    'CompareVocationalaspectSlot',
+                    'CompareVocationalSlot',
                     slots=get_slots(intent_request)
                 ) 
             message = f"the vocational training center : {comparevocational_type} choosen for the {comparevocationalaspect} aspect"

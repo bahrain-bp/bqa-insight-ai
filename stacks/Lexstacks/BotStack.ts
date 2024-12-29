@@ -341,9 +341,27 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'what is the aspect you want?',
-                            },
+                            imageResponseCard: {
+                                title: "Based on what aspect you want to analyze?",
+                                buttons: [
+                                    {
+                                        text: "Students Academic Achievement",
+                                        value: "Students Academic Achievement"
+                                    },
+                                    {
+                                        text: "Students Personal Development and Well-being",
+                                        value: "Students Personal Development and Well-being"
+                                    },
+                                    {
+                                        text: "Teaching, Learning and Assessment",
+                                        value: "Teaching, Learning and Assessment"
+                                    },
+                                    {
+                                        text: "Leadership, Management and Governance",
+                                        value: "Leadership, Management and Governance"
+                                    },
+                                ]
+                            }
                         }
                     }
                 ],
@@ -383,9 +401,23 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'what is the aspect you want?',
-                            },
+                            imageResponseCard: {
+                                title: "Based on what aspect you want to analyze?",
+                                buttons: [
+                                    {
+                                        text: "Assessment and Learners",
+                                        value: "Assessment and Learners"
+                                    },
+                                    {
+                                        text: "Learners Engagement",
+                                        value: "Learners Engagement"
+                                    },
+                                    {
+                                        text: "Leadership and Management",
+                                        value: "Leadership and Management"
+                                    }
+                                ]
+                            }
                         }
                     }
                 ],
@@ -596,6 +628,47 @@ export function BotStack({stack}: StackContext) {
     })
 
     comparingIntent.addSlot({
+        slotName: 'CompareSchoolAspectlSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Compare schools for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "Based on what aspect you want to compare?",
+                                buttons: [
+                                    {
+                                        text: "Students Academic Achievement",
+                                        value: "Students Academic Achievement"
+                                    },
+                                    {
+                                        text: "Students Personal Development and Well-being",
+                                        value: "Students Personal Development and Well-being"
+                                    },
+                                    {
+                                        text: "Teaching, Learning and Assessment",
+                                        value: "Teaching, Learning and Assessment"
+                                    },
+                                    {
+                                        text: "Leadership, Management and Governance",
+                                        value: "Leadership, Management and Governance"
+                                    },
+                                ]
+                            }
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+
+
+    comparingIntent.addSlot({
         slotName: 'CompareSchoolSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Compare schools for BQA',
@@ -724,12 +797,26 @@ export function BotStack({stack}: StackContext) {
             promptSpecification: {
                 messageGroups: [
                     {
-                        message: {
-                            plainTextMessage: {
-                                value: 'What is the aspects of Vocational training centers you want to compare?'
+                            message: {
+                                imageResponseCard: {
+                                    title: "Based on what aspect you want to compare?",
+                                    buttons: [
+                                        {
+                                            text: "Assessment and Learners",
+                                            value: "Assessment and Learners"
+                                        },
+                                        {
+                                            text: "Learners Engagement",
+                                            value: "Learners Engagement"
+                                        },
+                                        {
+                                            text: "Leadership and Management",
+                                            value: "Leadership and Management"
+                                        }
+                                    ]
+                                }
                             }
                         },
-                    },
                 ],
                 maxRetries: 2,
             },
