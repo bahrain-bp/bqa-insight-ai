@@ -62,7 +62,7 @@ export function VocationalReviews() {
         <div className="w-full flex flex-col">
 
           {/* Vocational Ranking Section */}
-          <ToggleSection title="Vocational Ranking Table" ariaControls="vocational-reviews-ranking">
+          <ToggleSection title="Vocationals Table" ariaControls="vocational-reviews-ranking">
             <VocationalReviewsTable data={data} />
           </ToggleSection>
 

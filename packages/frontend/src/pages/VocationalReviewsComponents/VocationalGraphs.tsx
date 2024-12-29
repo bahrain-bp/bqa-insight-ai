@@ -65,12 +65,20 @@ export function VocationalGraphs({ data }: { data: VocationalData[] }) {
     };
   }
   
-  function getGradeCategory(gradeNum: number) {
-    if (gradeNum >= 1 && gradeNum < 2) return 'Outstanding';
-    if (gradeNum >= 2 && gradeNum < 3) return 'Good';
-    if (gradeNum >= 3 && gradeNum < 4) return 'Satisfactory';
-    if (gradeNum >= 4) return 'Inadequate';
-    return 'N/A';
+  function getGradeCategory(gradeNum: number): string {
+    const differences = [
+      { category: 'Outstanding', value: 1, diff: Math.abs(gradeNum - 1) },
+      { category: 'Good', value: 2, diff: Math.abs(gradeNum - 2) },
+      { category: 'Satisfactory', value: 3, diff: Math.abs(gradeNum - 3) },
+      { category: 'Inadequate', value: 4, diff: Math.abs(gradeNum - 4) },
+    ];
+  
+    // Find the category with the smallest difference
+    const closest = differences.reduce((prev, curr) =>
+      prev.diff < curr.diff ? prev : curr
+    );
+  
+    return closest.category;
   }
   
   const scatterChartData = useMemo(() => {
@@ -127,7 +135,7 @@ export function VocationalGraphs({ data }: { data: VocationalData[] }) {
       legend: { display: false }, // Hide legend since color represents grade
       title: {
         display: true,
-        text: 'Institutes by Average Grade',
+        text: 'Vocational Institutes Performance by Average Grade',
       },
       tooltip: {
         callbacks: {
@@ -151,20 +159,19 @@ export function VocationalGraphs({ data }: { data: VocationalData[] }) {
   // ==========================
   const barChartData = useMemo(() => {
     const gradeCounts: Record<string, number> = {
-      Outstanding: 0,
-      Good: 0,
-      Satisfactory: 0,
       Inadequate: 0,
+      Satisfactory: 0,
+      Good: 0,
+      Outstanding: 0,
     };
+  
 
     data.forEach((institute) => {
       const avgGrade = institute.AverageGrade;
-      if (avgGrade >= 1 && avgGrade < 2) gradeCounts['Outstanding'] += 1;
-      else if (avgGrade >= 2 && avgGrade < 3) gradeCounts['Good'] += 1;
-      else if (avgGrade >= 3 && avgGrade < 4) gradeCounts['Satisfactory'] += 1;
-      else if (avgGrade >= 4) gradeCounts['Inadequate'] += 1;
+      const gradeCategory = getGradeCategory(avgGrade);
+      gradeCounts[gradeCategory] += 1;
     });
-
+  
     return {
       labels: Object.keys(gradeCounts),
       datasets: [
@@ -172,15 +179,16 @@ export function VocationalGraphs({ data }: { data: VocationalData[] }) {
           label: 'Number of Institutes',
           data: Object.values(gradeCounts),
           backgroundColor: [
-            GRADE_COLORS['Outstanding'],
-            GRADE_COLORS['Good'],
-            GRADE_COLORS['Satisfactory'],
             GRADE_COLORS['Inadequate'],
+            GRADE_COLORS['Satisfactory'],
+            GRADE_COLORS['Good'],
+            GRADE_COLORS['Outstanding'],
           ],
         },
       ],
     };
   }, [data]);
+  
 
   const barChartOptions: ChartOptions<'bar'> = {
     responsive: true,

@@ -40,10 +40,12 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
       return { grade: 'N/A', date: 'N/A' };
     }
 
-    const datedReviews = reviewReports.map(r => {
-      const parsed = parseBatchReleaseDate(r.BatchReleaseDate);
-      return { ...r, parsedDate: parsed };
-    }).filter(r => r.parsedDate !== null) as (Review & { parsedDate: Date })[];
+    const datedReviews = reviewReports
+      .map(r => {
+        const parsed = parseBatchReleaseDate(r.BatchReleaseDate);
+        return { ...r, parsedDate: parsed };
+      })
+      .filter(r => r.parsedDate !== null) as (Review & { parsedDate: Date })[];
 
     if (datedReviews.length === 0) {
       return { grade: 'N/A', date: 'N/A' };
@@ -57,12 +59,12 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
   const exportToExcel = () => {
     const exportData = displayedData.map(institute => {
       const { grade: latestGrade, date: latestDate } = getLatestReviewReportData(institute.Reviews);
-      const avgGrade = (institute.AverageGrade !== null && !isNaN(institute.AverageGrade))
-        ? institute.AverageGrade
-        : 'N/A';
+      const avgGrade =
+        institute.AverageGrade !== null && !isNaN(institute.AverageGrade)
+          ? institute.AverageGrade
+          : 'N/A';
 
       return {
-        'Rank': institute.Rank,
         'Institution Code': institute.InstitutionCode,
         'English Institute Name': institute.EnglishInstituteName,
         'Arabic Institute Name': institute.ArabicInstituteName,
@@ -151,7 +153,6 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = [
-      'Rank',
       'Institution Code',
       'English Institute Name',
       'Arabic Institute Name',
@@ -161,9 +162,9 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
       'Number of Reviews'
     ];
     
-    headers.forEach(header => {
+    headers.forEach(hdr => {
       const th = document.createElement('th');
-      th.textContent = header;
+      th.textContent = hdr;
       headerRow.appendChild(th);
     });
     thead.appendChild(headerRow);
@@ -175,14 +176,15 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
       const row = document.createElement('tr');
       
       const rowData = [
-        institute.Rank,
         institute.InstitutionCode,
         institute.EnglishInstituteName,
         institute.ArabicInstituteName,
-        (institute.AverageGrade !== null && !isNaN(institute.AverageGrade)) ? institute.AverageGrade.toFixed(2) : 'N/A',
+        institute.AverageGrade !== null && !isNaN(institute.AverageGrade)
+          ? institute.AverageGrade.toFixed(2)
+          : 'N/A',
         latestGrade,
         latestDate,
-        institute.Reviews.length
+        institute.Reviews.length,
       ];
 
       rowData.forEach(text => {
@@ -215,36 +217,12 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
     await html2pdf().set(opt).from(printDiv).save();
   };
 
-  // Compute Rankings Based on Entire Data
-  const rankedData = useMemo(() => {
-    const validSorted = [...data].sort((a, b) => {
-      const aGrade = (a.AverageGrade !== null && !isNaN(a.AverageGrade)) ? a.AverageGrade : Infinity;
-      const bGrade = (b.AverageGrade !== null && !isNaN(b.AverageGrade)) ? b.AverageGrade : Infinity;
-      return aGrade - bGrade;
-    });
-
-    let prevGrade: number | null = null;
-    let prevRank = 0;
-    let count = 0;
-    const withRank = validSorted.map((institute) => {
-      count++;
-      const grade = (institute.AverageGrade !== null && !isNaN(institute.AverageGrade)) ? institute.AverageGrade : Infinity;
-      if (grade !== prevGrade) {
-        prevRank = count;
-        prevGrade = grade;
-      }
-      return { ...institute, Rank: prevRank };
-    });
-
-    return withRank;
-  }, [data]);
-
   // Apply Average Grade Filter
   const filteredData = useMemo(() => {
-    return rankedData.filter((institute) => {
+    return data.filter((institute) => {
       return institute.AverageGrade >= averageGradeFilter;
     });
-  }, [rankedData, averageGradeFilter]);
+  }, [data, averageGradeFilter]);
 
   // Sorting
   const sortedData = useMemo(() => {
@@ -264,10 +242,6 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
       const bDate = parseBatchReleaseDate(bDateStr);
 
       switch(column) {
-        case 'Rank':
-          aVal = a.Rank;
-          bVal = b.Rank;
-          break;
         case 'InstitutionCode':
           aVal = a.InstitutionCode;
           bVal = b.InstitutionCode;
@@ -304,7 +278,9 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
       if (typeof aVal === 'number' && typeof bVal === 'number') {
         return aVal - bVal;
       } else {
-        return aVal.toString().localeCompare(bVal.toString(), undefined, { numeric: true, sensitivity: 'base' });
+        return aVal
+          .toString()
+          .localeCompare(bVal.toString(), undefined, { numeric: true, sensitivity: 'base' });
       }
     };
 
@@ -394,60 +370,59 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
             </button>
           </div>
         </div>
-  
-        <div className="text-right">
-          <span className="font-semibold">Overall Average Grade: </span>
-          <span>{overallAverage}</span>
+
+        <div className="flex items-center justify-between mb-2">
+        <div className="text-gray-700 font-semibold">
+          {displayedData.length} institute(s) returned
         </div>
+        <div className="text-gray-700 font-semibold">
+          Overall Average Grade: {overallAverage}
+        </div>
+      </div>
+
       </div>
   
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
-              <th 
-                className="px-4 py-2 border cursor-pointer"
-                onClick={() => handleSort('Rank')}
-              >
-                Rank {renderSortIndicator('Rank')}
-              </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('InstitutionCode')}
               >
                 Institution Code {renderSortIndicator('InstitutionCode')}
               </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('EnglishInstituteName')}
               >
                 English Institute Name {renderSortIndicator('EnglishInstituteName')}
               </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('ArabicInstituteName')}
               >
                 Arabic Institute Name {renderSortIndicator('ArabicInstituteName')}
               </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('AverageGrade')}
               >
                 Average Grade {renderSortIndicator('AverageGrade')}
               </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('LatestReviewGrade')}
               >
                 Latest Review Grade {renderSortIndicator('LatestReviewGrade')}
               </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('LatestReviewDate')}
               >
                 Latest Review Date {renderSortIndicator('LatestReviewDate')}
               </th>
-              <th 
+              <th
                 className="px-4 py-2 border cursor-pointer"
                 onClick={() => handleSort('NumberOfReviews')}
               >
@@ -459,16 +434,15 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
             {displayedData.map((institute, index) => {
               const { grade: latestGrade, date: latestDate } = getLatestReviewReportData(institute.Reviews);
               return (
-                <tr 
-                  key={institute.InstitutionCode} 
+                <tr
+                  key={institute.InstitutionCode}
                   className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}
                 >
-                  <td className="px-4 py-2 border">{institute.Rank}</td>
                   <td className="px-4 py-2 border">{institute.InstitutionCode}</td>
                   <td className="px-4 py-2 border">{institute.EnglishInstituteName}</td>
                   <td className="px-4 py-2 border">{institute.ArabicInstituteName}</td>
                   <td className="px-4 py-2 border">
-                    {(institute.AverageGrade !== null && !isNaN(institute.AverageGrade))
+                    {institute.AverageGrade !== null && !isNaN(institute.AverageGrade)
                       ? institute.AverageGrade.toFixed(2)
                       : 'N/A'}
                   </td>
@@ -489,5 +463,4 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
       )}
     </div>
   );
-  }
-  
+}
