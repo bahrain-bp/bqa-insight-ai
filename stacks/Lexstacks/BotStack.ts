@@ -296,6 +296,27 @@ export function BotStack({stack}: StackContext) {
     });
 
     uniStandard.addSlot({
+        slotName: 'AnalyzeUniversityNameSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing Universities for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the name of the University you want to analyze?',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    uniStandard.addSlot({
         slotName: 'StandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Standard to analyze',
@@ -337,6 +358,7 @@ export function BotStack({stack}: StackContext) {
             },
         },
     })
+
     analyzingIntent.addSlot({
         slotName: 'AnalyzeSchoolSlot',
         slotTypeName: 'AMAZON.FreeFormInput',

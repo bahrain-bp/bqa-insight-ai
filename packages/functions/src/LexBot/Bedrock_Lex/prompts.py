@@ -201,7 +201,7 @@ def create_school_analyze_prompt(school, schoolaspect):
     return prompt
 
 
-def create_uni_analyze_prompt(program_name, standard, university_name):
+def create_uni_analyze_prompt(standard, university_name, program_name=""):
     prompt = f"""
         Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
 
