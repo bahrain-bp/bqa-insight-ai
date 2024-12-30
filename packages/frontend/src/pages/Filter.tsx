@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
-import { LexChartSlotsContext } from "../components/RouterRoot"; // Import the context
+import { LexChartSlotsContext } from "../components/RouterRoot";
+
 
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
@@ -10,7 +11,10 @@ const Filter = () => {
   const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
 
   const [latestYear, setLatestYear] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
   const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
+
 
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
@@ -357,10 +361,10 @@ const Filter = () => {
 
     if (sentence) {
       try {
-        // Create a copy of selectedOptions for submission
+        setLoading(true); // Set loading state to true when starting the request
+        
         let submissionOptions = { ...selectedOptions };
         
-        // If it's schools and no year is selected, use the latest year
         if (educationType === "schools" && (!selectedOptions["Report Year"]?.length) && latestYear) {
           submissionOptions = {
             ...submissionOptions,
@@ -413,16 +417,18 @@ const Filter = () => {
         }
 
         console.log("API Response:", body);
-        
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
         console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
+      } finally {
+        setLoading(false); // Reset loading state regardless of success or failure
       }
     } else {
       showMessage("Please select options.", "error");
     }
   };
+
 
 
   const handleClear = () => {
@@ -582,14 +588,28 @@ const Filter = () => {
                   )}
                   
                   <div className="mt-6 text-center">
-                    <button
-                      onClick={handleSubmit}
-                      className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-                    >
-                      Submit
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className={`px-6 py-2 bg-primary text-white rounded-md ${
+                loading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-primary-dark'
+              } relative`}
+            >
+              {loading ? (
+                <>
+                  <span className="opacity-0">Submit</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  </div>
+                </>
+              ) : (
+                'Submit'
+              )}
+
                     </button>
                     <button
                       onClick={handleClear}
+                      disabled={loading}
                       className="ml-4 px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
                     >
                       Clear
