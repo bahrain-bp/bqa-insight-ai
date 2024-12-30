@@ -199,6 +199,10 @@ export const generateJson = async (event :  string ) => {
 
     
 
+
+
+    
+
     try {
         let completion = "";
         const response = await client.send(command);
