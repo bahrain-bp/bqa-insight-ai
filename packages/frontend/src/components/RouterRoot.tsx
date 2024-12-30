@@ -18,7 +18,7 @@ export type LexChartSlots = {
     ProgramNameSlot?: string,
     AnalyzeVocationalSlot?: string,
     CompareUniversityWUniSlot?: string,
-    CompareUniversityWProgramsSlot?: string,
+    CompareUniversityWprogSlot?: string,
     CompareSchoolSlot?: "All Government Schools" | "All Private Schools",
     CompareSpecificInstitutesSlot?: string,
     CompareVocationalSlot?: string,

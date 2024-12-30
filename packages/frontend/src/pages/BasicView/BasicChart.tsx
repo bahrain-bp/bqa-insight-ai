@@ -287,10 +287,10 @@ const BasicChart = () => {
       };
       setCurrentChart(comparisonChart);
 
-    } else if (chartSlots.CompareUniversityWProgramsSlot) {
+    } else if (chartSlots.CompareUniversityWprogSlot) {
       // Comparing specific programs within universities
       const matchedCharts: ChartJsonData[] = [];
-      chartSlots.CompareUniversityWProgramsSlot.split(",").forEach((s: string) => {
+      chartSlots.CompareUniversityWprogSlot.split(",").forEach((s: string) => {
         const trimmed = s.trim();
         const result = performFuzzySearch(trimmed, allUniversityCharts, "universityName");
         if (result && !matchedCharts.some((chart) => chart === result)) {
