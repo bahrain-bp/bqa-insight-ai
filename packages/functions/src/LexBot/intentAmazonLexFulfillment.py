@@ -495,7 +495,7 @@ def dispatch(intent_request):
                 ) 
             # message = f"the vocational training center : {comparevocational_type} choosen for the {comparevocationalaspect} aspect"
             compare_training_center_prompt = create_compare_vocational_training_centres(comparevocational_type, comparevocationalaspect)
-            message = invoke_agent(agent_id, agent_alias_id, "123", compare_training_center_prompt)
+            message = invoke_agent(agent_id, agent_alias_id, session_id, compare_training_center_prompt)
             response = create_message(message)
             session_attributes = get_session_attributes(intent_request)
             
@@ -515,7 +515,7 @@ def dispatch(intent_request):
                 "OtherQuestionsSlot",
             )
         # response = f"You asked: '{other_question}'. Processing your request."
-        response = invoke_agent(agent_id, agent_alias_id, "123", other_question)
+        response = invoke_agent(agent_id, agent_alias_id, session_id, other_question)
         message = create_message(response)
         return close(
             intent_request,
