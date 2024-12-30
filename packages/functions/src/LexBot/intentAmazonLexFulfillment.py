@@ -33,9 +33,91 @@ def get_slot(intent_request, slotName):
         return slots[slotName]['value']['originalValue']
     return slots[slotName]['value']['resolvedValues'][0]
 
+def get_slot_history(session_attributes):
+    slot_string = session_attributes.get('slotHistory')
+    if slot_string is None:
+        return []
+    # expected format:
+    # "BQAIntent:BQASlot,AnalyzingIntent:InstitutionTypeSlot,AnalyzingIntent:SchoolMetricSlot"
+    # slots are described by an intent name "BQAIntent:BQASlot"
+    # and each slot is separated by commas
+    # this will parse a string with this format to a 2D list
+
+    slots = slot_string.split(',')
+    total = []
+    for slot in slots:
+        total.append(slot.split(":"))
+    return total
+
+def set_slot_history(slot_list, session_attributes):
+    # this will convert a 2D list with the aforementioned format to a string
+    slots = []
+    for slot in slot_list:
+        slots.append(':'.join(slot))
+    slot_string = ','.join(slots)
+    if slot_string is None:
+        slot_string = ""
+    session_attributes['slotHistory'] = slot_string
+
+def update_slot_history(session_attributes, slot_to_elicit, intent_name):
+    slot_list = get_slot_history(session_attributes)
+
+    last_slot = None
+    if len(slot_list) > 0:
+        last_slot = slot_list[-1]
+
+    slot_name = ""
+    if last_slot is not None and len(last_slot) > 1:
+        slot_name = last_slot[1]
+
+    if slot_name != slot_to_elicit:
+        slot_list.append([intent_name, slot_to_elicit])
+    set_slot_history(slot_list, session_attributes)
+
+def retry_last_slot(intent_request):
+    session_attributes = get_session_attributes(intent_request)
+    slot_list = get_slot_history(session_attributes)
+    # remove last slot
+    last_slot = slot_list.pop()
+    intent_request['sessionState']['intent']['slots'].pop(last_slot[1])
+    current_intent = last_slot[0]
+    set_slot_history(slot_list, session_attributes)
+    session_attributes['retry'] = 'false'
+    # get last slot, this will be reset
+    if len(slot_list) > 0:
+        last_slot = slot_list[-1]
+        print("The last item is ", last_slot)
+        print("The array is ", slot_list)
+    else:
+        # if nothing in the history is left, return to main menu
+        return elicit_intent(
+            intent_request,
+            "BQASlot",
+            "BQAIntent",
+        )
+
+    if current_intent != last_slot[0]:
+        response = elicit_intent(
+            intent_request,
+            last_slot[1],
+            last_slot[0],
+        )
+    else:
+        response = elicit_slot(
+            intent_request,
+            last_slot[1],
+            slots=get_slots(intent_request),
+        )
+    print("Response after retry: ", response)
+
+    return response
+
 def elicit_slot(intent_request, slot_to_elicit, message = None, slots = {}, session_attributes = {}):
     if session_attributes == {}:
         session_attributes = get_session_attributes(intent_request)
+
+    intent_name = intent_request['sessionState']['intent']['name']
+    update_slot_history(session_attributes, slot_to_elicit, intent_name)
 
     result = {
         'sessionState':
@@ -62,29 +144,15 @@ def elicit_slot(intent_request, slot_to_elicit, message = None, slots = {}, sess
 
 
 def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, slots = {}, session_attributes = {}):
-    if session_attributes == {}:
-        session_attributes = get_session_attributes(intent_request)
-    return {
-        'sessionState': {
-            'dialogAction': {
-                'type': 'ElicitSlot',
-                'slotToElicit': slot_to_elicit,
-            },
-            'intent': {
-                'confirmationState': 'None',
-                'name': intent_to_elicit,
-                'slots': slots,
-                'state': 'InProgress',
-            },
-            'sessionAttributes': session_attributes,
-            'originatingRequestId': 'REQUESTID'
-            # 'originatingRequestId': intent_request['sessionState']['originatingRequestId']
-        },
-        'sessionId': intent_request['sessionId'],
-        # 'messages': [ message ],
-        'requestAttributes': intent_request['requestAttributes']
-        if 'requestAttributes' in intent_request else None
-    }
+    intent_request['sessionState']['intent']['confirmationState'] = 'None'
+    intent_request['sessionState']['intent']['name'] = intent_to_elicit
+    response = elicit_slot(
+        intent_request,
+        slot_to_elicit,
+        slots=slots,
+        session_attributes=session_attributes
+    )
+    return response
 
 
 
@@ -114,17 +182,22 @@ def dispatch(intent_request):
 
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
-    returnToMenu = get_session_attributes(intent_request)['return'] == "true"
-    retrySlots = get_session_attributes(intent_request)['retry'] == "true"
+    returnToMenu = get_session_attributes(intent_request).get('return')
+    retrySlots = get_session_attributes(intent_request).get('retry')
     session_id = intent_request['sessionId']
 
     # If user wants to go back to the main menu, elicit BQAIntent
-    if returnToMenu:
+    if returnToMenu and returnToMenu == 'true':
+        intent_request['sessionState']['sessionAttributes']['return'] = 'false'
+        set_slot_history([],intent_request['sessionState']['sessionAttributes'])
         return elicit_intent(
             intent_request,
             "BQASlot",
             "BQAIntent",
         )
+
+    if retrySlots and retrySlots == 'true':
+        return retry_last_slot(intent_request)
 
     # # Handle FallbackIntent
     # if intent_name == 'FallbackIntent':

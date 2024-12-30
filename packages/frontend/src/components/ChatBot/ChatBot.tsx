@@ -56,6 +56,7 @@ export const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [isWaitingForBot, setIsWaitingForBot] = useState(false);
     const [sessionId, setSessionId] = useState("");
+    const [sessionAttributes, setSessionAttributes] = useState<Record<string, string>>({})
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
@@ -139,7 +140,7 @@ export const Chat = () => {
         return lexChartSlots
     }
 
-    const messageLex = async (message: string | undefined, options?: {retry?: boolean, return?: boolean}) => {
+    const messageLex = async (message: string | undefined, options: {retry?: "true" | "false", return?: "true" | "false",} = {retry: 'false', return: 'false'}) => {
         if (isWaitingForBot) return
         try {
             setIsWaitingForBot(true)
@@ -149,18 +150,23 @@ export const Chat = () => {
             addMessage({author: "loading", body: "(Thinking...)"})
 
             const sessionId = await startSession()
+            const lexOptions: Record<string, any> = {...sessionAttributes, ...options}
+            console.log("Lex options are: ", options)
+            console.log("Lex combined options are: ", lexOptions)
             const lexResponse = await fetch(`${import.meta.env.VITE_API_URL}/lex/message-lex`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ message: message, sessionId: sessionId, options: options }),
+                body: JSON.stringify({ message: message, sessionId: sessionId, options: lexOptions }),
             });
             if (!lexResponse.ok) {
               throw Error("Could not send request.")
             }
             const result = await lexResponse.json()
             const body = result.response
+            const attr = body.sessionState.sessionAttributes
+            setSessionAttributes(attr)
             setChartSlots(getLexChartSlots(body))
             console.log("lex response: ", body)
             const hasImageResponseCard = body.messages[0].contentType === "ImageResponseCard"
@@ -200,7 +206,9 @@ export const Chat = () => {
         input.focus()
     };
 
-    const returnToMenu = () => messageLex(undefined, {return: true})
+    const returnToMenu = () => messageLex(undefined, {return: "true"})
+
+    const retrySlot = () => messageLex(undefined, {retry: "true"})
 
     useEffect(() => {
         if (isInitialized.current) return;
@@ -262,6 +270,13 @@ export const Chat = () => {
                     autoComplete="off"
                     required
                     className="grow p-2"
+                />
+                <input
+                    type="button"
+                    name="back"
+                    value="Back"
+                    className="bg-graydark text-white rounded cursor-pointer px-3 shrink"
+                    onClick={retrySlot}
                 />
                 <input
                     type="button"
