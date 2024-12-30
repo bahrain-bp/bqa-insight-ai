@@ -594,10 +594,10 @@ def dispatch(intent_request):
         # response = f"You asked: '{other_question}'. Processing your request."
         response = invoke_agent(agent_id, agent_alias_id, session_id, other_question)
         message = create_message(response)
-        return close(
+        return elicit_slot(
             intent_request,
-            'Fulfilled',
-            message
+            "OtherQuestionsSlot",
+            message,
         )
 
     # Handle other intents as needed...
