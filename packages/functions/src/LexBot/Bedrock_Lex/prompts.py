@@ -117,7 +117,7 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     return prompt
 
 
-def create_analyze_prompt(school, schoolaspect):
+def create_school_analyze_prompt(school, schoolaspect):
     prompt = f"""
         Your goal is to analyze the provided school report and provide insights on the school’s overall performance based on its achievements, challenges, and areas for improvement.
 
