@@ -176,7 +176,7 @@ export function BotStack({stack}: StackContext) {
     analyzingIntent.addSlot({
         slotName: 'AnalyzeUniversitySlot',
         slotTypeName: 'AMAZON.FreeFormInput',
-        description: 'Analyzing universitie',
+        description: 'Analyzing universities',
         valueElicitationSetting: {
             slotConstraint: 'Optional',
             promptSpecification: {
@@ -214,7 +214,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'write the name of the program and the university you want to analyze.',
+                                value: 'Write the name of the programme you want to analyze.',
                             },
                         }
                     }
@@ -223,6 +223,28 @@ export function BotStack({stack}: StackContext) {
             }
         }
     })
+
+    analyzingIntent.addSlot({
+        slotName: 'UniNameSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing Universities based on program',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'Write the name of the University you want to analyze.',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
     analyzingIntent.addSlot({
         slotName: 'StandardProgSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
