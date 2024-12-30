@@ -44,7 +44,6 @@
     "@aws-sdk/client-dynamodb": "^3.705.0",
     "@aws-sdk/client-lex-runtime-v2": "^3.693.0",
     "@aws-sdk/client-sns": "^3.714.0",
-    "@aws-sdk/client-sns": "^3.714.0",
     "@aws-sdk/client-textract": "^3.687.0",
     "@aws-sdk/credential-provider-node": "^3.699.0",
     "@aws-sdk/lib-dynamodb": "^3.705.0",
@@ -64,8 +63,6 @@
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.8.69",
     "pdfreader": "^3.0.5",
-    "react-router-dom": "^6.28.0",
-    "recharts": "^2.15.0",
     "uuid": "^11.0.3",
     "xlsx": "^0.18.5"
   }
