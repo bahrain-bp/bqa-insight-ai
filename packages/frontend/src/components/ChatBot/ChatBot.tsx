@@ -54,6 +54,7 @@ type Message = {
 
 export const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
+    const [isWaitingForBot, setIsWaitingForBot] = useState(false);
     const [sessionId, setSessionId] = useState("");
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
@@ -138,9 +139,12 @@ export const Chat = () => {
         return lexChartSlots
     }
 
-    const messageLex = async (message: string) => {
+    const messageLex = async (message: string | undefined, options?: {retry?: boolean, return?: boolean}) => {
+        if (isWaitingForBot) return
         try {
-            addMessage({author: "human", body: message});
+            setIsWaitingForBot(true)
+            if (message)
+                addMessage({author: "human", body: message});
 
             addMessage({author: "loading", body: "(Thinking...)"})
 
@@ -150,7 +154,7 @@ export const Chat = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ message: message, sessionId: sessionId }),
+                body: JSON.stringify({ message: message, sessionId: sessionId, options: options }),
             });
             if (!lexResponse.ok) {
               throw Error("Could not send request.")
@@ -171,11 +175,14 @@ export const Chat = () => {
         } catch (error) {
             console.error("error: ", error)
             replaceLastMessage({ author: "bot", body: "An error has occurred. Please try again." })
-        } 
+        } finally {
+            setIsWaitingForBot(false)
+        }
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (isWaitingForBot) return
         const input = (e.target as HTMLFormElement).elements.namedItem(
             "input"
         ) as HTMLInputElement;
@@ -193,8 +200,11 @@ export const Chat = () => {
         input.focus()
     };
 
+    const returnToMenu = () => messageLex(undefined, {return: true})
+
     useEffect(() => {
         if (isInitialized.current) return;
+        returnToMenu()
         isInitialized.current = true;
 
         // initialMessages.forEach((msg) => {
@@ -243,7 +253,7 @@ export const Chat = () => {
                 </ul>
 
             {/* Chat Input Form */}
-            <form className="c-chat__form bg-whiten rounded-b-md" onSubmit={handleSubmit}>
+            <form className="c-chat__form gap-2 bg-whiten rounded-b-md" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     name="input"
@@ -251,6 +261,14 @@ export const Chat = () => {
                     autoFocus
                     autoComplete="off"
                     required
+                    className="grow p-2"
+                />
+                <input
+                    type="button"
+                    name="return"
+                    value="Main Menu"
+                    className="bg-lightblue text-white rounded cursor-pointer px-3 shrink"
+                    onClick={returnToMenu}
                 />
             </form>
         </div>

@@ -9,9 +9,11 @@ const BasicChart = () => {
   const { chartSlots } = useContext(LexChartSlotsContext); // Context for dynamic filtering
   const [isSchoolDataLoading, setIsSchoolDataLoading] = useState(true);
   const [isVocationalDataLoading, setIsVocationalDataLoading] = useState(true);
+  const [isUniversityDataLoading, setIsUniversityDataLoading] = useState(true);
   const [currentChart, setCurrentChart] = useState<ChartJsonData | null>(null);
   const [allSchoolCharts, setAllSchoolCharts] = useState<ChartJsonData[]>([]);
   const [allVocationalCharts, setAllVocationalCharts] = useState<ChartJsonData[]>([]);
+  const [allUniversityCharts, setAllUniversityCharts] = useState<ChartJsonData[]>([]);
 
   // Fetch school reviews
   useEffect(() => {
@@ -88,13 +90,51 @@ const BasicChart = () => {
     fetchVocationalReviews();
   }, []);
 
+  // Fetch university reviews
+  useEffect(() => {
+    const fetchUniversityReviews = async () => {
+      setIsUniversityDataLoading(true);
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchUniversityReviews`);
+        if (!response.ok) throw new Error(`Failed to fetch university reviews: ${response.statusText}`);
+        const data = await response.json();
+        const reviews = data?.data || [];
+
+        const transformedCharts = reviews.map((university: any): ChartJsonData => ({
+          universityName: university.InstitutionName,
+          type: "line",
+          data: {
+            datasets: [
+              {
+                data: university.Reviews.map((review: any) => ({
+                  x: review.Cycle,
+                  y: review.Judgement === "Confidence" ? 3 : review.Judgement === "Limited Confidence" ? 2 : 1,
+                })),
+                label: university.InstitutionName,
+              },
+            ],
+          },
+        }));
+
+        setAllUniversityCharts(transformedCharts);
+      } catch (error) {
+        console.error("Error fetching university reviews:", error);
+      } finally {
+        setIsUniversityDataLoading(false);
+      }
+    };
+
+    fetchUniversityReviews();
+  }, []);
+  
   // Perform fuzzy search based on LexSlot for only one name
-  const performFuzzySearchForSlot = (slotValue: string, dataset: ChartJsonData[]) => {
-    const fuse = new Fuse(dataset, { keys: ["schoolName"], threshold: 0.25 });
+  const performFuzzySearch = (slotValue: string, dataset: ChartJsonData[], searchKey: "schoolName" | "universityName") => {
+    const fuse = new Fuse(dataset, { keys: [searchKey], threshold: 0.25 });
     const result = fuse.search(slotValue);
-    console.log("Search results for " + slotValue + ": ", result)
+    console.log("Search results for " + slotValue + ": ", result);
     return result.length > 0 ? result[0].item as ChartJsonData : null;
   };
+  
 
   // Perform fuzzy search for one or more names
   // const performFuzzySearchForNames = (names: string[], dataset: ChartJsonData[]): ChartJsonData[] => {
@@ -110,14 +150,14 @@ const BasicChart = () => {
 
     if (chartSlots.AnalyzeSchoolSlot) {
       const slotValue = chartSlots.AnalyzeSchoolSlot;
-      const schoolChart = performFuzzySearchForSlot(slotValue, allSchoolCharts);
+      const schoolChart = performFuzzySearch(slotValue, allSchoolCharts, "schoolName");
       if (schoolChart) setCurrentChart(schoolChart);
       else console.error(`No chart found for school: ${chartSlots.AnalyzeSchoolSlot}`);
     } else if (chartSlots.CompareSpecificInstitutesSlot) {
       const matchedCharts: ChartJsonData[] = []
       chartSlots.CompareSpecificInstitutesSlot.split(",").map((s: string) => {
         const trimmed = s.trim()
-        const result = performFuzzySearchForSlot(trimmed, allSchoolCharts)
+        const result = performFuzzySearch(trimmed, allSchoolCharts, "schoolName")
         if (result && (matchedCharts.indexOf(result) === -1)) matchedCharts.push(result);
     });
       const comparisonChart: ChartJsonData = {
@@ -201,7 +241,7 @@ const BasicChart = () => {
         setCurrentChart(comparisonChart);
       } else if (chartSlots.AnalyzeVocationalSlot) {
       const slotValue = chartSlots.AnalyzeVocationalSlot;
-      const vocationalChart = performFuzzySearchForSlot(slotValue, allSchoolCharts);
+      const vocationalChart = performFuzzySearch(slotValue, allSchoolCharts, "schoolName");
 
     if (vocationalChart) setCurrentChart(vocationalChart);
     else console.error(`No chart found for institute: ${chartSlots.AnalyzeVocationalSlot}`);
@@ -210,7 +250,7 @@ const BasicChart = () => {
     const matchedCharts: ChartJsonData[] = []
       chartSlots.CompareVocationalSlot.split(",").map((s: string) => {
         const trimmed = s.trim()
-        const result = performFuzzySearchForSlot(trimmed, allVocationalCharts)
+        const result = performFuzzySearch(trimmed, allVocationalCharts, "schoolName")
         if (result && (matchedCharts.indexOf(result) === -1)) matchedCharts.push(result);
       });
       const comparisonChart: ChartJsonData = {
@@ -225,7 +265,51 @@ const BasicChart = () => {
     };
       setCurrentChart(comparisonChart);
     }  
-  }, [chartSlots, allSchoolCharts, allVocationalCharts]);
+    if (chartSlots.CompareUniversityWUniSlot) {
+      // Comparing multiple universities overall
+      const matchedCharts: ChartJsonData[] = [];
+      chartSlots.CompareUniversityWUniSlot.split(",").forEach((s: string) => {
+        const trimmed = s.trim();
+        const result = performFuzzySearch(trimmed, allUniversityCharts, "universityName");
+        if (result && !matchedCharts.some((chart) => chart === result)) {
+          matchedCharts.push(result);
+        }
+      });
+      const comparisonChart: ChartJsonData = {
+        universityName: "Comparison of Universities",
+        type: "bar",
+        data: {
+          datasets: matchedCharts.map((chart) => ({
+            label: chart.universityName || "Unnamed University",
+            data: chart.data.datasets[0].data,
+          })),
+        },
+      };
+      setCurrentChart(comparisonChart);
+
+    } else if (chartSlots.CompareUniversityWProgramsSlot) {
+      // Comparing specific programs within universities
+      const matchedCharts: ChartJsonData[] = [];
+      chartSlots.CompareUniversityWProgramsSlot.split(",").forEach((s: string) => {
+        const trimmed = s.trim();
+        const result = performFuzzySearch(trimmed, allUniversityCharts, "universityName");
+        if (result && !matchedCharts.some((chart) => chart === result)) {
+          matchedCharts.push(result);
+        }
+      });
+      const comparisonChart: ChartJsonData = {
+        universityName: "Comparison of University Programs",
+        type: "bar",
+        data: {
+          datasets: matchedCharts.map((chart) => ({
+            label: chart.universityName || "Unnamed Program",
+            data: chart.data.datasets[0].data,
+          })),
+        },
+      };
+      setCurrentChart(comparisonChart);
+    }    
+  }, [chartSlots, allSchoolCharts, allVocationalCharts, allUniversityCharts]);
 
   // Export chart content as PDF
   const exportContentAsPDF = async () => {
@@ -249,9 +333,9 @@ const BasicChart = () => {
     <div className="flex flex-col md:flex-row">
       <div className="p-5 w-full md:w-[70%]">
         <h2>Charts</h2>
-        {(isSchoolDataLoading || isVocationalDataLoading) && <p>Loading charts...</p>}
+        {(isSchoolDataLoading || isVocationalDataLoading || isUniversityDataLoading) && <p>Loading charts...</p>}
         <div id="export-content">
-          {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
+          {!isSchoolDataLoading && !isVocationalDataLoading && !isUniversityDataLoading && currentChart && (
             <div id="current-chart">
               <DynamicChart jsonData={currentChart} />
             </div>

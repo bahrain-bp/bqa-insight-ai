@@ -187,12 +187,12 @@ export function BotStack({stack}: StackContext) {
                                 title: "Do you want to analyze based on program or standard??",
                                 buttons: [
                                     {
-                                        text: "Program",
-                                        value: "Program"
+                                        text: "Program Review",
+                                        value: "Program Review"
                                     },
                                     {
-                                        text: "Standard",
-                                        value: "Standard"
+                                        text: "Institutional Review",
+                                        value: "Institutional Review"
                                     }
                                 ]
                             }
@@ -233,10 +233,28 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'What is the standard of the specific program?'
+                                imageResponseCard: {
+                                    title: "What is the standard of the specific program you are looking for?",
+                                    buttons: [
+                                        {
+                                            text: "The Learning Programme",
+                                            value: "The Learning Programme"
+                                        },
+                                        {
+                                            text: "Efficiency of the Programme ",
+                                            value: "Efficiency of the Programme "
+                                        },
+                                        {
+                                            text: "Academic Standards of Students and Graduates",
+                                            value: "Academic Standards of Students and Graduates"
+                                        },
+                                        {
+                                            text: "Effectiveness of Quality Management and Assurance",
+                                            value: "Effectiveness of Quality Management and Assurance"
+                                        }
+                                    ]
+                                }
                             }
-                        },
                     },
                 ],
                 maxRetries: 2,
@@ -265,8 +283,30 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'What is the standard for analysis?'
+                            imageResponseCard: {
+                                title: "What is the standard of the institute you are looking for?",
+                                buttons: [
+                                    {
+                                        text: "Mission, Governance and Management",
+                                        value: "Mission, Governance and Management"
+                                    },
+                                    {
+                                        text: "Quality Assurance and Enhancement",
+                                        value: "Quality Assurance and Enhancement"
+                                    },
+                                    {
+                                        text: "Learning Resources, ICT and Infrastructure",
+                                        value: "Learning Resources, ICT and Infrastructuret"
+                                    },
+                                    {
+                                        text: "The Quality of Teaching and Learning",
+                                        value: "The Quality of Teaching and Learning"
+                                    },
+                                    {
+                                        text: "Student Support Services",
+                                        value: "Student Support Services"
+                                    },
+                                ]
                             }
                         },
                     },
@@ -306,9 +346,27 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'what is the aspect you want?',
-                            },
+                            imageResponseCard: {
+                                title: "Based on what aspect you want to analyze?",
+                                buttons: [
+                                    {
+                                        text: "Students Academic Achievement",
+                                        value: "Students Academic Achievement"
+                                    },
+                                    {
+                                        text: "Students Personal Development and Well-being",
+                                        value: "Students Personal Development and Well-being"
+                                    },
+                                    {
+                                        text: "Teaching, Learning and Assessment",
+                                        value: "Teaching, Learning and Assessment"
+                                    },
+                                    {
+                                        text: "Leadership, Management and Governance",
+                                        value: "Leadership, Management and Governance"
+                                    },
+                                ]
+                            }
                         }
                     }
                 ],
@@ -348,9 +406,23 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
-                            plainTextMessage: {
-                                value: 'what is the aspect you want?',
-                            },
+                            imageResponseCard: {
+                                title: "Based on what aspect you want to analyze?",
+                                buttons: [
+                                    {
+                                        text: "Assessment and Learners",
+                                        value: "Assessment and Learners"
+                                    },
+                                    {
+                                        text: "Learners Engagement",
+                                        value: "Learners Engagement"
+                                    },
+                                    {
+                                        text: "Leadership and Management",
+                                        value: "Leadership and Management"
+                                    }
+                                ]
+                            }
                         }
                     }
                 ],
@@ -406,6 +478,49 @@ export function BotStack({stack}: StackContext) {
     })
 
     comparingIntent.addSlot({
+        slotName: 'CompareUniSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Compare universities based on universities or program',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "What is the standard of the institute you are looking for?",
+                                buttons: [
+                                    {
+                                        text: "Mission, Governance and Management",
+                                        value: "Mission, Governance and Management"
+                                    },
+                                    {
+                                        text: "Quality Assurance and Enhancement",
+                                        value: "Quality Assurance and Enhancement"
+                                    },
+                                    {
+                                        text: "Learning Resources, ICT and Infrastructure",
+                                        value: "Learning Resources, ICT and Infrastructuret"
+                                    },
+                                    {
+                                        text: "The Quality of Teaching and Learning",
+                                        value: "The Quality of Teaching and Learning"
+                                    },
+                                    {
+                                        text: "Student Support Services",
+                                        value: "Student Support Services"
+                                    },
+                                ]
+                            }
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    comparingIntent.addSlot({
         slotName: 'CompareUniversitySlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Compare universities based on universities or program',
@@ -416,11 +531,11 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             imageResponseCard: {
-                                title: "would you like to compare universties or programs within universities?",
+                                title: "would you like to compare institutes or programs within universities?",
                                 buttons: [
                                     {
-                                        text: "Universities",
-                                        value: "Universities"
+                                        text: "Institutional review",
+                                        value: "Institutional review"
                                     },
                                     {
                                         text: "Programs",
@@ -467,8 +582,47 @@ export function BotStack({stack}: StackContext) {
                 messageGroups: [
                     {
                         message: {
+                                imageResponseCard: {
+                                    title: "What are the programs standards you would like to compare?",
+                                    buttons: [
+                                        {
+                                            text: "The Learning Programme",
+                                            value: "The Learning Programme"
+                                        },
+                                        {
+                                            text: "Efficiency of the Programme ",
+                                            value: "Efficiency of the Programme "
+                                        },
+                                        {
+                                            text: "Academic Standards of Students and Graduates",
+                                            value: "Academic Standards of Students and Graduates"
+                                        },
+                                        {
+                                            text: "Effectiveness of Quality Management and Assurance",
+                                            value: "Effectiveness of Quality Management and Assurance"
+                                        }
+                                    ]
+                                }
+                            }
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareUniversityWprogSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'names of universities to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
                             plainTextMessage: {
-                                value: 'What are the programs you would like to compare? You can choose any program from any university in Bahrain'
+                                value: 'what are the names of programs you would like to compare'
                             }
                         },
                     },
@@ -477,6 +631,47 @@ export function BotStack({stack}: StackContext) {
             },
         },
     })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareSchoolAspectlSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Compare schools for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            imageResponseCard: {
+                                title: "Based on what aspect you want to compare?",
+                                buttons: [
+                                    {
+                                        text: "Students Academic Achievement",
+                                        value: "Students Academic Achievement"
+                                    },
+                                    {
+                                        text: "Students Personal Development and Well-being",
+                                        value: "Students Personal Development and Well-being"
+                                    },
+                                    {
+                                        text: "Teaching, Learning and Assessment",
+                                        value: "Teaching, Learning and Assessment"
+                                    },
+                                    {
+                                        text: "Leadership, Management and Governance",
+                                        value: "Leadership, Management and Governance"
+                                    },
+                                ]
+                            }
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+
 
     comparingIntent.addSlot({
         slotName: 'CompareSchoolSlot',
@@ -607,12 +802,26 @@ export function BotStack({stack}: StackContext) {
             promptSpecification: {
                 messageGroups: [
                     {
-                        message: {
-                            plainTextMessage: {
-                                value: 'What is the aspects of Vocational training centers you want to compare?'
+                            message: {
+                                imageResponseCard: {
+                                    title: "Based on what aspect you want to compare?",
+                                    buttons: [
+                                        {
+                                            text: "Assessment and Learners",
+                                            value: "Assessment and Learners"
+                                        },
+                                        {
+                                            text: "Learners Engagement",
+                                            value: "Learners Engagement"
+                                        },
+                                        {
+                                            text: "Leadership and Management",
+                                            value: "Leadership and Management"
+                                        }
+                                    ]
+                                }
                             }
                         },
-                    },
                 ],
                 maxRetries: 2,
             },
