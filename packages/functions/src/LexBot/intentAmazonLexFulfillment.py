@@ -310,7 +310,9 @@ def dispatch(intent_request):
                     'AnalyzeVocationalSlot',
                     slots=get_slots(intent_request)
                 ) 
-             message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+            #  message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+             analyze_vocational_training_centre_prompt = create_analyze_vocational_training_centre(vocational, vocationalaspect)
+             message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_vocational_training_centre_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              
@@ -349,8 +351,18 @@ def dispatch(intent_request):
                         'StandardProgSlot',
                         slots=get_slots(intent_request),
                     )
+                
+                university = get_slot(intent_request, 'UniNameSlot')
+                if university is None:
+                    return elicit_slot(
+                        intent_request,
+                        'UniNameSlot',
+                        slots=get_slots(intent_request)
+                    )
 
-                message = f"for the following {standard} the standard {program_name} "
+                # message = f"for the following {standard} the standard {program_name} {university}"
+                analyze_university_programme_prompt = create_uni_analyze_prompt(program_name, standard, university)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_programme_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
