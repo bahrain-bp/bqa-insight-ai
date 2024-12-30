@@ -143,18 +143,25 @@ def elicit_slot(intent_request, slot_to_elicit, message = None, slots = {}, sess
     return result
 
 
-def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, slots = {}, session_attributes = {}):
+def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, message=None, slots = {}, session_attributes = {}):
     intent_request['sessionState']['intent']['confirmationState'] = 'None'
     intent_request['sessionState']['intent']['name'] = intent_to_elicit
     response = elicit_slot(
         intent_request,
         slot_to_elicit,
         slots=slots,
-        session_attributes=session_attributes
+        session_attributes=session_attributes,
+        message=message,
     )
     return response
 
-
+def followup(intent_request, message):
+    return elicit_intent(
+        intent_request,
+        'OtherQuestionsSlot',
+        'OtherIntent',
+        message=message,
+    )
 
 def close(intent_request, fulfillment_state, message, session_attributes = {}):
     if session_attributes == {}:
@@ -288,12 +295,7 @@ def dispatch(intent_request):
              message = invoke_agent(agent_id, agent_alias_id, session_id, school_analyze_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
-             return close(
-                 intent_request,
-                 'Fulfilled',
-                 response,
-                 session_attributes
-             )
+             return followup(intent_request, response)
         
         elif institute_type == 'Vocational training center':
              vocationalaspect = get_slot(intent_request, "VocationalAspectSlot")
@@ -316,12 +318,7 @@ def dispatch(intent_request):
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              
-             return close(
-                 intent_request,
-                 'Fulfilled',
-                 response,
-                 session_attributes
-             )
+             return followup(intent_request, response)
         
         # If University is selected, check AnalysisTypeSlot
         elif institute_type == 'University':
@@ -366,12 +363,7 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                    intent_request,
-                    'Fulfilled',
-                    response,
-                    session_attributes,
-                )
+                return followup(intent_request, response)
 
             elif analysis_type == 'Institutional Review':
                 return elicit_intent(
@@ -399,12 +391,7 @@ def dispatch(intent_request):
         response = create_message(message)
         session_attributes = get_session_attributes(intent_request)
         
-        return close(
-            intent_request,
-            'Fulfilled',
-            response,
-            session_attributes,
-        )
+        return followup(intent_request, response)
     
     
         
@@ -461,12 +448,7 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                    intent_request,
-                    'Fulfilled',
-                    response,
-                    session_attributes,
-                )
+                return followup(intent_request, response)
         
             elif compare_types == 'Programs':
                 programs_st = get_slot(intent_request,'CompareUniversityWProgramsSlot')
@@ -491,12 +473,7 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
     
         elif institutecompare_type == 'School':
             compare_school_aspect = get_slot(intent_request,'CompareSchoolAspectlSlot')
@@ -527,12 +504,7 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
             
             elif compareschool_type == 'Specific Institutes':
                 specific_institutes_name = get_slot(intent_request,'CompareSpecificInstitutesSlot')
@@ -548,24 +520,14 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
             
             elif compareschool_type == "All Government Schools" or compareschool_type == 'All Private Schools':
                 message = f"Comparision of schools: {compareschool_type} for the aspect {compare_school_aspect}"
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
             
         elif institutecompare_type == 'Vocational training center':
             comparevocationalaspect = get_slot(intent_request,'CompareVocationalaspectSlot')
@@ -588,12 +550,7 @@ def dispatch(intent_request):
             response = create_message(message)
             session_attributes = get_session_attributes(intent_request)
             
-            return close(
-                 intent_request,
-                 'Fulfilled',
-                 response,
-                 session_attributes
-             )
+            return followup(intent_request, response)
                  
     # Handle OtherIntent
     elif intent_name == 'OtherIntent':
