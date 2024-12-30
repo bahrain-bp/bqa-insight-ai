@@ -105,6 +105,7 @@ export async function handler(event: SQSEvent) {
             console.log("HERE IS RESPONSE: ", response);
     
             const modelResponse = response.output?.message?.content?.[0].text
+            // console.log("model output: ", modelResponse);
 
             const afterRegex = regexFunction(modelResponse || "");
     
