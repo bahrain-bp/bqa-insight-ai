@@ -14,6 +14,7 @@ const ALLOWED_CSV_FILENAMES = new Set([
   "Results of National Framework Operations.csv",
   "Results of Private Schools Reviews.csv",
   "Results of Vocational Reviews.csv",
+  "Results of University Reviews.csv"
 ]);
 
 export async function handler(event: any) {

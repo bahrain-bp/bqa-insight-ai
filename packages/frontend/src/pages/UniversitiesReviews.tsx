@@ -1,14 +1,13 @@
 
 import { useEffect, useState } from 'react';
-import { VocationalData } from './VocationalReviewsComponents/types';
+import { UniversityData } from './UniversityReviewComponents/types';
 import { ToggleSection } from './Components/ToggleSection'; 
-import { VocationalReviewsTable } from './VocationalReviewsComponents/VocationalReviewsTable';
-import { VocationalHistoryGraph } from './VocationalReviewsComponents/VocationalHistoryGraph';
-import { VocationalGraphs } from './VocationalReviewsComponents/VocationalGraphs';
+import { UniversityHistoryGraph } from './UniversityReviewComponents/UniversityHistoryGraph';
+import { UniversityReviewsTable} from './UniversityReviewComponents/UniversityReviewTables';
+import { UniversityGeneralCharts} from './UniversityReviewComponents/UniversityGeneralCharts';
 
-
-export function VocationalReviews() {
-  const [data, setData] = useState<VocationalData[]>([]);
+export function UniversityReviews() {
+  const [data, setData] = useState<UniversityData[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null); // Optional: To handle errors
 
@@ -16,9 +15,9 @@ export function VocationalReviews() {
     // Fetch data from the API when the component mounts
     const fetchData = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchVocationalReviews`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchUniversityReviews`);
         if (!response.ok) {
-          throw new Error(`Network response was not ok: ${response.statusText}`);
+          throw new Error(`Network response was not ok: ${response.body}`);
         }
         const json = await response.json();
         if (json.success && Array.isArray(json.data)) {
@@ -28,7 +27,7 @@ export function VocationalReviews() {
           throw new Error("Invalid data format from API.");
         }
       } catch (error: any) { // Type assertion for error
-        console.error("Error fetching schools:", error);
+        console.error("Error fetching University:", error);
         setError(error.message || "An unexpected error occurred.");
       } finally {
         setLoading(false); // Stop loading regardless of success or failure
@@ -61,19 +60,19 @@ export function VocationalReviews() {
         // Data Loaded Content with Toggle Sections
         <div className="w-full flex flex-col">
 
-          {/* Vocational Ranking Section */}
-          <ToggleSection title="Vocationals Table" ariaControls="vocational-reviews-ranking">
-            <VocationalReviewsTable data={data} />
+          {/* University Ranking Section */}
+          <ToggleSection title="University Ranking Table" ariaControls="University-reviews-ranking">
+            <UniversityReviewsTable data={data} />
           </ToggleSection>
 
           {/* Graphs Section */}
-          <ToggleSection title="General Graphs" ariaControls="vocational-reviews-graphs">
-            <VocationalGraphs data={data} />
+          <ToggleSection title="General Graphs" ariaControls="University-reviews-graphs">
+            <UniversityGeneralCharts data={data} />
           </ToggleSection>
           
-          {/* Search for a School Section */}
-          <ToggleSection title="Vocational History Graph" ariaControls="vocational-search">
-            <VocationalHistoryGraph data={data} />
+          {/* Search for a University Section */}
+          <ToggleSection title="University History Graph" ariaControls="University-search">
+            <UniversityHistoryGraph data={data} />
           </ToggleSection>
         </div>
       )}

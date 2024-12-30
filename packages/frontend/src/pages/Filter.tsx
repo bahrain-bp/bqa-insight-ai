@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import { LexChartSlotsContext } from "../components/RouterRoot";
 
 
 const Filter = () => {
@@ -7,6 +8,14 @@ const Filter = () => {
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
+  const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
+
+  const [latestYear, setLatestYear] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+
+  const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
+
+
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
     "Institute Level": [],
@@ -75,6 +84,12 @@ const Filter = () => {
         
         if (educationType === "schools") {
           setFilterOptions(data.filters);
+          // Find and store the latest year
+          if (data.filters["Report Year"]?.length > 0) {
+            const years = data.filters["Report Year"].map(Number);
+            const maxYear = Math.max(...years).toString();
+            setLatestYear(maxYear);
+          }
         } else if (educationType === "universities") {
           setUniversityFilters(data.universityFilters);
         }
@@ -87,7 +102,6 @@ const Filter = () => {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
-
   useEffect(() => {
     if (!userModifiedSentence) {
       const newSentence = generateSentence();
@@ -182,82 +196,46 @@ const Filter = () => {
   };
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
-  const value = e.target.value;
+    const value = e.target.value;
 
-  if (value && value !== "Select...") {
-    setSelectedOptions((prevState) => {
-      if (!isFilterActive) {
-        setIsFilterActive(true);
-      }
+    if (value && value !== "Select...") {
+      setSelectedOptions((prevState) => {
+        if (!isFilterActive) {
+          setIsFilterActive(true);
+        }
 
-      let updatedState = { ...prevState };
+        let updatedState = { ...prevState };
 
-      // Initialize array if it doesn't exist
-      if (!updatedState[header]) {
-        updatedState[header] = [];
-      }
+        // Enable multi-select only in Compare mode for Institute/University Name
+        if ((header === "Institute Name" && educationType === "schools" && mode === "Compare") ||
+            (header === "University Name" && educationType === "universities" && mode === "Compare")) {
+          if (!updatedState[header]) {
+            updatedState[header] = [];
+          }
+          if (!updatedState[header].includes(value)) {
+            updatedState[header] = [...updatedState[header], value];
+          }
+        } else {
+          // Single select for other fields
+          updatedState = {
+            ...prevState,
+            [header]: [value],
+          };
+          
+          if (educationType === "schools" && header === "Institute Classification") {
+            updatedState["Institute Level"] = [];
+            updatedState["Location"] = [];
+            updatedState["Institute Name"] = [];
+            updatedState["Report Year"] = [];
+          } else if (header === "Institute Level") {
+            updatedState["Institute Name"] = [];
+          }
+        }
 
-      // Handle Compare mode for both schools and universities for multi-select
-    // Handle multi-select for "Compare" mode
-    if (mode === "Compare" && educationType === "universities" && header === "University Name") {
-      // Add only unique selections
-      if (!updatedState[header].includes(value)) {
-        updatedState[header] = [...updatedState[header], value];
-      }
-      return updatedState;
+        return updatedState;
+      });
     }
-
-      // Handle all other cases
-      if (educationType === "schools") {
-        if (header === "Institute Classification") {
-          updatedState = {
-            ...prevState,
-            "Institute Classification": [value],
-            "Institute Level": [],
-            "Location": [],
-            "Institute Name": [],
-            "Report Year": []
-          };
-        } else if (header === "Institute Level") {
-          updatedState = {
-            ...prevState,
-            "Institute Level": [value],
-            "Institute Name": [],
-          };
-        } else if (header === "Location") {
-          updatedState = {
-            ...prevState,
-            "Location": [value],
-          };
-        } else {
-          updatedState = {
-            ...prevState,
-            [header]: [value],
-          };
-        }
-      } else if (educationType === "universities") {
-        updatedState = {
-          ...prevState,
-          [header]: [value],
-        };
-      } if (header === "University Name" && mode === "Compare" && educationType === "universities") {
-        updatedState = {
-          ...prevState,
-          [header]: [...(prevState[header] || []), value],
-          };
-        } else {
-          updatedState = {
-            ...prevState,
-            [header]: [value],
-          };
-        }
-
-
-      return updatedState;
-    });
-  }
-};
-
+  };
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
@@ -348,50 +326,30 @@ const Filter = () => {
     }, 3000);
   };
 
+
+  
+
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const sentence = editableSentence;
 
-
-    if (mode === "Compare" && educationType === "universities") {
-      const selectedUniversities = selectedOptions["University Name"] || [];
-  
-      if (selectedUniversities.length < 2) {
-        showMessage("Please select at least two universities in Compare mode.", "error");
-        return;
-      }
-  
-      console.log("Comparing the following universities:", selectedUniversities);
-    }
-
-
-
     if (mode === "Compare") {
       const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
-
+      if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
+        showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
+        return;
+      }
+    
       if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
-        // Check multi-select for Institute Name in schools table
-        if (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2) {
+        if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
           showMessage("Please select at least two institutes in Compare mode.", "error");
           return;
-        }
-        console.log("Comparing the following institutes:", selectedOptions["Institute Name"]);
-      } else if (educationType === "universities") {
-        // Check multi-select for University Name in universities table
-        if (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2) {
+        } else if (educationType === "universities" && (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2)) {
           showMessage("Please select at least two universities in Compare mode.", "error");
           return;
         }
-        console.log("Comparing the following universities:", selectedOptions["University Name"]);
-      } else {
-        showMessage("Invalid education type selected.", "error");
-        return;
       }
-    
-      // Proceed with comparison logic based on selected items
-      console.log("Comparison successful for education type:", educationType);
-    } 
-    
+    }
 
     const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
     const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
@@ -403,19 +361,30 @@ const Filter = () => {
 
     if (sentence) {
       try {
+        setLoading(true); // Set loading state to true when starting the request
+        
+        let submissionOptions = { ...selectedOptions };
+        
+        if (educationType === "schools" && (!selectedOptions["Report Year"]?.length) && latestYear) {
+          submissionOptions = {
+            ...submissionOptions,
+            "Report Year": [latestYear]
+          };
+        }
+
         const prompt = {
           userMessage: sentence,
           educationType,
           ...(educationType === "schools" ? {
-            classification: selectedOptions["Institute Classification"],
-            level: selectedOptions["Institute Level"],
-            location: selectedOptions["Location"],
-            instituteName: selectedOptions["Institute Name"],
-            reportYear: selectedOptions["Report Year"]
+            classification: submissionOptions["Institute Classification"],
+            level: submissionOptions["Institute Level"],
+            location: submissionOptions["Location"],
+            instituteName: submissionOptions["Institute Name"],
+            reportYear: submissionOptions["Report Year"]
           } : {
-            universityName: selectedOptions["University Name"],
-            programmeName: selectedOptions["Programme Name"],
-            programmeJudgment: selectedOptions["Programme Judgment"]
+            universityName: submissionOptions["University Name"],
+            programmeName: submissionOptions["Programme Name"],
+            programmeJudgment: submissionOptions["Programme Judgment"]
           })
         };
 
@@ -426,16 +395,41 @@ const Filter = () => {
         });
 
         const body = await response.json();
+        setBedrockResponse(body.response);
+        showMessage("Data successfully received!", "success");
+
+        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
+          const slots = {
+            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            CompareSpecificInstitutesSlot:
+              mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
+            ProgramNameSlot: undefined,
+            AnalyzeVocationalSlot: undefined,
+            CompareUniversityWUniSlot: undefined,
+            CompareUniversityWProgramsSlot: undefined,
+            CompareSchoolSlot: undefined,
+            CompareVocationalSlot: undefined,
+          };
+          
+          setChartSlots(slots); // Update context with selected filters
+          console.log("Updated chart slots:", slots);
+          
+        }
+
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
-        console.error("Error sending data to Bedrock:", error);
+        console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
+      } finally {
+        setLoading(false); // Reset loading state regardless of success or failure
       }
     } else {
       showMessage("Please select options.", "error");
     }
   };
+
+
 
   const handleClear = () => {
     const currentFilters = getCurrentFilters();
@@ -451,6 +445,7 @@ const Filter = () => {
     setUserModifiedSentence(false);
     setUserAdditions("");
     setLastGeneratedSentence("");
+    setBedrockResponse(null);
   };
 
 
@@ -511,11 +506,16 @@ const Filter = () => {
                       value="Select..."
                     >
                       <option value="Select...">Select...</option>
-                      {getFilterValues(header)
-                        .filter(option => !selectedOptions[header]?.includes(option))
-                        .map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
+              {getFilterValues(header)
+                .filter(option => {
+                  if ((header === "Institute Name" || header === "University Name") && mode === "Compare") {
+                    return !selectedOptions[header]?.includes(option);
+                  }
+                  return true;
+                })
+                .map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
                     </select>
                   ) : (
                     <select
@@ -564,11 +564,18 @@ const Filter = () => {
                         className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
                       />
                     ) : (
-                      <span onClick={handleSentenceEdit} className="cursor-pointer">
+                      <div 
+                        onClick={handleSentenceEdit} 
+                        className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
+                        title="Click to edit"
+                      >
                         {editableSentence || generateSentence()}
-                      </span>
+                        <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
+                      </div>
                     )}
                   </div>
+                 
+                  
                   {isEditing && (
                     <div className="mt-4 text-center">
                       <button
@@ -579,15 +586,30 @@ const Filter = () => {
                       </button>
                     </div>
                   )}
+                  
                   <div className="mt-6 text-center">
-                    <button
-                      onClick={handleSubmit}
-                      className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
-                    >
-                      Submit
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className={`px-6 py-2 bg-primary text-white rounded-md ${
+                loading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-primary-dark'
+              } relative`}
+            >
+              {loading ? (
+                <>
+                  <span className="opacity-0">Submit</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  </div>
+                </>
+              ) : (
+                'Submit'
+              )}
+
                     </button>
                     <button
                       onClick={handleClear}
+                      disabled={loading}
                       className="ml-4 px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
                     >
                       Clear
@@ -597,6 +619,19 @@ const Filter = () => {
               )}
             </>
           )}
+                    {bedrockResponse && (
+            <div className="mt-8">
+              <h3 className="text-xl font-semibold mb-4">Analysis Results</h3>
+              <div className="bg-white p-6 rounded-lg shadow-md">
+                <div className="prose max-w-none">
+                  {bedrockResponse.split('\n').map((paragraph, index) => (
+                    <p key={index} className="mb-4">{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          
       </div>
   );
 };

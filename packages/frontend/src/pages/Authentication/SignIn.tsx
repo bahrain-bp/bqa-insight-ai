@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
-import { useNavigate } from 'react-router-dom';
 import { signIn, getCurrentUser } from '@aws-amplify/auth';
 
 type SetStateType<T> = React.Dispatch<React.SetStateAction<T>>;
@@ -16,16 +15,20 @@ const SignIning = ({
   const [password, setPassword] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string>('');
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get the redirect path from location state, default to /fileManagement
+  const from = location.state?.from || '/fileManagement';
     
   const handleSignIn = async (email: string, password: string) => {
     try {
       const user = await signIn({ username: email, password });
       setUser(user);
-      setErrorMessage(''); // Clear any existing error messages
-      navigate('/fileManagement');
+      setErrorMessage('');
+      // Redirect to the page they tried to visit
+      navigate(from);
     } catch (error: any) {
       console.error('Error signing in', error);
-      // Handle specific error cases
       if (error.name === 'NotAuthorizedException') {
         setErrorMessage('Incorrect email or password. Please try again.');
       } else if (error.name === 'UserNotFoundException') {
@@ -41,11 +44,11 @@ const SignIning = ({
       try {
         const currentUser = await getCurrentUser();
         setUser(currentUser);
-        console.log("User ID:", currentUser.username);
-        navigate("/fileManagement");
+        // If already signed in, redirect to the intended page
+        navigate(from);
       } catch (error) {
+        // User is not signed in, stay on signin page
         console.log("User not signed in:", error);
-        navigate("/auth/signin");
       }
     };
     checkUserSignIn();

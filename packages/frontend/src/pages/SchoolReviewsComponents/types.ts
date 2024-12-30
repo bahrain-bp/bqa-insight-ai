@@ -18,3 +18,4 @@ export interface SchoolData {
   SchoolLevel?: string;   // Optional: "Primary", "Intermediate", "Secondary"
   SchoolGender?: string;  // Optional: "Boys", "Girls"
 }
+

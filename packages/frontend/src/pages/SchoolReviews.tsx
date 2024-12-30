@@ -67,7 +67,7 @@ export function SchoolReviews() {
           </ToggleSection>
 
           {/* Schools Ranking Section */}
-          <ToggleSection title="Schools Ranking Table" ariaControls="school-reviews-ranking">
+          <ToggleSection title="Schools Table" ariaControls="school-reviews-ranking">
             <SchoolReviewsTable data={data} />
           </ToggleSection>
 
