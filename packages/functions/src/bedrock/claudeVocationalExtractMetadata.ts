@@ -49,9 +49,9 @@ export async function handler(event: SQSEvent){
                 "Vocational Training center","Vocational Location","Date of Review"
 
                 request: {
-                Vocational Training center name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
+                Vocational Training center: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
                 Vocational Location: String// The location of the vocational training center before the word Kingdom of Barhain at the beginning of the text.
-                Date of Review: String// review date.
+                Date of Review: String// The Review Date.
                 }
     
                 Please output the extracted information in JSON format. 
@@ -61,7 +61,7 @@ export async function handler(event: SQSEvent){
     
                 Output: 
                 {
-                "Vocational Training center name": "Agora Training Centre",
+                "Vocational Training center": "Agora Training Centre",
                 "Vocational Location": "Manama"
                 "Date of Review": "08-12 October 2023",
                 }
@@ -69,7 +69,7 @@ export async function handler(event: SQSEvent){
                 
                 Input: ` + text + `
                 Output: {
-                  "Vocational Training center name": "",
+                  "Vocational Training center": "",
                   "Vocational Location": ""
                   "Date of Review": "",
                 }`;
@@ -88,11 +88,7 @@ export async function handler(event: SQSEvent){
                   };
                 
             
-                // const request = {
-                // payload,
-                // temperature: 0.5,
-                // top_p: 0.9,
-                // };
+              
                 
                 
                 const command = new InvokeModelCommand({
@@ -100,28 +96,18 @@ export async function handler(event: SQSEvent){
                     body: JSON.stringify(payload),
                     modelId : ModelId,
                   });
-            // const command = new InvokeModelCommand({
-            //     body : JSON.stringify(request),
-            //     modelId : ModelId,
-            // });
+         
             
             const response = await client.send(command);
-            console.log("RESPONSE: ", response)
+          
     
             const decodedResponse = new TextDecoder().decode(response.body);
             const decodedResponseBody = JSON.parse(decodedResponse);
             const output = decodedResponseBody.content[0].text;
             
-            console.log("Final output: ",output)
-            console.log("output type: ", typeof (output))
-            console.log(["Institute Name"])
+      
             const extractedOutput = parseMetadata(output);
-            console.log("EXTRACTED OUTPUT type: ", typeof (extractedOutput))
-            //console.log("JSON EXTRACTED OUTPUT type: ", typeof JSON.parse(extractedOutput))
-    
-    
-    
-            // const parsedOutput = await parseMetadata(output);
+           
     
             
             console.log("Extracted Output:", extractedOutput)
@@ -217,9 +203,10 @@ async function insertVocationalCentreMetadata(data: any, fileKey: string) {
   const params = {
       TableName: process.env.VOCATIONAL_CENTER_METADATA_TABLE_NAME as string,
       Item: {
-          vocationalCenterName: data["Vocational Training center name"],
+          vocationalCenterName: data["Vocational Training center"],
           vocationalCenterLocation: data["Vocational Location"],
-          dateOfReview: data["Date Of Review"]
+          dateOfReview: data["Date of Review"]
+          
       },
   }
   

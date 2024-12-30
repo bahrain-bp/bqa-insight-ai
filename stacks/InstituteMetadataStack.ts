@@ -4,7 +4,6 @@ export function InstituteMetadataStack({ stack }: StackContext) {
   const instituteMetadata = new Table(stack, "InstituteMetadata", {
     fields: {
         institueName: "string",
-        instituteType: "string",
         instituteClassification: "number",
         instituteGradeLevels: "string", 
         instituteLocation: "string", 
