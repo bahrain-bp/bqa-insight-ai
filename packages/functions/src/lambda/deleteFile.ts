@@ -97,8 +97,52 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         } else {
           console.log(`No corresponding metadata.json file found for key: ${metadataFileKey}`);
         }
+//         await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
 
-// Get the institute name for the current file
+
+// // Get the institute name for the current file
+// const fileMetadata = await dynamodb
+//   .get({
+//     TableName: TABLE_NAME,
+//     Key: { fileKey }
+//   })
+//   .promise();
+
+//   console.log(`${fileMetadata.Item?.institueName} fileMetadata instituitename`);
+  
+
+// if (fileMetadata.Item?.instituteName) {
+//   // Query for all records with the same institute name
+//   const instituteRecords = await dynamodb
+//     .scan({
+//       TableName: TABLE_NAME,
+//       FilterExpression: "instituteName = :instituteName",
+//       ExpressionAttributeValues: {
+//         ":instituteName": fileMetadata.Item.instituteName
+//       }
+//     })
+//     .promise();
+
+//   // Delete from file metadata table
+//   console.log(fileKey || "nbsnvh", ": file key");
+  
+//   // await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
+
+//   // If this is the only record for this institute, delete from institute table
+//   if (instituteRecords.Items?.length === 1) {
+//     await dynamodb
+//       .delete({
+//         TableName: INSTITUTE_METADATA_TABLE,
+//         Key: { institueName: fileMetadata.Item.instituteName }
+//       })
+//       .promise();
+//     console.log(`Deleted institute from metadata table: ${fileMetadata.Item.instituteName}`);
+//   } else {
+//     console.log(`Keeping institute record as ${instituteRecords.Items?.length} files remain`);
+//   }
+// }
+ // Get the file metadata first
+// Get the file metadata first
 const fileMetadata = await dynamodb
   .get({
     TableName: TABLE_NAME,
@@ -106,8 +150,10 @@ const fileMetadata = await dynamodb
   })
   .promise();
 
+console.log(`${fileMetadata.Item?.instituteName} fileMetadata institutename`);
+
 if (fileMetadata.Item?.instituteName) {
-  // Query for all records with the same institute name
+  // Query for all records with the same institute name BEFORE deleting
   const instituteRecords = await dynamodb
     .scan({
       TableName: TABLE_NAME,
@@ -120,9 +166,11 @@ if (fileMetadata.Item?.instituteName) {
 
   // Delete from file metadata table
   await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
+  console.log(`Deleted from file metadata table: ${fileKey}`);
 
-  // If this is the only record for this institute, delete from institute table
-  if (instituteRecords.Items?.length === 1) {
+  // Now check if this was the last file for this institute
+  if (instituteRecords.Items && instituteRecords.Items.length <= 1) {
+    // This was the last file, so delete from institute metadata
     await dynamodb
       .delete({
         TableName: INSTITUTE_METADATA_TABLE,
@@ -131,10 +179,17 @@ if (fileMetadata.Item?.instituteName) {
       .promise();
     console.log(`Deleted institute from metadata table: ${fileMetadata.Item.instituteName}`);
   } else {
-    console.log(`Keeping institute record as ${instituteRecords.Items?.length} files remain`);
+    // There are other files for this institute, so keep the institute record
+    const remainingFiles = instituteRecords.Items ? instituteRecords.Items.length - 1 : 0;
+    console.log(`Keeping institute record as ${remainingFiles} files remain`);
   }
+} else {
+  // If there's no institute name, just delete from file metadata
+  await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
+  console.log(`Deleted from file metadata table: ${fileKey}`);
 }
- 
+
+
   // Check and Delete from Program Metadata Table   
 const programScan = await dynamodb.scan({
   TableName: PROGRAM_METADATA_TABLE_NAME,

@@ -67,9 +67,12 @@ export function ApiStack({stack}: StackContext) {
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
                         INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
                         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
-                        UNIVERSITY_METADATA_TABLE_NAME :UniversityProgramMetadataTable.tableName
+                        UNIVERSITY_METADATA_TABLE_NAME :UniversityProgramMetadataTable.tableName,
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+
                     },
-                    permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable, "bedrock"],
                 },
             },
             "POST /comprehend": {
