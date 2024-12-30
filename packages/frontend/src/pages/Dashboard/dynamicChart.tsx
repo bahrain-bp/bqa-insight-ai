@@ -9,6 +9,7 @@ export interface ChartJsonData {
   schoolName?: string; // For schools
   vocationalName?: string; // For vocational institutes
   schoolType?: string; // For schools (Government, Private)
+  universityName?: string;
   options?: object;
   type: ChartType;
   data: {
