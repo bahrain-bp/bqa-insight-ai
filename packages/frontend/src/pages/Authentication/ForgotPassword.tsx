@@ -2,6 +2,7 @@ import { useState, ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { resetPassword, confirmResetPassword, 
   type ResetPasswordOutput, type ConfirmResetPasswordInput } from 'aws-amplify/auth';
+import Breadcrumb from "../../components/Breadcrumbs/Breadcrumb";
 
 type FormFields = {
   email: string;
@@ -174,6 +175,8 @@ export default function PasswordResetPage() {
   }
 
   return (
+  <>
+    <Breadcrumb pageName="Reset Password" />
     <div>
       {!isCodeSent
         ? renderEmailInputForm()
@@ -181,6 +184,7 @@ export default function PasswordResetPage() {
         ? renderPasswordResetForm()
         : renderResetSuccessMessage()}
     </div>
+  </>
   );
 }
 

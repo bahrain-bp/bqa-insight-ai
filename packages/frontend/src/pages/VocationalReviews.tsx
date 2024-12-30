@@ -5,6 +5,7 @@ import { ToggleSection } from './Components/ToggleSection';
 import { VocationalReviewsTable } from './VocationalReviewsComponents/VocationalReviewsTable';
 import { VocationalHistoryGraph } from './VocationalReviewsComponents/VocationalHistoryGraph';
 import { VocationalGraphs } from './VocationalReviewsComponents/VocationalGraphs';
+import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
 
 
 export function VocationalReviews() {
@@ -39,6 +40,8 @@ export function VocationalReviews() {
   }, []);
 
   return (
+  <>
+    <Breadcrumb pageName="Vocational Institution Reviews" />
     <div className="min-h-screen p-6 bg-gray-50 flex flex-col">
       {loading ? (
         // Spinner and Loading Text Container
@@ -78,5 +81,6 @@ export function VocationalReviews() {
         </div>
       )}
     </div>
+  </>
   );
 }

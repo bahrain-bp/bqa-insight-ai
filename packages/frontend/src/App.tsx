@@ -4,7 +4,6 @@ import Loader from './Loader';
 import PageTitle from './components/PageTitle';
 import SignIning from './pages/Authentication/SignIn';
 import PasswordResetPage from './pages/Authentication/ForgotPassword';
-import ECommerce from './pages/Dashboard/ECommerce';
 import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
@@ -38,7 +37,7 @@ function App() {
           element={
             <>
               <PageTitle title="InsightAI" />
-              <ECommerce />
+              <BasicView />
             </>
           }
         />
@@ -99,7 +98,6 @@ function App() {
           element={
             <>
               <PageTitle title="Filter" />
-              <BasicView />
             </>
           }
         />
