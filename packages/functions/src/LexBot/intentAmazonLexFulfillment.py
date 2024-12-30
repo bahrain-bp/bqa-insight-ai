@@ -278,8 +278,18 @@ def dispatch(intent_request):
                         'StandardProgSlot',
                         slots=get_slots(intent_request),
                     )
+                
+                university = get_slot(intent_request, 'UniNameSlot')
+                if university is None:
+                    return elicit_slot(
+                        intent_request,
+                        'UniNameSlot',
+                        slots=get_slots(intent_request)
+                    )
 
-                message = f"for the following {standard} the standard {program_name} "
+                # message = f"for the following {standard} the standard {program_name} {university}"
+                analyze_university_programme_prompt = create_uni_analyze_prompt(program_name, standard, university)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_programme_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
