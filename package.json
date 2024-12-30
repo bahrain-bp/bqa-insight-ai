@@ -57,13 +57,12 @@
     "fuse.js": "^7.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.2",
+    "lucide-react": "^0.469.0",
     "mime-types": "^2.1.35",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
     "pdfjs-dist": "^4.8.69",
     "pdfreader": "^3.0.5",
-    "react-router-dom": "^6.28.0",
-    "recharts": "^2.15.0",
     "uuid": "^11.0.3"
   }
 }
