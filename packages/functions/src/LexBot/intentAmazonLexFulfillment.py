@@ -237,7 +237,9 @@ def dispatch(intent_request):
                     'AnalyzeVocationalSlot',
                     slots=get_slots(intent_request)
                 ) 
-             message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+            #  message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
+             analyze_vocational_training_centre_prompt = create_analyze_vocational_training_centre(vocational, vocationalaspect)
+             message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_vocational_training_centre_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              
