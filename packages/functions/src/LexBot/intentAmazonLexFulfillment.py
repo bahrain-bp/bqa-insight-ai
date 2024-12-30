@@ -79,7 +79,13 @@ def retry_last_slot(intent_request):
     slot_list = get_slot_history(session_attributes)
     # remove last slot
     last_slot = slot_list.pop()
-    intent_request['sessionState']['intent']['slots'].pop(last_slot[1])
+    # get slots from session_attributes if they exist
+    WAS_FOLLOWUP = 'slots' in session_attributes and 'OtherQuestionsSlot' in last_slot
+    if WAS_FOLLOWUP:
+        intent_request['sessionState']['intent']['slots'] = json.loads(session_attributes['slots'])
+        session_attributes.pop('slots')
+    else:
+        intent_request['sessionState']['intent']['slots'].pop(last_slot[1])
     current_intent = last_slot[0]
     set_slot_history(slot_list, session_attributes)
     session_attributes['retry'] = 'false'
@@ -102,6 +108,8 @@ def retry_last_slot(intent_request):
             last_slot[1],
             last_slot[0],
         )
+        if WAS_FOLLOWUP:
+            response['sessionState']['intent']['slots'] = get_slots(intent_request)
     else:
         response = elicit_slot(
             intent_request,
@@ -156,12 +164,16 @@ def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, message=None
     return response
 
 def followup(intent_request, message):
-    return elicit_intent(
+    response = elicit_intent(
         intent_request,
         'OtherQuestionsSlot',
         'OtherIntent',
         message=message,
     )
+    slots = get_slots(intent_request)
+    if 'OtherQuestionsSlot' not in slots:
+        intent_request['sessionState']['sessionAttributes']['slots'] = json.dumps(slots)
+    return response
 
 def close(intent_request, fulfillment_state, message, session_attributes = {}):
     if session_attributes == {}:
@@ -197,6 +209,8 @@ def dispatch(intent_request):
     if returnToMenu and returnToMenu == 'true':
         intent_request['sessionState']['sessionAttributes']['return'] = 'false'
         set_slot_history([],intent_request['sessionState']['sessionAttributes'])
+        if 'slots' in get_session_attributes(intent_request):
+            intent_request['sessionState']['sessionAttributes'].pop('slots')
         return elicit_intent(
             intent_request,
             "BQASlot",
@@ -563,9 +577,8 @@ def dispatch(intent_request):
         # response = f"You asked: '{other_question}'. Processing your request."
         response = invoke_agent(agent_id, agent_alias_id, session_id, other_question)
         message = create_message(response)
-        return elicit_slot(
+        return followup(
             intent_request,
-            "OtherQuestionsSlot",
             message,
         )
 
