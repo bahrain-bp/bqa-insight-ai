@@ -49,37 +49,72 @@ export async function handler(event: SQSEvent) {
               }
               </formatting_example>
             `;
+            console.log(text);
+            
 
             const toolConfig = {
                 "tools": [
-                    {
-                        "toolSpec": {
-                            "name": "print_entities",
-                            "description": "Prints extract named entities.",
-                            "inputSchema": {
-                                "json": {
-                                    "type": "object",
-                                    "properties": {
-                                        "entities": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                    "Vocational Centre Name": { "type": "string", "description": "The extracted Provider Name." },
-                                                    "Vocational Centre Location": { "type": "string", "description": "The location of the Vocational Training Centre in Kingdom of Bahrain." },
-                                                    "Date Of Review": { "type": "string", "description": "The Date Reviewed" },
-                                                },
-                                                "required": ["Vocational Centre Name", "Vocational Centre Location", "Date Of Review"]
-                                            }
-                                        }
-                                    },
-                                    "required": ["entities"]
-                                }
+                  {
+                    "toolSpec": {
+                      "name": "print_entities",
+                      "description": "Prints extract named entities.",
+                      "inputSchema": {
+                        "json": {
+                          "type": "object",
+                          "properties": {
+                            "entities": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "Vocational Training center name": {"type": "string", "description": "The extracted entity name."},
+                                //   "University Location": {"type": "string", "description": "The entity type (LOCATION)."},
+                                //   "Number Of Qualifications": {"type": "number", "description": "Total number of qualifications"},
+                                //   "Number of Programmes": {"type": "number", "description": "Number of programmes offered by the university including (Bachelor Degree, Master Degree, PhD Degress)"}
+                                  // "context": {"type": "string", "description": "The context in which the entity appears in the text."}
+                                },
+                                "required": ["Vocational Training center name"]
+                              }
                             }
+                          },
+                          "required": ["entities"]
                         }
+                      }
                     }
+                  }
                 ]
-            };
+              }
+
+            // const toolConfig = {
+            //     "tools": [
+            //         {
+            //             "toolSpec": {
+            //                 "name": "print_entities",
+            //                 "description": "Prints extract named entities.",
+            //                 "inputSchema": {
+            //                     "json": {
+            //                         "type": "object",
+            //                         "properties": {
+            //                             "entities": {
+            //                                 "type": "array",
+            //                                 "items": {
+            //                                     "type": "object",
+            //                                     "properties": {
+            //                                         "Vocational Centre Name": { "type": "string", "description": "The extracted Provider Name." },
+            //                                         // "Vocational Centre Location": { "type": "string", "description": "The location of the Vocational Training Centre in Kingdom of Bahrain." },
+            //                                         // "Date Of Review": { "type": "string", "description": "The Date Reviewed" },
+            //                                     },
+            //                                     "required": ["Vocational Centre Name"]
+            //                                 }
+            //                             }
+            //                         },
+            //                         "required": ["entities"]
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     ]
+            // };
 
             const input = {
                 modelId: ModelId,
@@ -107,16 +142,16 @@ export async function handler(event: SQSEvent) {
             const modelResponse = response.output?.message?.content?.[0].text
             // console.log("model output: ", modelResponse);
 
-            const afterRegex = regexFunction(modelResponse || "");
+            // const afterRegex = regexFunction(modelResponse || "");
     
-            const parsedResponse = JSON.parse(afterRegex || "");
-            console.log("model output: ", modelResponse);
+            // const parsedResponse = JSON.parse(afterRegex || "");
+            console.log("model output: ", response.output?.message?.content?.[0]);
 
             
-            await insertVocationalCentreMetadata(parsedResponse, fileKey);
+            // await insertVocationalCentreMetadata(parsedResponse, fileKey);
             console.log("IT SHOULD BE INSERTED TO VOCATIONAL CENTRE METADATA TABLE");
 
-            return parsedResponse;
+            // return parsedResponse;
 
         } catch (error) {
             await deleteSQSMessage(record.receiptHandle);

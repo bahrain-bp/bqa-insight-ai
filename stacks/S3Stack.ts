@@ -67,8 +67,11 @@ export function S3Stack({ stack }: StackContext) {
         },
         bind: [syncTopic]
     });
-    const extractVocationalCentreMetadata = new Function(stack, "claudeVocationalCentersMetadata", {
-        handler: "packages/functions/src/bedrock/claudeVocationalCentersMetadata.handler",
+
+    // claudeVocationalExtractMetadata
+
+    const extractVocationalCentreMetadata = new Function(stack, "claudeVocationalExtractMetadata", {
+        handler: "packages/functions/src/bedrock/claudeVocationalExtractMetadata.handler",
         timeout: "300 seconds",
         permissions: [
             bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable

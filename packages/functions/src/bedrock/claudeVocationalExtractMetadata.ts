@@ -46,57 +46,32 @@ export async function handler(event: SQSEvent){
                 const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
                 When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
                 These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
-                "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
-                
+                "Vocational Training center","Vocational Location","Date of Review"
+
                 request: {
-                Institute Name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
-                Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, only if you detect the word private it means private school, otherwise keep it as Government.
-                Date of Review: String// The date of the review.
-                Overall Effectiveness: String // The institute overall effectiveness is either 1 which means outsanding, if 2 means Good, if 3 means Satisfactory, if 4 means Inadequate.
-                Location: String// The institute location ONLY including Governate, without town.
-                Institute Type: String// The institute type is it a school or university.
-                Grades In School: String // The Grade level in school by checking the primary, middle, and high columns tell me is it Primary School, Secondary School, or High School excluding 'Grades e.g. 1 to 12'.
+                Vocational Training center name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
+                Vocational Location: String// The location of the vocational training center before the word Kingdom of Barhain at the beginning of the text.
+                Date of Review: String// review date.
                 }
     
                 Please output the extracted information in JSON format. 
                 Do not output anything except for the extracted information. Do not use the below input output examples as a response. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
     
-                Input: AlRawabi Private School located in sehla Northern Governorate in Bahrain. It includes levels from 1-9. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
-                Output: "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
-                "AlRawabi Private School","Private","30 April and 2-3 May 2018","3: Satisfactory","Sehla - Northern Governorate", "School", "1-9"
+                Input: Agora Training Centre in Manama in Kingdom of Bahrain. It includes levels from 1-9. The instituite overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
     
                 Output: 
                 {
-                "Institute Name": "AlRawabi Private School",
-                "Institute Classification": "Private",
-                "Date of Review": "30 April and 2-3 May 2018",
-                "Overall Effectiveness": "3: Satisfactory",
-                "Location": "Northern Governorate",
-                "Institute Type": "School",
-                "Grades In School": "Secondary",
+                "Vocational Training center name": "Agora Training Centre",
+                "Vocational Location": "Manama"
+                "Date of Review": "08-12 October 2023",
                 }
     
-                Input: Jidhafs Secondary Girls School located in Jidhafs Capital Governorate in Bahrain. It includes levels from 10-12. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
-                {
-                "School Name": "Jidhafs Secondary Girls School",
-                "School Classification": "Government School",
-                "Date of Review": "30 April and 2-3 May 2018",
-                "Overall Effectiveness": "3: Satisfactory",
-                "School Location": "Capital Governorate",
-                "School Type": "School",
-                "Grades In School": "High School"
-                }
-    
-    
+                
                 Input: ` + text + `
                 Output: {
-                "Institute Name": "",
-                "Institute Classification": "",
-                "Date of Review": "",
-                "Overall Effectiveness": "",
-                "Location": "",
-                "Institute Type": "",
-                "Grades In School": ""
+                  "Vocational Training center name": "",
+                  "Vocational Location": ""
+                  "Date of Review": "",
                 }`;
                     
             
@@ -142,16 +117,16 @@ export async function handler(event: SQSEvent){
             console.log(["Institute Name"])
             const extractedOutput = parseMetadata(output);
             console.log("EXTRACTED OUTPUT type: ", typeof (extractedOutput))
-            
+            //console.log("JSON EXTRACTED OUTPUT type: ", typeof JSON.parse(extractedOutput))
+    
+    
+    
+            // const parsedOutput = await parseMetadata(output);
     
             
             console.log("Extracted Output:", extractedOutput)
-            
-    
-    
-            
-    
-            await insertInstituteMetadata(extractedOutput, fileKey);
+          
+            await insertVocationalCentreMetadata(extractedOutput, fileKey);
             console.log("IT SHOULD BE INSERTED to instituiteMetaData");
   
             await deleteSQSMessage(record.receiptHandle);
@@ -182,39 +157,6 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
     console.log("SQS message deleted successfully.");
   } catch (error) {
     console.error("Error deleting SQS message:", error);
-  }
-}
-
-
-
-// Insert institute metadata into DynamoDB
-async function insertInstituteMetadata(data :any , fileKey: string) {
-    // console.log("datatype of data:", typeof data)
-    // console.log("data zero:",  data)
-
-    const params = {
-        TableName: process.env.INSTITUTE_METADATA_TABLE_NAME as string,
-                      Item: {
-                        institueName: data["Institute Name"],
-                        instituteType: data["Institute Type"],
-                        instituteClassification: data["Institute Classification"],
-                        instituteGradeLevels: data["Grades In School"],
-                        instituteLocation: data["Location"],
-                        dateOfReview: data["Date of Review"],
-                        },
-                      
-    };
-    try {
-      await dynamoDb.put(params).promise();
-      console.log("Institute metadata inserted into DynamoDB.");
-
-      // Insert metadata into S3 JSON file
-      
-      await handleDynamoDbInsert(data, bucket ,fileKey);
-      if (!extractMetadataQueueUrl) throw Error("No queue url")
-      await getMessageInQueue(extractMetadataQueueUrl)
-  } catch (error) {
-      console.error("Error inserting institute metadata into DynamoDB:", error);
   }
 }
 
@@ -270,3 +212,32 @@ function parseMetadata(input: string): string {
 //   // https://llama.meta.com/docs/model-cards-and-prompt-formats/meta-llama-3/#special-tokens-used-with-meta-llama-3
   
   
+// Insert Program metadata into DynamoDB and S3
+async function insertVocationalCentreMetadata(data: any, fileKey: string) {
+  const params = {
+      TableName: process.env.VOCATIONAL_CENTER_METADATA_TABLE_NAME as string,
+      Item: {
+          vocationalCenterName: data["Vocational Training center name"],
+          vocationalCenterLocation: data["Vocational Location"],
+          dateOfReview: data["Date Of Review"]
+      },
+  }
+  
+  try {
+    await dynamoDb.put(params).promise();
+    console.log("Institute metadata inserted into DynamoDB.");
+
+    // Insert metadata into S3 JSON file
+    
+    await handleDynamoDbInsert(data, bucket ,fileKey);
+    if (!extractMetadataQueueUrl) throw Error("No queue url")
+    await getMessageInQueue(extractMetadataQueueUrl)
+  } catch (error) {
+      console.error("Error inserting institute metadata into DynamoDB:", error);
+  }
+
+  ;
+  await dynamoDb.put(params).promise();
+  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); // Add this line here
+  return;
+}

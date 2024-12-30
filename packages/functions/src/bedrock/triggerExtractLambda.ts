@@ -60,6 +60,7 @@ function classifyReport(text: string): string {
     const lowerText = text.toLowerCase(); // Normalize text to lowercase
     if (
         lowerText.includes("schools reviews") ||
+        lowerText.includes("school type") ||
         lowerText.includes("the school’s overall effectiveness") ||
         lowerText.includes("intermediate boys") ||
         lowerText.includes("intermediate girls") ||
@@ -88,7 +89,9 @@ function classifyReport(text: string): string {
         return "programme";
     }else if (
         lowerText.includes("training centre") ||
+        lowerText.includes("training center") ||
         lowerText.includes("vocational reviews") ||
+        lowerText.includes("training & development") ||
         lowerText.includes("directorate of vocational reviews")
       
     ) {
