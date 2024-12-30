@@ -5,11 +5,13 @@ import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
+import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 export function S3Stack({ stack }: StackContext) {
     const {fileMetadataTable } = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
     const {programMetadataTable} = use(ProgramMetadataStack);
     const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
+    const {vocationalCenterMetadataTable} = use(VocationalCentersMetadataStack);
     const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
@@ -52,7 +54,7 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/bedrock/claudeUniversityMetadata.handler",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
         ],
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
@@ -60,6 +62,24 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
+        BUCKET_NAME: bucket.bucketName
+        },
+        bind: [syncTopic]
+    });
+    const extractVocationalCentreMetadata = new Function(stack, "extractVocationalCentreMetadata", {
+        handler: "packages/functions/src/bedrock/extractVocationalCentreMetadata.handler",
+        timeout: "300 seconds",
+        permissions: [
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
+        ],
+        environment: {
+        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
+        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
+        EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
+        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
         bind: [syncTopic]
@@ -68,7 +88,7 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
         ],
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
@@ -76,6 +96,7 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName,
         },
         bind: [syncTopic]
@@ -85,7 +106,7 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/bedrock/claudeExtractReportMetadata.handler",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
         ],
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
@@ -93,6 +114,7 @@ export function S3Stack({ stack }: StackContext) {
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
         bind: [syncTopic]
@@ -101,17 +123,19 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/bedrock/triggerExtractLambda.handler",
         timeout: "300 seconds",
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, "lambda:InvokeFunction"
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable, "lambda:InvokeFunction"
         ],
         environment: {
         SCHOOL_LAMBDA_FUNCTION_NAME : extractReportMetadata.functionName,
         UNIVERSITY_LAMBDA_FUNCTION_NAME : extractUniversityMetadata.functionName,
         PROGRAM_LAMBDA_FUNCTION_NAME: extractProgramMetadata.functionName,
+        VOCATIONAL_LAMBDA_FUNCTION_NAME: extractVocationalCentreMetadata.functionName,
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
         INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
+        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
         // bind: [syncTopic],

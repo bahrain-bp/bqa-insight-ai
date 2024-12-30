@@ -13,6 +13,7 @@ const lambda = new AWS.Lambda();
 const schoolLambdaFunctionName = process.env.SCHOOL_LAMBDA_FUNCTION_NAME || "";
 const universityLambdaFunctionName = process.env.UNIVERSITY_LAMBDA_FUNCTION_NAME || "";
 const programLambdaFunctionName = process.env.PROGRAM_LAMBDA_FUNCTION_NAME || "";
+const vocationalCentreLambdaFunctionName = process.env.VOCATIONAL_LAMBDA_FUNCTION_NAME || "";
 
 export async function handler(event: SQSEvent){
     for (const record of event.Records) {
@@ -42,7 +43,9 @@ export async function handler(event: SQSEvent){
                 await invokeLambda(universityLambdaFunctionName, event);
             } else if (reportType === "programme") {
                 await invokeLambda(programLambdaFunctionName, event);
-            } else {
+            } else if (reportType === "vocationalCentre") {
+                await invokeLambda(vocationalCentreLambdaFunctionName, event);
+            }else {
                 console.error(`No matching Lambda function for report type: ${reportType}`);
             }
         }catch (error) {
@@ -58,7 +61,6 @@ function classifyReport(text: string): string {
     if (
         lowerText.includes("schools reviews") ||
         lowerText.includes("the school’s overall effectiveness") ||
-        lowerText.includes("training centre") ||
         lowerText.includes("intermediate boys") ||
         lowerText.includes("intermediate girls") ||
         lowerText.includes("primary girls") ||
@@ -67,8 +69,8 @@ function classifyReport(text: string): string {
         lowerText.includes("secondary girls") ||
         lowerText.includes("private schools") ||
         lowerText.includes("schools & kindergartens Reviews") ||
-        lowerText.includes("private schools & kindergartens Reviews") ||
-        lowerText.includes("vocational reviews")
+        lowerText.includes("private schools & kindergartens Reviews")
+      
     ) {
         return "school";
     } else if (
@@ -84,6 +86,13 @@ function classifyReport(text: string): string {
         lowerText.includes("college of")
     ) {
         return "programme";
+    }else if (
+        lowerText.includes("training centre") ||
+        lowerText.includes("vocational reviews") ||
+        lowerText.includes("directorate of vocational reviews")
+      
+    ) {
+        return "vocationalCentre";
     }
     return "unknown";
 }
