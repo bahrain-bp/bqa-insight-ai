@@ -171,6 +171,7 @@ async function insertInstituteMetadata(data :any , fileKey: string) {
     const params = {
         TableName: process.env.INSTITUTE_METADATA_TABLE_NAME as string,
                       Item: {
+                        fileKey: fileKey,
                         institueName: data["Institute Name"],
                         instituteClassification: data["Institute Classification"],
                         instituteGradeLevels: data["Grades In School"],
