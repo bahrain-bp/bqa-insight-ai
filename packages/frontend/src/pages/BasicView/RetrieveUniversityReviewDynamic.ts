@@ -20,12 +20,17 @@ const client = new DynamoDBClient();
 export const handler = async (event: any) => {
   try {
     const tableName = process.env.UNIVERSITY_REVIEWS_TABLE_NAME;
+
     if (!tableName) {
       throw new Error("University reviews table name is not defined in environment variables.");
     }
 
-    const universityNameSlot = event?.universityNameSlot;
-    const specificUniversitiesSlot = event?.specificUniversitiesSlot;
+    const universityNameSlot = event?.universityNameSlot?.trim();
+    const specificUniversitiesSlot = event?.specificUniversitiesSlot?.trim();
+
+    if (!universityNameSlot && !specificUniversitiesSlot) {
+      throw new Error("Invalid input: Either 'universityNameSlot' or 'specificUniversitiesSlot' must be provided.");
+    }
 
     const command = new ScanCommand({ TableName: tableName });
     const response = await client.send(command);
@@ -41,9 +46,8 @@ export const handler = async (event: any) => {
     if (universityNameSlot) {
       result = getSingleUniversityReviews(universities, universityNameSlot);
     } else if (specificUniversitiesSlot) {
-      result = compareSpecificUniversities(universities, specificUniversitiesSlot.split(","));
-    } else {
-      throw new Error("Invalid input provided.");
+      const universityNames = specificUniversitiesSlot.split(",").map((name: string) => name.trim());
+      result = compareSpecificUniversities(universities, universityNames);
     }
 
     return {
@@ -59,14 +63,14 @@ export const handler = async (event: any) => {
       statusCode: 500,
       body: JSON.stringify({
         success: false,
-        error: (error as Error).message,
+        error: error instanceof Error ? error.message : "Unknown error occurred.",
       }),
     };
   }
 };
 
 function parseReviews(reviewsAttribute: any): Review[] {
-  if (!reviewsAttribute.L) return [];
+  if (!reviewsAttribute?.L) return [];
 
   return reviewsAttribute.L.map((reviewItem: any) => {
     const reviewMap = reviewItem.M || {};
@@ -85,9 +89,11 @@ function getSingleUniversityReviews(universities: University[], universityName: 
   const university = universities.find(
     (u) => u.EnglishUniversityName.toLowerCase() === universityName.toLowerCase()
   );
+
   if (!university) {
-    return { message: `No university found with the name ${universityName}.` };
+    return { message: `No university found with the name '${universityName}'.` };
   }
+
   return {
     universityName: university.EnglishUniversityName,
     reviews: university.Reviews,
@@ -97,18 +103,16 @@ function getSingleUniversityReviews(universities: University[], universityName: 
 function compareSpecificUniversities(universities: University[], universityNames: string[]) {
   const matchedUniversities = universities.filter((university) =>
     universityNames.some(
-      (name) => university.EnglishUniversityName.toLowerCase() === name.trim().toLowerCase()
+      (name) => university.EnglishUniversityName.toLowerCase() === name.toLowerCase()
     )
   );
 
   if (matchedUniversities.length === 0) {
-    return { message: "No matching universities found." };
+    return { message: "No matching universities found for the provided names." };
   }
 
-  const comparisonData = matchedUniversities.map((university) => ({
+  return matchedUniversities.map((university) => ({
     universityName: university.EnglishUniversityName,
     reviews: university.Reviews,
   }));
-
-  return comparisonData;
 }

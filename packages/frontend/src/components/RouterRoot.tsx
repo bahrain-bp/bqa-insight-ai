@@ -1,6 +1,6 @@
 import { createContext, useState } from "react";
 import App from "../App.tsx";
-import {ChartJsonData} from "../pages/Dashboard/dynamicChart.tsx";
+import {ChartJsonData} from "../pages/BasicView/dynamicChart.tsx";
 import {BrowserRouter } from "react-router-dom";
 
 type ChartContextType = {
@@ -15,8 +15,9 @@ export const ChartContext = createContext<ChartContextType>({
 
 export type LexChartSlots = {
     AnalyzeSchoolSlot?: string,
-    ProgramNameSlot?: string,
     AnalyzeVocationalSlot?: string,
+    UniNameSlot?: string,
+    ProgramNameSlot?: string,
     CompareUniversityWUniSlot?: string,
     CompareUniversityWprogSlot?: string,
     CompareSchoolSlot?: "All Government Schools" | "All Private Schools",

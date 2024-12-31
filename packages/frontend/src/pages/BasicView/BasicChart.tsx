@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import DynamicChart, { ChartJsonData } from "../Dashboard/dynamicChart";
+import DynamicChart, { ChartJsonData } from "./dynamicChart";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { LexChartSlotsContext } from "../../components/RouterRoot";
@@ -100,21 +100,31 @@ const BasicChart = () => {
         const data = await response.json();
         const reviews = data?.data || [];
 
-        const transformedCharts = reviews.map((university: any): ChartJsonData => ({
-          universityName: university.InstitutionName,
-          type: "line",
-          data: {
-            datasets: [
-              {
-                data: university.Reviews.map((review: any) => ({
-                  x: review.Cycle,
-                  y: review.Judgement === "Confidence" ? 3 : review.Judgement === "Limited Confidence" ? 2 : 1,
-                })),
-                label: university.InstitutionName,
-              },
-            ],
-          },
-        }));
+        // Transform the reviews into chart data
+        const transformedCharts = reviews.map((university: any): ChartJsonData => {
+          const latestReview = university.Reviews.sort((a: any, b: any) =>
+            new Date(b.Cycle).getTime() - new Date(a.Cycle).getTime()
+          )[0];
+
+          return {
+            universityName: university.InstitutionName,
+            type: "line",
+            data: {
+              datasets: latestReview
+                ? [
+                    {
+                      data: university.Reviews.map((review: any) => ({
+                        x: review.Cycle,
+                        y: review.Judgement === "Confidence" ? 1 : review.Judgement === "Limited Confidence" ? 2 : 3,
+                        UnifiedStudyField: review.UnifiedStudyField,
+                      })),
+                      label: university.InstitutionName,
+                    },
+                  ]
+                : [],
+            },
+          };
+        });
 
         setAllUniversityCharts(transformedCharts);
       } catch (error) {
@@ -265,49 +275,62 @@ const BasicChart = () => {
     };
       setCurrentChart(comparisonChart);
     }  
-    if (chartSlots.CompareUniversityWUniSlot) {
-      // Comparing multiple universities overall
-      const matchedCharts: ChartJsonData[] = [];
-      chartSlots.CompareUniversityWUniSlot.split(",").forEach((s: string) => {
-        const trimmed = s.trim();
-        const result = performFuzzySearch(trimmed, allUniversityCharts, "universityName");
-        if (result && !matchedCharts.some((chart) => chart === result)) {
-          matchedCharts.push(result);
-        }
+    // Inside the useEffect handling chartSlots
+    else if (chartSlots.UniNameSlot) {
+      const slotValue = chartSlots.UniNameSlot.trim().toLowerCase();
+      const universityChart = performFuzzySearch(slotValue, allUniversityCharts, "universityName");
+  
+      if (universityChart) {
+        setCurrentChart(universityChart);
+      } else {
+        console.error(`No chart found for university: ${slotValue}`);
+      }
+    } else if (chartSlots.ProgramNameSlot) {
+      const slotValue = chartSlots.ProgramNameSlot.trim().toLowerCase();
+      const gradeCounts = { Confidence: 0, "Limited Confidence": 0, "No Confidence": 0 };
+    
+      allUniversityCharts.forEach((universityChart) => {
+        universityChart.data.datasets.forEach((dataset) => {
+          dataset.data.forEach((review: any) => {
+            if (
+              review &&
+              review.UnifiedStudyField &&
+              review.UnifiedStudyField.trim().toLowerCase() === slotValue
+            ) {
+              if (review.y === 1) {
+                gradeCounts.Confidence++;
+              } else if (review.y === 2) {
+                gradeCounts["Limited Confidence"]++;
+              } else if (review.y === 3) {
+                gradeCounts["No Confidence"]++;
+              }
+            }
+          });
+        });
       });
-      const comparisonChart: ChartJsonData = {
-        universityName: "Comparison of Universities",
-        type: "bar",
+    
+      const totalGrades = Object.values(gradeCounts).reduce((sum, count) => sum + count, 0);
+      if (totalGrades === 0) {
+        console.error(`No data found for program: ${slotValue}`);
+        return;
+      }
+    
+      const programComparisonChart: ChartJsonData = {
+        universityName: `Analysis of Program: ${chartSlots.ProgramNameSlot}`,
+        type: "pie",
         data: {
-          datasets: matchedCharts.map((chart) => ({
-            label: chart.universityName || "Unnamed University",
-            data: chart.data.datasets[0].data,
-          })),
+          labels: Object.keys(gradeCounts),
+          datasets: [
+            {
+              label: `Grade Distribution for Program: ${chartSlots.ProgramNameSlot}`,
+              data: Object.values(gradeCounts),
+              backgroundColor: ["rgba(102, 156, 86, 1)", "rgba(83, 116, 156, 1)", "rgba(230, 65, 37, 1)"]
+            },
+          ],
         },
       };
-      setCurrentChart(comparisonChart);
-
-    } else if (chartSlots.CompareUniversityWprogSlot) {
-      // Comparing specific programs within universities
-      const matchedCharts: ChartJsonData[] = [];
-      chartSlots.CompareUniversityWprogSlot.split(",").forEach((s: string) => {
-        const trimmed = s.trim();
-        const result = performFuzzySearch(trimmed, allUniversityCharts, "universityName");
-        if (result && !matchedCharts.some((chart) => chart === result)) {
-          matchedCharts.push(result);
-        }
-      });
-      const comparisonChart: ChartJsonData = {
-        universityName: "Comparison of University Programs",
-        type: "bar",
-        data: {
-          datasets: matchedCharts.map((chart) => ({
-            label: chart.universityName || "Unnamed Program",
-            data: chart.data.datasets[0].data,
-          })),
-        },
-      };
-      setCurrentChart(comparisonChart);
+    
+      setCurrentChart(programComparisonChart);
     }    
   }, [chartSlots, allSchoolCharts, allVocationalCharts, allUniversityCharts]);
 

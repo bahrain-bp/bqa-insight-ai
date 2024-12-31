@@ -1,5 +1,5 @@
 import { ChartContext } from "../../components/RouterRoot";
-import DynamicChart, { ChartJsonData } from "./dynamicChart";
+import DynamicChart, { ChartJsonData } from "../BasicView/dynamicChart";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import React, { useContext, useEffect, useState } from "react";
