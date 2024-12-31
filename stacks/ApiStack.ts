@@ -14,6 +14,7 @@ import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack
 import { OpenDataStack } from "./OpenDataStack";
 
 
+
 export function ApiStack({stack}: StackContext) {
     const {table} = use(DBStack);
     const {bucket, bedrockOutputBucket} = use(S3Stack);
