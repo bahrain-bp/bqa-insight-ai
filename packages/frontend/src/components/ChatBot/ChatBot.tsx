@@ -128,11 +128,14 @@ export const Chat = () => {
         }
     }
     const getLexChartSlots = (lexResponse: any): LexChartSlots => {
-        const lexSlots = lexResponse.sessionState.intent.slots
+        let lexSlots = lexResponse.sessionState.intent.slots
         const lexChartSlots: LexChartSlots = {ProgramNameSlot: undefined, AnalyzeSchoolSlot: undefined, CompareSchoolSlot: undefined, AnalyzeVocationalSlot: undefined, CompareVocationalSlot: undefined, CompareUniversityWUniSlot: undefined, CompareSpecificInstitutesSlot: undefined, CompareUniversityWProgramsSlot: undefined}
+        if ('OtherIntent' === lexResponse.sessionState.intent.name) {
+            lexSlots = JSON.parse(lexResponse.sessionState.sessionAttributes.slots)
+        }
         Object.keys(lexSlots).map((slot) => {
             console.log("Checking slot " + slot)
-            if (slot in lexChartSlots) {
+            if (slot in lexChartSlots && lexSlots[slot]) {
                 console.log(`Found slot ${slot}`)
                 lexChartSlots[slot as keyof LexChartSlots] = lexSlots[slot].value.interpretedValue
             }
