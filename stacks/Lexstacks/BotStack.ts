@@ -296,6 +296,27 @@ export function BotStack({stack}: StackContext) {
     });
 
     uniStandard.addSlot({
+        slotName: 'AnalyzeUniversityNameSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'Analyzing Universities for BQA',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What is the name of the University you want to analyze?',
+                            },
+                        }
+                    }
+                ],
+                maxRetries: 2
+            }
+        }
+    })
+
+    uniStandard.addSlot({
         slotName: 'StandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Standard to analyze',
@@ -337,6 +358,7 @@ export function BotStack({stack}: StackContext) {
             },
         },
     })
+
     analyzingIntent.addSlot({
         slotName: 'AnalyzeSchoolSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
@@ -500,7 +522,7 @@ export function BotStack({stack}: StackContext) {
     })
 
     comparingIntent.addSlot({
-        slotName: 'CompareUniSlot',
+        slotName: 'CompareUniStandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Compare universities based on universities or program',
         valueElicitationSetting: {
@@ -574,7 +596,7 @@ export function BotStack({stack}: StackContext) {
     })
 
     comparingIntent.addSlot({
-        slotName: 'CompareUniversityWUniSlot',
+        slotName: 'CompareUniversityUniSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'names of universities to compare',
         valueElicitationSetting: {
@@ -584,7 +606,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'what are the names of universites you would like to compare'
+                                value: 'What are the names of universites you would like to compare?'
                             }
                         },
                     },
@@ -644,7 +666,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'what are the names of programs you would like to compare'
+                                value: 'What are the names of programs you would like to compare'
                             }
                         },
                     },
@@ -653,6 +675,28 @@ export function BotStack({stack}: StackContext) {
             },
         },
     })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareUniversityWprogUniversityNameSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'names of universities to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What are the names of universities you would like to compare?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
 
     comparingIntent.addSlot({
         slotName: 'CompareSchoolAspectlSlot',
