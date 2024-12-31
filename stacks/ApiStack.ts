@@ -24,7 +24,7 @@ export function ApiStack({stack}: StackContext) {
     const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
     const { programMetadataTable } = use(ProgramMetadataStack);  
     const {vocationalCenterMetadataTable} = use (VocationalCentersMetadataStack);
-    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
 
 
 
