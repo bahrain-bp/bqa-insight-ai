@@ -13,6 +13,7 @@ import { SchoolReviews } from './pages/SchoolReviews.tsx';
 import { VocationalReviews } from './pages/VocationalReviews.tsx';
 import { UniversityReviews } from './pages/UniversitiesReviews.tsx';
 import ProtectedRoute from './pages/Authentication/ProtectedRouteComp.tsx';
+import CreateUser from './pages/Authentication/CreateUser.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -82,6 +83,19 @@ function App() {
             </>
           }
         />
+        <Route
+  path="/auth/CreateUser"
+  element={
+    <>
+      <PageTitle title="Create User | InsightAI" />
+      <CreateUser 
+        setUser={(newUser) => console.log('Set User:', newUser)} 
+        user={{ email: '', name: '' }} 
+      />
+    </>
+  }
+/>
+
         
           <Route
             path="/fileManagement"

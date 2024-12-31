@@ -40,6 +40,7 @@
     "@aws-sdk/client-bedrock-agent-runtime": "^3.693.0",
     "@aws-sdk/client-bedrock-runtime": "^3.706.0",
     "@aws-sdk/client-cloudformation": "^3.709.0",
+    "@aws-sdk/client-cognito-identity-provider": "^3.716.0",
     "@aws-sdk/client-comprehend": "^3.687.0",
     "@aws-sdk/client-dynamodb": "^3.705.0",
     "@aws-sdk/client-lex-runtime-v2": "^3.693.0",
