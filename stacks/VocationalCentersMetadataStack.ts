@@ -3,6 +3,7 @@ export function VocationalCentersMetadataStack({ stack }: StackContext) {
   // Create DynamoDB table to store file metadata
   const vocationalCenterMetadataTable = new Table(stack, "vocationalCenterMetadata", {
     fields: {
+      fileKey: "string",
         vocationalCenterName: "string",
         vocationalCenterLocation: "string", 
         dateOfReview: "string",

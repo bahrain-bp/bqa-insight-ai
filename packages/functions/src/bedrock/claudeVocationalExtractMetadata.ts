@@ -203,6 +203,7 @@ async function insertVocationalCentreMetadata(data: any, fileKey: string) {
   const params = {
       TableName: process.env.VOCATIONAL_CENTER_METADATA_TABLE_NAME as string,
       Item: {
+         fileKey: fileKey,
           vocationalCenterName: data["Vocational Training center"],
           vocationalCenterLocation: data["Vocational Location"],
           dateOfReview: data["Date of Review"]
@@ -225,6 +226,6 @@ async function insertVocationalCentreMetadata(data: any, fileKey: string) {
 
   ;
   await dynamoDb.put(params).promise();
-  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); // Add this line here
+  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'vocational'); 
   return;
 }

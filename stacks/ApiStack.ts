@@ -10,6 +10,7 @@ import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
+import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
 
 
@@ -22,6 +23,7 @@ export function ApiStack({stack}: StackContext) {
     const {instituteMetadata} = use (InstituteMetadataStack);
     const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
     const { programMetadataTable } = use(ProgramMetadataStack);  
+    const {vocationalCenterMetadataTable} = use (VocationalCentersMetadataStack);
     const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
 
 
@@ -67,12 +69,13 @@ export function ApiStack({stack}: StackContext) {
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
                         INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
                         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+                        VOCATIONAL_CENTER_METADATA_TABLE_NAME :vocationalCenterMetadataTable.tableName,
                         UNIVERSITY_METADATA_TABLE_NAME :UniversityProgramMetadataTable.tableName,
                         KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
                         DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
 
                     },
-                    permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable, "bedrock"],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable, "bedrock"],
                 },
             },
             "POST /comprehend": {

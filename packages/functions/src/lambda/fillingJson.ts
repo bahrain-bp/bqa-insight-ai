@@ -2,7 +2,12 @@ import * as AWS from "aws-sdk";
 
 const s3 = new AWS.S3();
 
-async function insertMetadataFile(bucketName: string, fileKey: string, data: any, type: 'institute' | 'university' | 'program'): Promise<void> {
+async function insertMetadataFile(
+    bucketName: string, 
+    fileKey: string, 
+    data: any, 
+    type: 'institute' | 'university' | 'program' | 'vocational'
+): Promise<void> {
     const metadataKey = `Text${fileKey}.metadata.json`;
 
     const metadataContent = JSON.stringify({
@@ -18,6 +23,10 @@ async function insertMetadataFile(bucketName: string, fileKey: string, data: any
             "location": data["University Location"],
             "numOfPrograms": data["Number Of Programmes"],
             "numOfQualifications": data["Number Of Qualifications"]
+        } : type === 'vocational' ? {
+            "vocationalCenterName": data["Vocational Training center"],
+            "vocationalLocation": data["Vocational Location"],
+            "dateOfReview": data["Date of Review"]
         } : {
             "universityName": data["University Name"],
             "programmeName": data["Programme Name"],
@@ -38,7 +47,12 @@ async function insertMetadataFile(bucketName: string, fileKey: string, data: any
     }
 }
 
-export async function handleDynamoDbInsert(event: any, bucket: string, fileKey: string, type: 'institute' | 'university' | 'program' = 'institute'): Promise<void> {
+export async function handleDynamoDbInsert(
+    event: any, 
+    bucket: string, 
+    fileKey: string, 
+    type: 'institute' | 'university' | 'program' | 'vocational' = 'institute'
+): Promise<void> {
     if (!bucket) {
         throw new Error("Bucket name not defined");
     }
