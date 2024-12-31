@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import LogoIcon from '../../images/BQA.png';
+import PDFIcon from '../../images/PDF.png';
+import XSLIcon from '../../images/xls.png';
 
 interface Review {
   Title: string;
@@ -271,12 +273,14 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     if (sortState.column !== columnName) return null;
     return sortState.direction === 'asc' ? ' ▲' : ' ▼';
   }
-
+  
   return (
     <div className="w-full">
-      <div className="mb-4 flex flex-col space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
+      <div className="mb-4 flex flex-col space-y-4 md:flex-row md:justify-between md:space-x-4">
+        {/* Judgement Filter and Search Section */}
+        <div className="flex-1">
+          {/* Judgement Filter */}
+          <div className="mb-4">
             <span className="font-semibold mr-2">Filter by Judgement:</span>
             <select
               value={judgementFilter}
@@ -288,39 +292,54 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
               <option value="limited confidence">Limited Confidence</option>
               <option value="no confidence">No Confidence</option>
             </select>
-          </div>
-          <div className="space-x-2">
-            <button
-              onClick={exportToExcel}
-              className="bg-[#0F7E0F] hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
-            >
-              Export as Excel
-            </button>
-            <button
-              onClick={exportToPDF}
-              className="bg-primary hover:bg-primary text-white px-4 py-2 rounded"
-            >
-              Export as PDF
-            </button>
+            
+            {/* Search by Institution Name - Now under Judgement Filter */}
+            <div className="mt-4">
+              <span className="font-semibold mr-2">Search by Institution Name:</span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="border border-gray-300 rounded px-3 py-1 w-full md:w-auto"
+                placeholder="Enter name..."
+              />
+            </div>
           </div>
         </div>
-
-        <div>
-          <span className="font-semibold mr-2">Search by Institution Name:</span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1"
-            placeholder="Enter name..."
-          />
+  
+        {/* Export Buttons Section - Now aligned to the right */}
+        <div className="flex space-x-2">
+          <button
+            onClick={exportToExcel}
+            className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            title="Export as Excel"
+          >
+            <img
+              src={XSLIcon}
+              alt="Export to Excel"
+              className="w-9 h-9 object-contain"
+            />
+            <span className="ml-2">Export as Excel</span>
+          </button>
+          <button
+            onClick={exportToPDF}
+            className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            title="Export as PDF"
+          >
+            <img
+              src={PDFIcon}
+              alt="Export to PDF"
+              className="w-9 h-9 object-contain"
+            />
+            <span className="ml-2">Export as PDF</span>
+          </button>
         </div>
       </div>
-
+  
+      {/* Display the number of institutions returned */}
       <div className="mb-2 text-gray-700 font-semibold">
-        <span>{displayedData.length} Institution(s) Returned</span>
+        {displayedData.length} Institution(s) Returned
       </div>
-
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-200">
           <thead>
