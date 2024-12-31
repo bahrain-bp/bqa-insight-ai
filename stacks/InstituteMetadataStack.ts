@@ -5,7 +5,6 @@ export function InstituteMetadataStack({ stack }: StackContext) {
     fields: {
        fileKey: "string",
         institueName: "string",
-        instituteType: "string",
         instituteClassification: "number",
         instituteGradeLevels: "string", 
         instituteLocation: "string", 
