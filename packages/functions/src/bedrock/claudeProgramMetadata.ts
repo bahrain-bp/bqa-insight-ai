@@ -148,13 +148,14 @@ async function insertProgramMetadata(data: any, fileKey: string) {
     const params = {
         TableName: process.env.PROGRAM_METADATA_TABLE_NAME as string,
         Item: {
+            fileKey: fileKey,
             universityName: data["University Name"],
             programmeName: data["Programme Name"],
             programmeJudgment: data["Programme Judgment"]
         },
     };
     await dynamoDb.put(params).promise();
-    await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); // Add this line here
+    await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); 
     return;
 }
 
