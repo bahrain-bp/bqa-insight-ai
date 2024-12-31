@@ -165,6 +165,9 @@ const fetchVocationalData = async (
     TableName: vocTable
   };
 
+  console.log('Vocational Table Name:', vocTable);
+  console.log('Filters for Vocational Data:', filters);
+
   // Add filters if provided
   if (filters.vocationalCenterName || filters.vocationalCenterLocation) {
     const expressions: string[] = [];
@@ -181,11 +184,18 @@ const fetchVocationalData = async (
 
     params.FilterExpression = expressions.join(' AND ');
     params.ExpressionAttributeValues = expressionValues;
+
+    console.log('Filter Expression:', params.FilterExpression);
+    console.log('Expression Attribute Values:', params.ExpressionAttributeValues);
   }
 
   try {
     const data = await dynamoDB.scan(params).promise();
+    console.log('Raw Vocational Data:', data);
+
     const centers = data.Items || [];
+
+    console.log('Filtered Vocational Centers:', centers);
 
     const extractYear = (date: string): string | null => date?.match(/(\d{4})/)?.[1] || null;
 
@@ -205,3 +215,4 @@ const fetchVocationalData = async (
     throw error;
   }
 };
+

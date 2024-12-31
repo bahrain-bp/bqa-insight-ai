@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
-import { LexChartSlotsContext } from "../components/RouterRoot";
+import React, { useState, useEffect } from "react";
 
 
 const Filter = () => {
@@ -8,14 +7,12 @@ const Filter = () => {
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
-  const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
-
   const [latestYear, setLatestYear] = useState<string>("");
-  const [loading, setLoading] = useState(false);
-
-  const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
 
 
+
+
+  
   const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
     "Institute Classification": [],
     "Institute Level": [],
@@ -58,6 +55,9 @@ const Filter = () => {
   const [userModifiedSentence, setUserModifiedSentence] = useState(false);
   const [userAdditions, setUserAdditions] = useState<string>("");
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
+
+
+
 
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -102,6 +102,10 @@ const Filter = () => {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
+
+
+
+
   useEffect(() => {
     if (!userModifiedSentence) {
       const newSentence = generateSentence();
@@ -361,10 +365,10 @@ const Filter = () => {
 
     if (sentence) {
       try {
-        setLoading(true); // Set loading state to true when starting the request
-        
+        // Create a copy of selectedOptions for submission
         let submissionOptions = { ...selectedOptions };
         
+        // If it's schools and no year is selected, use the latest year
         if (educationType === "schools" && (!selectedOptions["Report Year"]?.length) && latestYear) {
           submissionOptions = {
             ...submissionOptions,
@@ -395,40 +399,16 @@ const Filter = () => {
         });
 
         const body = await response.json();
-        setBedrockResponse(body.response);
-        showMessage("Data successfully received!", "success");
-
-        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
-          const slots = {
-            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
-            CompareSpecificInstitutesSlot:
-              mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
-            ProgramNameSlot: undefined,
-            AnalyzeVocationalSlot: undefined,
-            CompareUniversityWUniSlot: undefined,
-            CompareUniversityWProgramsSlot: undefined,
-            CompareSchoolSlot: undefined,
-            CompareVocationalSlot: undefined,
-          };
-          
-          setChartSlots(slots); // Update context with selected filters
-          console.log("Updated chart slots:", slots);
-          
-        }
-
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error sending data to Bedrock:", error);
         showMessage("An error occurred. Please try again.", "error");
-      } finally {
-        setLoading(false); // Reset loading state regardless of success or failure
       }
     } else {
       showMessage("Please select options.", "error");
     }
   };
-
 
 
   const handleClear = () => {
@@ -445,7 +425,6 @@ const Filter = () => {
     setUserModifiedSentence(false);
     setUserAdditions("");
     setLastGeneratedSentence("");
-    setBedrockResponse(null);
   };
 
 
@@ -462,11 +441,11 @@ const Filter = () => {
           {submittedMessage}
         </div>
       )}
-        <div className="flex flex-wrap items-center mb-4 gap-4">
-          <div className="flex gap-3 flex-col sm:flex-row flex-1">
-            <label className="block font-semibold text-2xl mr-4 text-nowrap">Insight</label>
+        <div className="flex items-center mb-4 space-x-8">
+          <div className="flex items-center flex-1">
+            <label className="block font-semibold text-2xl mr-4">Insighting To</label>
             <select
-              className="p-2 border rounded text-sm grow max-w-48"
+              className="p-2 border rounded text-sm w-48"
               value={mode}
               onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
             >
@@ -476,10 +455,10 @@ const Filter = () => {
             </select>
           </div>
 
-          <div className="flex gap-3 flex-col sm:flex-row flex-1">
-            <label className="block font-semibold text-2xl mr-4 text-nowrap">Education Level</label>
+          <div className="flex items-center flex-1">
+            <label className="block font-semibold text-2xl mr-4">Education Level</label>
             <select
-              className="p-2 border rounded text-sm grow max-w-48"
+              className="p-2 border rounded text-sm w-48"
               value={educationType}
               onChange={handleEducationTypeChange}
             >
@@ -492,7 +471,7 @@ const Filter = () => {
 
         {mode && educationType && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               {Object.keys(getCurrentFilters()).map((header) => (
                 <div key={header} className="w-full">
                   <label className="block text-sm font-semibold mb-2">{header}</label>
@@ -555,27 +534,25 @@ const Filter = () => {
 
               {isFilterActive && (
                 <>
-                  <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
-                    {isEditing ? (
-                      <textarea
-                        value={editableSentence}
-                        onChange={handleSentenceChange}
-                        rows={4}
-                        className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
-                      />
-                    ) : (
-                      <div 
-                        onClick={handleSentenceEdit} 
-                        className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
-                        title="Click to edit"
-                      >
-                        {editableSentence || generateSentence()}
-                        <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
-                      </div>
-                    )}
+          <div className="mt-6 p-4 bg-lightblue text-white rounded text-sm w-full">
+            {isEditing ? (
+              <textarea
+                value={editableSentence}
+                onChange={handleSentenceChange}
+                rows={4}
+                className="w-full bg-transparent border-none focus:ring-2 focus:ring-primary"
+              />
+            ) : (
+              <div 
+                onClick={handleSentenceEdit} 
+                className="cursor-text hover:bg-blue-600 transition-colors duration-200 p-1 rounded relative group"
+                title="Click to edit"
+              >
+                {editableSentence || generateSentence()}
+                <span className="inline-block opacity-0 group-hover:opacity-100 animate-pulse">|</span>
+              </div>
+            )}
                   </div>
-                 
-                  
                   {isEditing && (
                     <div className="mt-4 text-center">
                       <button
@@ -586,30 +563,15 @@ const Filter = () => {
                       </button>
                     </div>
                   )}
-                  
                   <div className="mt-6 text-center">
-            <button
-              onClick={handleSubmit}
-              disabled={loading}
-              className={`px-6 py-2 bg-primary text-white rounded-md ${
-                loading ? 'opacity-75 cursor-not-allowed' : 'hover:bg-primary-dark'
-              } relative`}
-            >
-              {loading ? (
-                <>
-                  <span className="opacity-0">Submit</span>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  </div>
-                </>
-              ) : (
-                'Submit'
-              )}
-
+                    <button
+                      onClick={handleSubmit}
+                      className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-dark"
+                    >
+                      Submit
                     </button>
                     <button
                       onClick={handleClear}
-                      disabled={loading}
                       className="ml-4 px-6 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
                     >
                       Clear
@@ -619,19 +581,6 @@ const Filter = () => {
               )}
             </>
           )}
-                    {bedrockResponse && (
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold mb-4">Analysis Results</h3>
-              <div className="bg-white p-6 rounded-lg shadow-md">
-                <div className="prose max-w-none">
-                  {bedrockResponse.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">{paragraph}</p>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-          
       </div>
   );
 };
