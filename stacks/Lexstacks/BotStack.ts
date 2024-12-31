@@ -666,7 +666,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'what are the names of programs you would like to compare'
+                                value: 'What are the names of programs you would like to compare'
                             }
                         },
                     },
@@ -675,6 +675,28 @@ export function BotStack({stack}: StackContext) {
             },
         },
     })
+
+    comparingIntent.addSlot({
+        slotName: 'CompareUniversityWprogUniversityNameSlot',
+        slotTypeName: 'AMAZON.FreeFormInput',
+        description: 'names of universities to compare',
+        valueElicitationSetting: {
+            slotConstraint: 'Optional',
+            promptSpecification: {
+                messageGroups: [
+                    {
+                        message: {
+                            plainTextMessage: {
+                                value: 'What are the names of universities you would like to compare?'
+                            }
+                        },
+                    },
+                ],
+                maxRetries: 2,
+            },
+        },
+    })
+
 
     comparingIntent.addSlot({
         slotName: 'CompareSchoolAspectlSlot',

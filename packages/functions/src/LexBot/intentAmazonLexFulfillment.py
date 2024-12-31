@@ -398,8 +398,8 @@ def dispatch(intent_request):
                 
 
                 # message = f"based on {standard_name} and the universities: {universities} here is the new one"
-                prompt = create_compare_uni_prompt(universities, standard_name)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
+                compare_uni_prompt = create_compare_uni_prompt(universities, standard_name)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_uni_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
@@ -427,9 +427,19 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request)
                     )
                 
+                universities = get_slot(intent_request,'CompareUniversityWprogUniversityNameSlot')
+                if universities is None:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareUniversityWprogUniversityNameSlot',
+                        slots=get_slots(intent_request)
+                    )
+                
 
         
-                message = f"the program standatd {programs_st} for the {program_names}"
+                # message = f"the program standatd {programs_st} for the {program_names} in {universities}"
+                create_comapre_university_prompt = create_compare_programme(programs_st, program_names, universities)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, create_comapre_university_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
