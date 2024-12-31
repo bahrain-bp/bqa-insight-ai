@@ -380,24 +380,26 @@ def dispatch(intent_request):
 
 
             if compare_types == 'Institutional review':
-                Uni_name = get_slot(intent_request,'CompareUniSlot')
-                if Uni_name is None:
+                standard_name = get_slot(intent_request,'CompareUniStandardSlot')
+                if standard_name is None:
                     return elicit_slot(
                         intent_request,
-                        'CompareUniSlot',
+                        'CompareUniStandardSlot',
                         slots=get_slots(intent_request),
                     )
                 
-                comp_type = get_slot(intent_request,'CompareUniversityWUniSlot')
-                if not comp_type:
+                universities = get_slot(intent_request,'CompareUniversityUniSlot')
+                if not universities:
                     return elicit_slot(
                         intent_request,
-                        'CompareUniversityWUniSlot',
+                        'CompareUniversityUniSlot',
                         slots=get_slots(intent_request)
                     )
                 
 
-                message = f"based on {Uni_name} and the universities: {comp_type}"
+                # message = f"based on {standard_name} and the universities: {universities} here is the new one"
+                prompt = create_compare_uni_prompt(universities, standard_name)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 

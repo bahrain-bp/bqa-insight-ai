@@ -522,7 +522,7 @@ export function BotStack({stack}: StackContext) {
     })
 
     comparingIntent.addSlot({
-        slotName: 'CompareUniSlot',
+        slotName: 'CompareUniStandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Compare universities based on universities or program',
         valueElicitationSetting: {
@@ -596,7 +596,7 @@ export function BotStack({stack}: StackContext) {
     })
 
     comparingIntent.addSlot({
-        slotName: 'CompareUniversityWUniSlot',
+        slotName: 'CompareUniversityUniSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'names of universities to compare',
         valueElicitationSetting: {
@@ -606,7 +606,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'what are the names of universites you would like to compare'
+                                value: 'What are the names of universites you would like to compare?'
                             }
                         },
                     },
