@@ -251,10 +251,9 @@ const BasicChart = () => {
         setCurrentChart(comparisonChart);
       } else if (chartSlots.AnalyzeVocationalSlot) {
       const slotValue = chartSlots.AnalyzeVocationalSlot;
-      const vocationalChart = performFuzzySearch(slotValue, allSchoolCharts, "schoolName");
-
-    if (vocationalChart) setCurrentChart(vocationalChart);
-    else console.error(`No chart found for institute: ${chartSlots.AnalyzeVocationalSlot}`);
+      const vocationalChart = performFuzzySearch(slotValue, allVocationalCharts, "schoolName");
+      if (vocationalChart) setCurrentChart(vocationalChart);
+      else console.error(`No chart found for institute: ${chartSlots.AnalyzeVocationalSlot}`);
   } else if (chartSlots.CompareVocationalSlot) {
     console.log("Checking compare vocational: " , chartSlots.CompareVocationalSlot)
     const matchedCharts: ChartJsonData[] = []
@@ -279,12 +278,8 @@ const BasicChart = () => {
     else if (chartSlots.UniNameSlot) {
       const slotValue = chartSlots.UniNameSlot.trim().toLowerCase();
       const universityChart = performFuzzySearch(slotValue, allUniversityCharts, "universityName");
-  
-      if (universityChart) {
-        setCurrentChart(universityChart);
-      } else {
-        console.error(`No chart found for university: ${slotValue}`);
-      }
+      if (universityChart)  setCurrentChart(universityChart);
+      else console.error(`No chart found for university: ${slotValue}`);
     } else if (chartSlots.ProgramNameSlot) {
       const slotValue = chartSlots.ProgramNameSlot.trim().toLowerCase();
       const gradeCounts = { Confidence: 0, "Limited Confidence": 0, "No Confidence": 0 };
