@@ -1,15 +1,11 @@
 import { LexRuntimeV2Client, RecognizeTextCommand, RecognizeTextCommandOutput, RecognizeTextRequest, RecognizeTextResponse } from "@aws-sdk/client-lex-runtime-v2";
 import { APIGatewayEvent } from "aws-lambda";
 
-interface LexOptions {
-  retry?: boolean
-  return?: boolean
-}
 
 interface MessageLexInput {
   message: string
   sessionId: string
-  options?: LexOptions
+  options?: Record<string,any>
 }
 
 const lexClient = new LexRuntimeV2Client({ region: "us-east-1" })
@@ -22,8 +18,7 @@ export async function handler(event: APIGatewayEvent) {
     }
   }
   const text = message ? message.trim() : "back"
-  const retryMessage = options?.retry ? "true" : "false"
-  const returnMessage = options?.return ? "true" : "false"
+  console.log("Lex options are: ", options)
 
   const recognizeTextRequest: RecognizeTextRequest = {
     text: text,
@@ -33,8 +28,7 @@ export async function handler(event: APIGatewayEvent) {
     localeId: process.env.LOCALE_ID,
     sessionState: {
       sessionAttributes: {
-        retry: retryMessage,
-        return: returnMessage,
+        ...options,
       }
     }
   }
