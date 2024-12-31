@@ -3,15 +3,15 @@ import AWS from 'aws-sdk';
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-// Lambda handler
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // Environment variables
   const tableName = process.env.TABLE_NAME || '';
   const uniTable = process.env.UNIVERSITY_TABLE_NAME || '';
   const progTable = process.env.PROGRAM_TABLE_NAME || '';
+  const vocTable = process.env.VOCATIONAL_TABLE_NAME || '';
   
   // Validate required environment variables
-  if (!tableName || !uniTable || !progTable) {
+  if (!tableName || !uniTable || !progTable || !vocTable) {
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Required environment variables are not set.' }),
@@ -19,22 +19,34 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 
   // Extract query parameters
-  const { classification, level, location, universityName, programmeName } = event.queryStringParameters || {};
+  const { 
+    classification, 
+    level, 
+    location, 
+    universityName, 
+    programmeName,
+    vocationalCenterName,
+    vocationalCenterLocation 
+  } = event.queryStringParameters || {};
 
   try {
-    // Fetch and filter institute data
-    const instituteFilters = await fetchInstituteData(tableName, { classification, level, location });
-    console.log('Institute Data:', instituteFilters);
+    // Fetch and filter all data in parallel
+    const [instituteFilters, universityFilters, vocationalFilters] = await Promise.all([
+      fetchInstituteData(tableName, { classification, level, location }),
+      fetchUniversityData(uniTable, progTable, { universityName, programmeName }),
+      fetchVocationalData(vocTable, { vocationalCenterName, vocationalCenterLocation })
+    ]);
 
-    // Fetch and filter university data
-    const universityFilters = await fetchUniversityData(uniTable, progTable, { universityName, programmeName });
+    console.log('Institute Data:', instituteFilters);
     console.log('University Data:', universityFilters);
+    console.log('Vocational Data:', vocationalFilters);
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         filters: instituteFilters,
         universityFilters,
+        vocationalFilters,
       }),
     };
   } catch (error) {
@@ -46,7 +58,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
   }
 };
 
-// Helper function to fetch and filter institute data
+// Your existing fetchInstituteData function remains the same
 const fetchInstituteData = async (
   tableName: string,
   filters: { classification?: string; level?: string; location?: string }
@@ -89,12 +101,13 @@ const fetchInstituteData = async (
     throw error;
   }
 };
+
+// Your existing fetchUniversityData function remains the same
 const fetchUniversityData = async (
   uniTable: string,
   progTable: string,
   filters: { universityName?: string; programmeName?: string }
 ) => {
-  // University table query
   const uniParams: AWS.DynamoDB.DocumentClient.ScanInput = { 
     TableName: uniTable
   };
@@ -103,7 +116,6 @@ const fetchUniversityData = async (
     uniParams.ExpressionAttributeValues = { ':universityName': filters.universityName };
   }
 
-  // Program table query
   const progParams: AWS.DynamoDB.DocumentClient.ScanInput = { 
     TableName: progTable
   };
@@ -140,6 +152,56 @@ const fetchUniversityData = async (
     };
   } catch (error) {
     console.error('Error fetching data:', error);
+    throw error;
+  }
+};
+
+// New function to fetch vocational center data
+const fetchVocationalData = async (
+  vocTable: string,
+  filters: { vocationalCenterName?: string; vocationalCenterLocation?: string }
+) => {
+  const params: AWS.DynamoDB.DocumentClient.ScanInput = {
+    TableName: vocTable
+  };
+
+  // Add filters if provided
+  if (filters.vocationalCenterName || filters.vocationalCenterLocation) {
+    const expressions: string[] = [];
+    const expressionValues: Record<string, string> = {};
+
+    if (filters.vocationalCenterName) {
+      expressions.push('vocationalCenterName = :vocationalCenterName');
+      expressionValues[':vocationalCenterName'] = filters.vocationalCenterName;
+    }
+    if (filters.vocationalCenterLocation) {
+      expressions.push('vocationalCenterLocation = :vocationalCenterLocation');
+      expressionValues[':vocationalCenterLocation'] = filters.vocationalCenterLocation;
+    }
+
+    params.FilterExpression = expressions.join(' AND ');
+    params.ExpressionAttributeValues = expressionValues;
+  }
+
+  try {
+    const data = await dynamoDB.scan(params).promise();
+    const centers = data.Items || [];
+
+    const extractYear = (date: string): string | null => date?.match(/(\d{4})/)?.[1] || null;
+
+    return {
+      "Vocational Center Name": [...new Set(centers.map(item => item.vocationalCenterName))],
+      "Center Location": [...new Set(centers.map(item => item.vocationalCenterLocation))],
+      "Report Year": [
+        ...new Set(
+          centers
+            .map(item => extractYear(item.dateOfReview))
+            .filter(year => year !== null)
+        ),
+      ],
+    };
+  } catch (error) {
+    console.error('Error fetching vocational center data:', error);
     throw error;
   }
 };

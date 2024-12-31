@@ -11,6 +11,7 @@ import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
+import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -21,6 +22,7 @@ export function ApiStack({stack}: StackContext) {
     const {fileMetadataTable} = use(FileMetadataStack);
     const {instituteMetadata} = use (InstituteMetadataStack);
     const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
+    const {vocationalCenterMetadataTable} = use(VocationalCentersMetadataStack);
     const { programMetadataTable } = use(ProgramMetadataStack);  
     const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
 
@@ -221,8 +223,9 @@ export function ApiStack({stack}: StackContext) {
                         TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
                         UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
+                        VOCATIONAL_TABLE_NAME: vocationalCenterMetadataTable.tableName ,
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable, vocationalCenterMetadataTable], 
                 },
             },
             "GET /fetchfilters": {
@@ -232,8 +235,9 @@ export function ApiStack({stack}: StackContext) {
                         TABLE_NAME: instituteMetadata.tableName,
                         UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
+                        vocational_TABLE_NAME: vocationalCenterMetadataTable.tableName ,
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable,vocationalCenterMetadataTable], 
         
                 }
             },
