@@ -372,7 +372,7 @@ def dispatch(intent_request):
                     )
 
                 # message = f"for the following {standard} the standard {program_name} {university}"
-                analyze_university_programme_prompt = create_uni_analyze_prompt(program_name, standard, university)
+                analyze_university_programme_prompt = create_uni_analyze_prompt(standard, university, program_name=program_name)
                 message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_programme_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
@@ -400,8 +400,21 @@ def dispatch(intent_request):
                 'StandardSlot',
             )
         
+
+        university_name = get_slot(
+            intent_request,
+            'AnalyzeUniversityNameSlot',
+        )
+        if university_name is None:
+            return elicit_slot(
+                intent_request,
+                'AnalyzeUniversityNameSlot',
+            )
+
         # university here
-        message = f"the standared of the program is: {standard}"
+        # message = f"the standared of the program is: {standard} {university_name}"
+        analyze_university_prompt = create_uni_analyze_prompt(standard, university_name)
+        message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_prompt)
         response = create_message(message)
         session_attributes = get_session_attributes(intent_request)
         
@@ -441,24 +454,26 @@ def dispatch(intent_request):
 
 
             if compare_types == 'Institutional review':
-                Uni_name = get_slot(intent_request,'CompareUniSlot')
-                if Uni_name is None:
+                standard_name = get_slot(intent_request,'CompareUniStandardSlot')
+                if standard_name is None:
                     return elicit_slot(
                         intent_request,
-                        'CompareUniSlot',
+                        'CompareUniStandardSlot',
                         slots=get_slots(intent_request),
                     )
                 
-                comp_type = get_slot(intent_request,'CompareUniversityWUniSlot')
-                if not comp_type:
+                universities = get_slot(intent_request,'CompareUniversityUniSlot')
+                if not universities:
                     return elicit_slot(
                         intent_request,
-                        'CompareUniversityWUniSlot',
+                        'CompareUniversityUniSlot',
                         slots=get_slots(intent_request)
                     )
                 
 
-                message = f"based on {Uni_name} and the universities: {comp_type}"
+                # message = f"based on {standard_name} and the universities: {universities} here is the new one"
+                compare_uni_prompt = create_compare_uni_prompt(universities, standard_name)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_uni_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
@@ -481,9 +496,19 @@ def dispatch(intent_request):
                         slots=get_slots(intent_request)
                     )
                 
+                universities = get_slot(intent_request,'CompareUniversityWprogUniversityNameSlot')
+                if universities is None:
+                    return elicit_slot(
+                        intent_request,
+                        'CompareUniversityWprogUniversityNameSlot',
+                        slots=get_slots(intent_request)
+                    )
+                
 
         
-                message = f"the program standatd {programs_st} for the {program_names}"
+                # message = f"the program standatd {programs_st} for the {program_names} in {universities}"
+                create_comapre_university_prompt = create_compare_programme(programs_st, program_names, universities)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, create_comapre_university_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 

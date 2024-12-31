@@ -13,8 +13,8 @@ import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
 import { OpenDataStack } from "./stacks/OpenDataStack";
 import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
-
 import { AfterDeployStack } from "./stacks/AfterDeployStack";
+import { VocationalCentersMetadataStack } from "./stacks/VocationalCentersMetadataStack";
 
 export default {
   config(_input) {
@@ -41,6 +41,7 @@ export default {
       .stack(InstituteMetadataStack)
       .stack(UniversityProgramMetadataStack)
       .stack(ProgramMetadataStack)
+      .stack(VocationalCentersMetadataStack)
       .stack(OpenDataStack)
       .stack(S3Stack)
       .stack(BedrockStack)

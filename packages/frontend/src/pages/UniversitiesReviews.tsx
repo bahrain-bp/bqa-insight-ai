@@ -5,6 +5,7 @@ import { ToggleSection } from './Components/ToggleSection';
 import { UniversityHistoryGraph } from './UniversityReviewComponents/UniversityHistoryGraph';
 import { UniversityReviewsTable} from './UniversityReviewComponents/UniversityReviewTables';
 import { UniversityGeneralCharts} from './UniversityReviewComponents/UniversityGeneralCharts';
+import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
 
 export function UniversityReviews() {
   const [data, setData] = useState<UniversityData[]>([]);
@@ -38,6 +39,8 @@ export function UniversityReviews() {
   }, []);
 
   return (
+  <>
+    <Breadcrumb pageName="University Reviews" />
     <div className="min-h-screen p-6 bg-gray-50 flex flex-col">
       {loading ? (
         // Spinner and Loading Text Container
@@ -77,5 +80,6 @@ export function UniversityReviews() {
         </div>
       )}
     </div>
+  </>
   );
 }
