@@ -1,6 +1,6 @@
 import { createContext, useState } from "react";
 import App from "../App.tsx";
-import {ChartJsonData} from "../pages/BasicView/dynamicChart.tsx";
+import {ChartJsonData} from "../pages/Dashboard/dynamicChart.tsx";
 import {BrowserRouter } from "react-router-dom";
 
 type ChartContextType = {

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import DynamicChart, { ChartJsonData } from "./dynamicChart";
+import DynamicChart, { ChartJsonData } from "../Dashboard/dynamicChart";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { LexChartSlotsContext } from "../../components/RouterRoot";
