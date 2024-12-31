@@ -6,6 +6,7 @@ import { SchoolReviewsFacts } from './SchoolReviewsComponents/SchoolReviewsFacts
 import { SchoolReviewsTable } from './SchoolReviewsComponents/SchoolReviewsTable';
 import { SchoolGeneralCharts } from './SchoolReviewsComponents/SchoolGeneralCharts';
 import { SchoolHistoryGraph } from './SchoolReviewsComponents/SchoolHistoryGraph';
+import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
 
 
 export function SchoolReviews() {
@@ -40,6 +41,8 @@ export function SchoolReviews() {
   }, []);
 
   return (
+  <>
+    <Breadcrumb pageName="School Reviews" />
     <div className="min-h-screen p-6 bg-gray-50 flex flex-col">
       {loading ? (
         // Spinner and Loading Text Container
@@ -67,7 +70,7 @@ export function SchoolReviews() {
           </ToggleSection>
 
           {/* Schools Ranking Section */}
-          <ToggleSection title="Schools Ranking Table" ariaControls="school-reviews-ranking">
+          <ToggleSection title="Schools Table" ariaControls="school-reviews-ranking">
             <SchoolReviewsTable data={data} />
           </ToggleSection>
 
@@ -83,5 +86,6 @@ export function SchoolReviews() {
         </div>
       )}
     </div>
+  </>
   );
 }

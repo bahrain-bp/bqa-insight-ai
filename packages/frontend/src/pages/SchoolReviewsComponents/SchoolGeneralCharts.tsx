@@ -236,21 +236,42 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
         reverse: true, // 4..1 (left->right)
         min: 1,
         max: 4,
-        title: { display: true, text: 'Average Grade' },
+        title: {
+          display: true,
+          text: 'Average Grade',
+        },
+        ticks: {
+          stepSize: 0.5, // Increment by 0.5
+          callback: (value) => {
+            // Map numeric grade to category for better readability
+            if (value === 1) return '1 - Outstanding';
+            if (value === 2) return '2 - Good';
+            if (value === 3) return '3 - Satisfactory';
+            if (value === 4) return '4 - Inadequate';
+            if (value === 1.5) return '1.5';
+            if (value === 2.5) return '2.5';
+            if (value === 3.5) return '3.5';
+            return value;
+          },
+        },
       },
       y: {
-        display: false,
+        display: false, // Hide Y-axis since it's random
       },
     },
     plugins: {
       legend: { display: true },
+      title: {
+        display: true,
+        text: 'Schools Performance by Average Grade',
+      },
       tooltip: {
         callbacks: {
           label: (ctx: TooltipItem<'scatter'>) => {
             const raw = ctx.raw as ScatterDataPoint & { school: SchoolData };
             return [
               raw.school.EnglishSchoolName,
-              `Average Grade: ${raw.school.AverageGrade ?? 'N/A'}`
+              `Average Grade: ${raw.school.AverageGrade ?? 'N/A'}`,
             ].join('\n');
           },
         },
@@ -259,6 +280,7 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
       datalabels: false,
     },
   };
+  
 
   // ==========================
   // 3) GROUPED BAR CHART (INVERTED AVERAGE GRADE) + COUNTS
@@ -356,6 +378,10 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
     },
     plugins: {
       legend: { display: true },
+      title: {
+        display: true,
+        text: 'Average Grade by Review Cycle for Schools',
+      },
       tooltip: {
         callbacks: {
           label: (ctx) => {
@@ -492,6 +518,10 @@ export function SchoolGeneralCharts({ data }: { data: SchoolData[] }) {
     },
     plugins: {
       legend: { display: true },
+      title: {
+        display: true,
+        text: 'Grade Distribution by Review Cycle for Schools',
+      },
       tooltip: {
         callbacks: {
           label: (ctx) => {
