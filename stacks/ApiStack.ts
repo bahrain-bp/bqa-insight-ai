@@ -39,13 +39,7 @@ export function ApiStack({stack}: StackContext) {
             },
         },
         routes: {
-        "POST /createUser": {
-        function: {
-          handler: "packages/functions/src/User.createUserInCognito",
-          permissions: "*",
-          //permissions will be changed
-        },
-      },
+      
             
             // Add the generate-upload-url route
             "POST /generate-upload-url": {
