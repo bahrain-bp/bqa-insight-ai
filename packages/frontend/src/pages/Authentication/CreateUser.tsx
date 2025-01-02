@@ -16,7 +16,7 @@ interface CreateUserProps {
     name: string;
   };
 }
-const CreateUser: React.FC<CreateUserProps> = ({ setUser, user }) => {
+const CreateUser: React.FC<CreateUserProps> = ({ setUser }) => {
   
   const [formFields, setFormFields] = useState<FormFields>({
     email: '',

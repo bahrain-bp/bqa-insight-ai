@@ -13,7 +13,7 @@ import { SchoolReviews } from './pages/SchoolReviews.tsx';
 import { VocationalReviews } from './pages/VocationalReviews.tsx';
 import { UniversityReviews } from './pages/UniversitiesReviews.tsx';
 import ProtectedRoute from './pages/Authentication/ProtectedRouteComp.tsx';
-import CreateUser from './pages/Authentication/CreateUser.tsx';
+//import CreateUser from './pages/Authentication/CreateUser.tsx';
 import CreateUserBQA from './pages/Authentication/CreateUserBQA.tsx';
 
 function App() {

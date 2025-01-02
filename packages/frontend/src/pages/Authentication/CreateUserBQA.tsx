@@ -16,7 +16,7 @@ interface CreateUserBQAProps {
       name: string;
     };
   }
-const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser, user }) => {
+const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
   const [formFields, setFormFields] = useState<FormFields>({
     email: '',
     code: '',
