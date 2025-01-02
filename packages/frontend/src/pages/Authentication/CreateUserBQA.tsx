@@ -9,15 +9,14 @@ interface FormFields {
   password: string;
   confirmPassword: string;
 }
-interface CreateUserProps {
-  setUser: (newUser: any) => void;
-  user: {
-    email: string;
-    name: string;
-  };
-}
-const CreateUser: React.FC<CreateUserProps> = ({ setUser, user }) => {
-  
+interface CreateUserBQAProps {
+    setUser: (newUser: any) => void;
+    user: {
+      email: string;
+      name: string;
+    };
+  }
+const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser, user }) => {
   const [formFields, setFormFields] = useState<FormFields>({
     email: '',
     code: '',
@@ -31,23 +30,40 @@ const CreateUser: React.FC<CreateUserProps> = ({ setUser, user }) => {
   const navigate = useNavigate();
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormFields({
+    const newFields = {
       ...formFields,
       [e.target.name]: e.target.value
-    });
+    };
+    setFormFields(newFields);
+    
+    // Handle email validation error message here instead
+    if (e.target.name === 'email') {
+      if (!validateEmail(e.target.value)) {
+        setErrorMessage('Only @bqa.gov.bh email addresses are allowed to register');
+      } else {
+        setErrorMessage('');
+      }
+    }
   };
 
+  // Updated email validation to only allow @bqa.gov.bh domain
   const validateEmail = (email: string): boolean => {
+    // First check if it's a valid email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+    
+    // Then check if it's from the allowed domain
+    return email.toLowerCase().endsWith('@bqa.gov.bh');
   };
 
   const isInitialFormValid = () => {
+    // Only return the boolean result, don't set any state here
     return validateEmail(formFields.email) && 
            formFields.password.length >= 8 &&
            formFields.password === formFields.confirmPassword;
   };
-
   const isConfirmationFormValid = () => {
     return formFields.code.length > 0;
   };
@@ -57,6 +73,13 @@ const CreateUser: React.FC<CreateUserProps> = ({ setUser, user }) => {
     setErrorMessage('');
     setSuccessMessage('');
     setIsLoading(true);
+
+    // Additional check before submission
+    if (!validateEmail(formFields.email)) {
+      setErrorMessage('Only @bqa.gov.bh email addresses are allowed to register');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       await signUp({
@@ -117,13 +140,14 @@ const CreateUser: React.FC<CreateUserProps> = ({ setUser, user }) => {
           <input
             type="email"
             name="email"
-            placeholder="Enter your email"
+            placeholder="Enter your @bqa.gov.bh email"
             className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             value={formFields.email}
             onChange={handleInputChange}
             disabled={isLoading}
           />
         </div>
+        <small className="text-gray-500 mt-1">Only @bqa.gov.bh email addresses are allowed</small>
       </div>
 
       <div className="mb-6">
@@ -237,4 +261,4 @@ const CreateUser: React.FC<CreateUserProps> = ({ setUser, user }) => {
   );
 };
 
-export default CreateUser;
+export default CreateUserBQA;
