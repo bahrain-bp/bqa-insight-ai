@@ -60,12 +60,19 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
               text: "Grades",
             },
             reverse: true,
-            min: 1,
-            max: 4,
+            min: 0,
+            max: 5,
             ticks: {
               precision: 0,
-            }
+              stepSize: 1, // Steps between grades
+              callback: (value: number) => {
+                if (value === 1 || value === 2 || value === 3 || value === 4) {
+                  return value; // Only label 1, 2, 3, and 4
+                }
+                return ""; // Skip labeling for other values
+            },
           },
+        },
         } : undefined,
       }
     );
