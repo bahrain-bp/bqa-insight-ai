@@ -162,13 +162,13 @@ const SignIning = ({
   </p>
   <p className="mt-2">
     Need an account?{' '}
-     {/*<Link to="/auth/CreateUser" className="text-primary">
+     <Link to="/auth/CreateUser" className="text-primary">
+      Create User
+    </Link> 
+
+    {/*<Link to="/auth/CreateUserBQA" className="text-primary">
       Create User
     </Link> */}
-
-    <Link to="/auth/CreateUserBQA" className="text-primary">
-      Create User
-    </Link>
   </p>
 </div>
               </form>
