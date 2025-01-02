@@ -33,24 +33,3 @@ export async function syncDeleteKnowlegeBase(knowledgeBaseId: string, dataSource
    
 }
     
-// { // DeleteKnowledgeBaseDocumentsResponse
-//   documentDetails: [ // KnowledgeBaseDocumentDetails
-//     { // KnowledgeBaseDocumentDetail
-//       knowledgeBaseId: "STRING_VALUE", // required
-//       dataSourceId: "STRING_VALUE", // required
-//       status: "INDEXED" || "PARTIALLY_INDEXED" || "PENDING" || "FAILED" || "METADATA_PARTIALLY_INDEXED" || "METADATA_UPDATE_FAILED" || "IGNORED" || "NOT_FOUND" || "STARTING" || "IN_PROGRESS" || "DELETING" || "DELETE_IN_PROGRESS", // required
-//       identifier: { // DocumentIdentifier
-//         dataSourceType: "CUSTOM" || "S3", // required
-//         s3: { // S3Location
-//           uri: "STRING_VALUE", // required
-//         },
-//         custom: { // CustomDocumentIdentifier
-//           id: "STRING_VALUE", // required
-//         },
-//       },
-//       statusReason: "STRING_VALUE",
-//       updatedAt: new Date("TIMESTAMP"),
-//     },
-//   ],
-// };
-

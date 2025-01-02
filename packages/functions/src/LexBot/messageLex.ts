@@ -1,21 +1,24 @@
 import { LexRuntimeV2Client, RecognizeTextCommand, RecognizeTextCommandOutput, RecognizeTextRequest, RecognizeTextResponse } from "@aws-sdk/client-lex-runtime-v2";
 import { APIGatewayEvent } from "aws-lambda";
 
+
 interface MessageLexInput {
   message: string
   sessionId: string
+  options?: Record<string,any>
 }
 
 const lexClient = new LexRuntimeV2Client({ region: "us-east-1" })
 export async function handler(event: APIGatewayEvent) {
-  const { message, sessionId }: MessageLexInput = JSON.parse(event.body || "{}")
-  if (!message || !message.trim()) {
+  const { message, sessionId, options }: MessageLexInput = JSON.parse(event.body || "{}")
+  if (!options && (!message || !message.trim()) ) {
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Empty text cannot be sent" })
     }
   }
-  const text = message.trim()
+  const text = message ? message.trim() : "back"
+  console.log("Lex options are: ", options)
 
   const recognizeTextRequest: RecognizeTextRequest = {
     text: text,
@@ -23,6 +26,11 @@ export async function handler(event: APIGatewayEvent) {
     botAliasId: process.env.BOT_ALIAS_ID,
     sessionId: sessionId,
     localeId: process.env.LOCALE_ID,
+    sessionState: {
+      sessionAttributes: {
+        ...options,
+      }
+    }
   }
   try {
     const recognizeTextCommand = new RecognizeTextCommand(recognizeTextRequest)

@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { VocationalData, Review } from './types';
 import LogoIcon from '../../images/BQA.png';
+import PDFIcon from '../../images/PDF.png';
+import XSLIcon from '../../images/xls.png';
 
 interface VocationalReviewsTableProps {
   data: VocationalData[];
@@ -324,10 +326,11 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
     }
     return sortState.direction === 'asc' ? ' ▲' : ' ▼';
   }
-
   return (
     <div className="w-full">
       <div className="mb-4 flex flex-col space-y-4">
+        
+        {/* Minimum Average Grade Filter */}
         <div>
           <span className="font-semibold mr-2">Minimum Average Grade:</span>
           <input
@@ -344,7 +347,10 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
           </div>
         </div>
   
-        <div className="flex justify-between items-center">
+        {/* Search and Export Buttons Section */}
+        <div className="flex flex-col md:flex-row md:justify-between items-center">
+          
+          {/* Search Input */}
           <div>
             <span className="font-semibold mr-2">Search by English Institute Name:</span>
             <input
@@ -355,33 +361,46 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
               placeholder="Enter name..."
             />
           </div>
-          <div className="space-x-2">
+  
+          {/* Export Buttons */}
+          <div className="mt-4 md:mt-0 flex space-x-2">
             <button
               onClick={exportToExcel}
-              className="bg-[#0F7E0F] hover:bg-[#0D6A0D] text-white px-4 py-2 rounded"
+              className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Export as Excel"
             >
-              Export as Excel
+              <img 
+                src={XSLIcon} 
+                alt="Export to Excel" 
+                className="w-9 h-9 object-contain"  
+              />
+              <span className="ml-2">Export as Excel</span>
             </button>
             <button
               onClick={exportToPDF}
-              className="bg-primary hover:bg-primary text-white px-4 py-2 rounded"
+              className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Export as PDF"
             >
-              Export as PDF
+              <img 
+                src={PDFIcon} 
+                alt="Export to PDF" 
+                className="w-9 h-9 object-contain"  
+              />
+              <span className="ml-2">Export as PDF</span>
             </button>
           </div>
         </div>
-
-        <div className="flex items-center justify-between mb-2">
-        <div className="text-gray-700 font-semibold">
-          {displayedData.length} institute(s) returned
-        </div>
-        <div className="text-gray-700 font-semibold">
-          Overall Average Grade: {overallAverage}
-        </div>
-      </div>
-
-      </div>
   
+        {/* Summary of Data */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-gray-700 font-semibold">
+            {displayedData.length} institute(s) returned
+          </div>
+          <div className="text-gray-700 font-semibold">
+            Overall Average Grade: {overallAverage}
+          </div>
+        </div>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
