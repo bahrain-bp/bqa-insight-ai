@@ -54,7 +54,9 @@ type Message = {
 
 export const Chat = () => {
     const [messages, setMessages] = useState<Message[]>([]);
+    const [isWaitingForBot, setIsWaitingForBot] = useState(false);
     const [sessionId, setSessionId] = useState("");
+    const [sessionAttributes, setSessionAttributes] = useState<Record<string, string>>({})
     // const [responses, setResponses] = useState(0);
     const isInitialized = useRef(false);
     const chatListRef = useRef<HTMLUListElement>(null); // Reference to the chat list
@@ -126,11 +128,14 @@ export const Chat = () => {
         }
     }
     const getLexChartSlots = (lexResponse: any): LexChartSlots => {
-        const lexSlots = lexResponse.sessionState.intent.slots
+        let lexSlots = lexResponse.sessionState.intent.slots
         const lexChartSlots: LexChartSlots = {ProgramNameSlot: undefined, AnalyzeSchoolSlot: undefined, CompareSchoolSlot: undefined, AnalyzeVocationalSlot: undefined, CompareVocationalSlot: undefined, CompareUniversityWUniSlot: undefined, CompareSpecificInstitutesSlot: undefined, CompareUniversityWProgramsSlot: undefined}
+        if ('OtherIntent' === lexResponse.sessionState.intent.name && 'slots' in lexResponse.sessionState.sessionAttributes) {
+            lexSlots = JSON.parse(lexResponse.sessionState.sessionAttributes.slots)
+        }
         Object.keys(lexSlots).map((slot) => {
             console.log("Checking slot " + slot)
-            if (slot in lexChartSlots) {
+            if (slot in lexChartSlots && lexSlots[slot]) {
                 console.log(`Found slot ${slot}`)
                 lexChartSlots[slot as keyof LexChartSlots] = lexSlots[slot].value.interpretedValue
             }
@@ -138,25 +143,33 @@ export const Chat = () => {
         return lexChartSlots
     }
 
-    const messageLex = async (message: string) => {
+    const messageLex = async (message: string | undefined, options: {retry?: "true" | "false", return?: "true" | "false",} = {retry: 'false', return: 'false'}) => {
+        if (isWaitingForBot) return
         try {
-            addMessage({author: "human", body: message});
+            setIsWaitingForBot(true)
+            if (message)
+                addMessage({author: "human", body: message});
 
             addMessage({author: "loading", body: "(Thinking...)"})
 
             const sessionId = await startSession()
+            const lexOptions: Record<string, any> = {...sessionAttributes, ...options}
+            console.log("Lex options are: ", options)
+            console.log("Lex combined options are: ", lexOptions)
             const lexResponse = await fetch(`${import.meta.env.VITE_API_URL}/lex/message-lex`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ message: message, sessionId: sessionId }),
+                body: JSON.stringify({ message: message, sessionId: sessionId, options: lexOptions }),
             });
             if (!lexResponse.ok) {
               throw Error("Could not send request.")
             }
             const result = await lexResponse.json()
             const body = result.response
+            const attr = body.sessionState.sessionAttributes
+            setSessionAttributes(attr)
             setChartSlots(getLexChartSlots(body))
             console.log("lex response: ", body)
             const hasImageResponseCard = body.messages[0].contentType === "ImageResponseCard"
@@ -171,11 +184,14 @@ export const Chat = () => {
         } catch (error) {
             console.error("error: ", error)
             replaceLastMessage({ author: "bot", body: "An error has occurred. Please try again." })
-        } 
+        } finally {
+            setIsWaitingForBot(false)
+        }
     }
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (isWaitingForBot) return
         const input = (e.target as HTMLFormElement).elements.namedItem(
             "input"
         ) as HTMLInputElement;
@@ -193,8 +209,13 @@ export const Chat = () => {
         input.focus()
     };
 
+    const returnToMenu = () => messageLex(undefined, {return: "true"})
+
+    const retrySlot = () => messageLex(undefined, {retry: "true"})
+
     useEffect(() => {
         if (isInitialized.current) return;
+        returnToMenu()
         isInitialized.current = true;
 
         // initialMessages.forEach((msg) => {
@@ -223,7 +244,7 @@ export const Chat = () => {
                             <div className={`c-chat__message ${message.author === "human" ? "bg-lightblue" : "bg-primary"}`}>
                                 {typeof message.body === "string" ? (
                                     <span
-                                        className={message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
+                                        className={"whitespace-pre-line" + message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
                                 ) : (
                                     <div className="flex flex-col">
                                         <span className="font-bold text-lg">{message.body.title}</span>
@@ -233,7 +254,7 @@ export const Chat = () => {
                                             <input type="button" value={btn.text} key={i} onClick={async () => {
                                                     await messageLex(btn.value)
                                                 }}
-                                                className="bg-lightblue text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer"/>
+                                                className="bg-lightblue whitespace-break-spaces text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer"/>
                                         ))}</span>
                                     </div>
                                 )}
@@ -243,7 +264,7 @@ export const Chat = () => {
                 </ul>
 
             {/* Chat Input Form */}
-            <form className="c-chat__form bg-whiten rounded-b-md" onSubmit={handleSubmit}>
+            <form className="c-chat__form gap-2 bg-whiten rounded-b-md" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     name="input"
@@ -251,6 +272,21 @@ export const Chat = () => {
                     autoFocus
                     autoComplete="off"
                     required
+                    className="grow p-2"
+                />
+                <input
+                    type="button"
+                    name="back"
+                    value="Back"
+                    className="bg-graydark text-white rounded cursor-pointer px-3 shrink"
+                    onClick={retrySlot}
+                />
+                <input
+                    type="button"
+                    name="return"
+                    value="Main Menu"
+                    className="bg-lightblue text-white rounded cursor-pointer px-3 shrink"
+                    onClick={returnToMenu}
                 />
             </form>
         </div>
