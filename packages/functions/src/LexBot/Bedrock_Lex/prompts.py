@@ -1,5 +1,13 @@
 # TODO: change the questions in compare prompt and others
-def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False):
+def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False, all_government=False, all_private=False):
+    question = f"How did {institute_names} do in terms of {aspect}?"
+    
+    if governorate:
+        question = f"How did all schools in {institute_names} do in terms of {aspect}?"
+    elif all_government:
+        question = f"How did all government schools across bahrain do in terms of {aspect}?"
+    elif all_private:
+        question = f"How did all private schools across bahrain do in terms of {aspect}?"
     prompt = f'''
         
 Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
@@ -92,7 +100,7 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     - Prioritization of infrastructure development and updates to the STEM curriculum.
     - Significant progress in fostering student well-being programs and promoting leadership development among educators.
 
-    Input: How did {institute_names} do in terms of {aspect}?
+    Input: {question}?
     Output:
     The performance of {institute_names} in terms of {aspect} is as follows:
 
@@ -112,7 +120,7 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     2. 
     3. 
     
-?
+
     '''
     return prompt
 

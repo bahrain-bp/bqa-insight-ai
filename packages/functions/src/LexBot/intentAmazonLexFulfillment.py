@@ -398,6 +398,7 @@ def dispatch(intent_request):
             return elicit_slot(
                 intent_request,
                 'StandardSlot',
+                slots=get_slots(intent_request),
             )
         
 
@@ -539,7 +540,10 @@ def dispatch(intent_request):
                         'GovernorateSlot',
                         slots=get_slots(intent_request),
                     )
-                message = f"the governorate you selected is: {governorate_name} for the aspect {compare_school_aspect}"
+                
+                # message = f"the governorate you selected is: {governorate_name} for the aspect {compare_school_aspect}"
+                compare_school_by_governorate_prompt = create_compare_schools_prompt(institute_names=governorate_name, aspect=compare_school_aspect, governorate=True)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_school_by_governorate_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
