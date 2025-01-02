@@ -150,7 +150,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
       type={parsedData.type}
       data={formattedData as any} // Cast as any to satisfy Chart.js type requirements
       options={chartOptions}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", display: "block", margin: "auto" }}
     />
   );
 };

@@ -400,21 +400,59 @@ const Filter = () => {
 
         if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
-            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            AnalyzeSchoolSlot:
+              mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
             CompareSpecificInstitutesSlot:
               mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
-            ProgramNameSlot: undefined,
+            CompareSchoolSlot: undefined,
             AnalyzeVocationalSlot: undefined,
             CompareUniversityWUniSlot: undefined,
             CompareUniversityWProgramsSlot: undefined,
+            CompareVocationalSlot: undefined,
+            ProgramNameSlot: undefined,
+          };
+        
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots);
+        } else if (educationType === "universities" && selectedOptions["University Name"].length > 0) {
+          const slots = {
+            AnalyzeUniversityNameSlot:
+              mode === "Analyze" && educationType === "universities" ? selectedOptions["University Name"][0] : undefined,
+            CompareUniversityWprogUniversityNameSlot:
+              mode === "Compare" && educationType === "universities" ? selectedOptions["University Name"].join(", ") : undefined,
+            CompareUniversityWprogSlot:
+              mode === "Compare" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
+                ? selectedOptions["Programme Name"].join(", ")
+                : undefined,
+            AnalyzeSchoolSlot: undefined,
+            CompareSpecificInstitutesSlot: undefined,
             CompareSchoolSlot: undefined,
             CompareVocationalSlot: undefined,
+            ProgramNameSlot:
+              mode === "Analyze" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
+                ? selectedOptions["Programme Name"][0]
+                : undefined,
           };
-          
-          setChartSlots(slots); // Update context with selected filters
+        
+          setChartSlots(slots);
           console.log("Updated chart slots:", slots);
-          
-        }
+        } else if (educationType === "vocational" && selectedOptions["Institute Name"].length > 0) {
+          const slots = {
+            AnalyzeVocationalSlot:
+              mode === "Analyze" && educationType === "vocational" ? selectedOptions["Institute Name"][0] : undefined,
+            CompareVocationalSlot:
+              mode === "Compare" && educationType === "vocational" ? selectedOptions["Institute Name"].join(", ") : undefined,
+            AnalyzeSchoolSlot: undefined,
+            CompareSpecificInstitutesSlot: undefined,
+            CompareSchoolSlot: undefined,
+            CompareUniversityWUniSlot: undefined,
+            CompareUniversityWProgramsSlot: undefined,
+            ProgramNameSlot: undefined,
+          };
+        
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots);
+        }        
 
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");

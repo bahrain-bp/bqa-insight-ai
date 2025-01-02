@@ -4,6 +4,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { LexChartSlotsContext } from "../../components/RouterRoot";
 import Fuse from "fuse.js"; // Import Fuse.js for fuzzy searching
+import LogoIcon from '../../images/BQA.png';
 
 const BasicChart = () => {
   const { chartSlots } = useContext(LexChartSlotsContext); // Context for dynamic filtering
@@ -159,6 +160,9 @@ const BasicChart = () => {
   // Update current chart based on chart slots
   useEffect(() => {
     if (!chartSlots) return;
+
+    setCurrentChart(null);
+    setProgramGradesList([]);
 
     if (chartSlots.AnalyzeSchoolSlot) {
       // Clear the list before starting a new operation
@@ -388,74 +392,107 @@ const BasicChart = () => {
     } else if (chartSlots.CompareUniversityUniSlot) {
       // Clear the list before starting a new operation
       setProgramGradesList([]);
-      const programNames = chartSlots.CompareUniversityUniSlot
+    
+      // Extract university names from the slot
+      const universityNames = chartSlots.CompareUniversityUniSlot
         .split(",")
-        .map((program) => program.trim().toLowerCase());
+        .map((name) => name.trim());
+    
+      console.log("University Names for Comparison:", universityNames);
     
       // Function to calculate weight for grades
       const calculateWeight = (grade: number): number => {
         switch (grade) {
-          case 1:
-            return 1.0; // Highest weight
-          case 2:
-            return 0.75;
-          case 3:
-            return 0.5;
-          case 4:
-            return 0.25; // Lowest weight
-          default:
-            return 0; // Handle unexpected grades
+          case 1: return 1.0;
+          case 2: return 0.75;
+          case 3: return 0.5;
+          case 4: return 0.25;
+          default: return 0;
         }
       };
     
-      // Aggregate grades for comparison
-      const datasets = allUniversityCharts.map((universityChart) => {
-        const programGrades: { program: string; grade: number; originalGrade: number }[] = [];
+      // Find matching universities using fuzzy search
+      const matchedUniversities = universityNames
+        .map(name => performFuzzySearch(name, allUniversityCharts, "universityName"))
+        .filter((univ): univ is ChartJsonData => univ !== null);
     
-        universityChart.data.datasets[0]?.data.forEach((review: any) => {
-          const programName = review?.UnifiedStudyField?.trim().toLowerCase();
-          const grade = review.y;
+      // Prepare data for the chart
+      const programGradesMap: { [program: string]: { university: string; grade: number; originalGrade: number }[] } = {};
     
-          if (programNames.includes(programName)) {
-            programGrades.push({
-              program: review.UnifiedStudyField,
-              grade: calculateWeight(grade), // Weighted grade
-              originalGrade: grade, // Store original grade
-            });
+      matchedUniversities.forEach((universityChart) => {
+        // Sort reviews to get the latest first
+        const sortedReviews = [...(universityChart.data.datasets[0]?.data || [])].sort(
+          (a: any, b: any) => new Date(b.x).getTime() - new Date(a.x).getTime()
+        );
+      
+        console.log(`Processing university: ${universityChart.universityName}`);
+        console.log(`Sorted reviews:`, sortedReviews);
+      
+        // Keep track of processed programs to ensure we only use the latest review
+        const processedPrograms = new Set<string>();
+      
+        // Process reviews
+        sortedReviews.forEach((review: any) => {
+          console.log(`Review:`, review);
+          const programName = review?.UnifiedStudyField?.trim();
+          const grade = review?.y;
+      
+          if (!programName || processedPrograms.has(programName)) {
+            console.log(`Skipping program: ${programName}`);
+            return;
           }
+      
+          processedPrograms.add(programName);
+      
+          if (!programGradesMap[programName]) {
+            programGradesMap[programName] = [];
+          }
+      
+          console.log(`Adding program: ${programName}, Grade: ${grade}`);
+          programGradesMap[programName].push({
+            university: universityChart.universityName || "Unnamed University",
+            grade: calculateWeight(grade),
+            originalGrade: grade,
+          });
         });
+      });
+      
+      // Verify programGradesMap structure
+      console.log(`Program Grades Map:`, programGradesMap);      
     
-        // Filter out universities with no matching programs
-        if (programGrades.length === 0) return null;
+      // Get unique program names
+      const programNames = Object.keys(programGradesMap);
     
-        return {
-          label: universityChart.universityName || "Unnamed University",
-          data: programGrades.map((pg) => ({
-            x: pg.program,
-            y: pg.grade,
-            originalGrade: pg.originalGrade, // Include original grade for tooltip
-          })),
-        };
-      }).filter((dataset) => dataset !== null) as {
-        label: string;
-        data: { x: string; y: number; originalGrade: number }[];
-      }[];
+      // Create datasets for each matched university
+      const datasets = matchedUniversities.map(universityChart => ({
+        label: universityChart.universityName || "Unnamed University",
+        data: programNames.map(program => {
+          const gradeInfo = programGradesMap[program]?.find(
+            entry => entry.university === universityChart.universityName
+          );
+      
+          console.log(`Program: ${program}, Grade Info:`, gradeInfo);
+      
+          return {
+            x: program,
+            y: gradeInfo?.grade || 0,
+            originalGrade: gradeInfo?.originalGrade || "No grade",
+          };
+        }),
+      }));      
     
       // Ensure we have data to display
       if (datasets.length === 0) {
-        console.error(`No data found for programs: ${chartSlots.CompareUniversityUniSlot}`);
+        console.error(`No data found for universities: ${chartSlots.CompareUniversityUniSlot}`);
         return;
       }
     
       const programComparisonChart: ChartJsonData = {
-        universityName: `Comparison of Programs by Grades across Universities`,
-        type: "bar", // Bar chart
+        universityName: `Comparison of Universities by Programs Grades (Latest Reports)`,
+        type: "bar",
         data: {
-          labels: programNames.map((name) => name.charAt(0).toUpperCase() + name.slice(1)), // Capitalize program names
-          datasets: datasets.map((dataset) => ({
-            label: dataset.label,
-            data: dataset.data.map((d) => d as { x: string | number; y: number; originalGrade: any }), // Ensure proper type
-          })),
+          labels: programNames,
+          datasets: datasets,
         },
         options: {
           responsive: true,
@@ -467,28 +504,22 @@ const BasicChart = () => {
               },
             },
             y: {
-              reverse: false, // Ensure Y-axis is not reversed
+              reverse: false,
               title: {
                 display: true,
                 text: "Grades",
               },
               ticks: {
-                min: 0.25, // Lowest weighted grade
-                max: 1.0, // Highest weighted grade
-                stepSize: 0.25, // Steps for each grade
+                min: 0.25,
+                max: 1.0,
+                stepSize: 0.25,
                 callback: (value: number) => {
-                  // Map the weighted grades back to original grades
                   switch (value) {
-                    case 1.0:
-                      return "1"; // Original grade 1
-                    case 0.75:
-                      return "2"; // Original grade 2
-                    case 0.5:
-                      return "3"; // Original grade 3
-                    case 0.25:
-                      return "4"; // Original grade 4
-                    default:
-                      return ""; // For values outside expected range
+                    case 1.0: return "1";
+                    case 0.75: return "2";
+                    case 0.5: return "3";
+                    case 0.25: return "4";
+                    default: return "";
                   }
                 },
               },
@@ -496,19 +527,177 @@ const BasicChart = () => {
           },
           plugins: {
             title: {
-              display: true, // Enable the title
-              text: "Comparison of Programs by Grades across Universities", // Graph title text
-              font: {
-                size: 18,
+              display: true,
+              text: "Comparison of Universities by Programs Grades (Latest Reports)",
+              font: { size: 18 },
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context: { raw: any; dataset: { label: any } }) {
+                  const university = context.dataset.label;
+                  const originalGrade = context.raw?.originalGrade;
+                  const weightedGrade = context.raw?.y;
+                  return originalGrade !== "No grade"
+                    ? `${university}: Original Grade: ${originalGrade}, Weighted: ${weightedGrade}`
+                    : `${university}: No grade available`;
+                },
               },
+            },            
+            datalabels: {
+              display: false,
+            },
+          },
+        },
+      };
+    
+      setCurrentChart(programComparisonChart);
+    } else if (chartSlots.CompareUniversityWprogUniversityNameSlot && chartSlots.CompareUniversityWprogSlot) {
+      setProgramGradesList([]);
+    
+      // Function to calculate weight for grades
+      const calculateWeight = (grade: number): number => {
+        switch (grade) {
+          case 1: return 1.0; // Highest weight
+          case 2: return 0.75;
+          case 3: return 0.5;
+          case 4: return 0.25; // Lowest weight
+          default: return 0;   // Invalid grade
+        }
+      };
+
+      const universityNames = chartSlots.CompareUniversityWprogUniversityNameSlot
+        .split(",")
+        .map((university) => university.trim().toLowerCase());
+      const programNames = chartSlots.CompareUniversityWprogSlot
+        .split(",")
+        .map((program) => program.trim().toLowerCase());
+    
+      console.log("University Names for Comparison:", universityNames);
+      console.log("Program Names for Comparison:", programNames);
+    
+      const programGradesMap: {
+        [university: string]: { program: string; grade: number; originalGrade: number | "No grade" }[];
+      } = {};
+    
+      const matchedUniversities = universityNames
+        .flatMap((name) => performFuzzySearch(name, allUniversityCharts, "universityName"))
+        .filter((university): university is ChartJsonData => university !== null);
+    
+      console.log("Matched Universities with Fuzzy Search:", matchedUniversities.map((u) => u.universityName));
+    
+      matchedUniversities.forEach((universityChart) => {
+        const universityName = universityChart.universityName || "Unnamed University";
+    
+        const sortedReviews = [...(universityChart.data.datasets[0]?.data || [])].sort(
+          (a: any, b: any) => new Date(b.x).getTime() - new Date(a.x).getTime()
+        );
+    
+        if (!programGradesMap[universityName]) {
+          programGradesMap[universityName] = [];
+        }
+    
+        programNames.forEach((programName) => {
+          const review = sortedReviews.find(
+            (review: any) =>
+              typeof review === "object" &&
+              review?.UnifiedStudyField?.trim()?.toLowerCase() === programName
+          );
+    
+          if (review && typeof review === "object" && "y" in review) {
+            const grade = review.y;
+            programGradesMap[universityName].push({
+              program: programName,
+              grade: calculateWeight(grade),
+              originalGrade: grade,
+            });
+          } else {
+            programGradesMap[universityName].push({
+              program: programName,
+              grade: 0,
+              originalGrade: "No grade",
+            });
+          }
+        });
+      });
+    
+      const universitiesFromData = Object.keys(programGradesMap);
+    
+      const datasets = programNames.map((program) => ({
+        label: program.charAt(0).toUpperCase() + program.slice(1),
+        data: universitiesFromData.map((university) => {
+          const gradeInfo = programGradesMap[university]?.find((entry) => entry.program === program);
+          return {
+            x: university,
+            y: gradeInfo?.grade || 0,
+            originalGrade: gradeInfo?.originalGrade || "No grade",
+          };
+        }),
+      }));
+    
+      if (datasets.length === 0) {
+        console.error(
+          `No data found for universities: ${chartSlots.CompareUniversityWprogUniversityNameSlot} and programs: ${chartSlots.CompareUniversityWprogSlot}`
+        );
+        return;
+      }
+    
+      const programComparisonChart: ChartJsonData = {
+        universityName: `Comparison of Selected Programs by Grades across Selected Universities (Latest Reports)`,
+        type: "bar",
+        data: {
+          labels: universitiesFromData.map((name) => name.charAt(0).toUpperCase() + name.slice(1)),
+          datasets: datasets.map((dataset) => ({
+            label: dataset.label,
+            data: dataset.data.map((d) => d as { x: string | number; y: number; originalGrade: any }),
+          })),
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Universities",
+              },
+            },
+            y: {
+              reverse: false,
+              title: {
+                display: true,
+                text: "Grades",
+              },
+              ticks: {
+                min: 0.25,
+                max: 1.0,
+                stepSize: 0.25,
+                callback: (value: number) => {
+                  switch (value) {
+                    case 1.0: return "1";
+                    case 0.75: return "2";
+                    case 0.5: return "3";
+                    case 0.25: return "4";
+                    default: return "";
+                  }
+                },
+              },
+            },
+          },
+          plugins: {
+            title: {
+              display: true,
+              text: "Comparison of Selected Programs by Grades across Selected Universities (Latest Reports)",
+              font: { size: 18 },
             },
             tooltip: {
               callbacks: {
                 label: function (context: { raw: any; dataset: { label: any } }) {
-                  const rawData = context.raw; // Access the raw data
-                  const originalGrade = rawData?.originalGrade !== undefined ? rawData.originalGrade : "N/A"; // Access originalGrade
-                  const weightedGrade = rawData?.y || "N/A"; // Access weighted grade
-                  return `${context.dataset.label}: Original Grade: ${originalGrade}, Weighted Grade: ${weightedGrade}`;
+                  const program = context.dataset.label;
+                  const rawData = context.raw;
+                  const originalGrade = rawData?.originalGrade !== undefined ? rawData.originalGrade : "N/A";
+                  const weightedGrade = rawData?.y !== undefined ? rawData.y.toFixed(2) : "N/A";
+                  return originalGrade !== "No grade"
+                    ? `${program}: Original Grade: ${originalGrade}, Weighted: ${weightedGrade}`
+                    : `${program}: No grade available`;
                 },
               },
             },
@@ -520,231 +709,251 @@ const BasicChart = () => {
       };
     
       setCurrentChart(programComparisonChart);
-    } else if (chartSlots.CompareUniversityWprogUniversityNameSlot && chartSlots.CompareUniversityWprogSlot) {
-      // Clear the list before starting a new operation
-      setProgramGradesList([]);
-    console.log("Chart slot university name in compare programs: " + chartSlots.CompareUniversityWprogUniversityNameSlot);
-      // Parse university names and program names from slots
-      const universityNames = chartSlots.CompareUniversityWprogUniversityNameSlot
-        .split(",")
-        .map((university) => university.trim().toLowerCase());
-      const programNames = chartSlots.CompareUniversityWprogSlot
-        .split(",")
-        .map((program) => program.trim().toLowerCase());
-    
-      // Filter data for the specified universities and programs
-      const datasets = allUniversityCharts
-        .filter((universityChart) =>
-          universityNames.includes(universityChart.universityName?.toLowerCase() || "")
-        )
-        .map((universityChart) => {
-          const programGrades: { program: string; grade: number; originalGrade: number }[] = [];
-    
-          universityChart.data.datasets[0]?.data.forEach((review: any) => {
-            const programName = review?.UnifiedStudyField?.trim().toLowerCase();
-            const grade = review.y;
-    
-            // Include only programs specified in CompareUniversityWprogSlot
-            if (programNames.includes(programName)) {
-              programGrades.push({
-                program: review.UnifiedStudyField,
-                grade: grade,
-                originalGrade: grade, // Store original grade
-              });
-            }
-          });
-    
-          // Skip universities with no matching programs
-          if (programGrades.length === 0) return null;
-    
-          return {
-            label: universityChart.universityName || "Unnamed University",
-            data: programGrades.map((pg) => ({
-              x: pg.program,
-              y: pg.grade,
-              originalGrade: pg.originalGrade,
-            })),
-          };
-        })
-        .filter((dataset) => dataset !== null) as {
-        label: string;
-        data: { x: string; y: number; originalGrade: number }[];
-      }[];
-    
-      // Ensure we have data to display
-      if (datasets.length === 0) {
-        console.error(
-          `No data found for universities: ${chartSlots.CompareUniversityWprogUniversityNameSlot} and programs: ${chartSlots.CompareUniversityWprogSlot}`
-        );
-        return;
-      }
-    
-      const programComparisonChart: ChartJsonData = {
-        universityName: `Comparison of Selected Programs by Grades across Universities`,
-        type: "bar", // Bar chart
-        data: {
-          labels: programNames.map((name) => name.charAt(0).toUpperCase() + name.slice(1)), // Capitalize program names
-          datasets: datasets.map((dataset) => ({
-            label: dataset.label,
-            data: dataset.data.map((d) => d as { x: string | number; y: number; originalGrade: any }), // Ensure proper type
-          })),
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: {
-              title: {
-                display: true,
-                text: "Programs",
-              },
-            },
-            y: {
-              reverse: false, // Ensure Y-axis is not reversed
-              title: {
-                display: true,
-                text: "Grades",
-              },
-              ticks: {
-                min: 0.25, // Lowest weighted grade
-                max: 1.0, // Highest weighted grade
-                stepSize: 0.25, // Steps for each grade
-                callback: (value: number) => {
-                  // Map the weighted grades back to original grades
-                  switch (value) {
-                    case 1.0:
-                      return "1"; // Original grade 1
-                    case 0.75:
-                      return "2"; // Original grade 2
-                    case 0.5:
-                      return "3"; // Original grade 3
-                    case 0.25:
-                      return "4"; // Original grade 4
-                    default:
-                      return ""; // For values outside expected range
-                  }
-                },
-              },
-            },
-          },
-          plugins: {
-            legend: {
-              position: "right", // Move legends to the right
-              align: "center", // Align legends vertically
-              labels: {
-                boxWidth: 20, // Width of the color box
-                font: {
-                  size: 12, // Font size of legend labels
-                },
-              },
-            },
-            title: {
-              display: true,
-              text: "Comparison of Selected Programs by Grades across Universities", // Graph title
-              font: {
-                size: 18,
-              },
-            },
-            tooltip: {
-              callbacks: {
-                label: function (context: { raw: any; dataset: { label: any } }) {
-                  const rawData = context.raw;
-                  const originalGrade = rawData?.originalGrade !== undefined ? rawData.originalGrade : "N/A"; // Access originalGrade
-                  const weightedGrade = rawData?.y || "N/A"; // Access weighted grade
-                  return `${context.dataset.label}: Original Grade: ${originalGrade}, Weighted Grade: ${weightedGrade}`;
-                },
-              },
-            },
-            datalabels: {
-              display: false, // Disable data labels on bars
-            },
-          },
-        },
-      };
-    
-      setCurrentChart(programComparisonChart);
-    }                                
+    }    
   }, [chartSlots, allSchoolCharts, allVocationalCharts, allUniversityCharts]);
 
   // Export chart content as PDF
   const exportContentAsPDF = async () => {
     const content = document.getElementById("export-content");
-    if (content) {
-      try {
-        const canvas = await html2canvas(content);
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("charts-and-text.pdf");
-      } catch (error) {
-        console.error("Error exporting content to PDF:", error);
+    if (!content) {
+      console.error("No content found to export.");
+      return;
+    }
+  
+    try {
+      // Clone the content for manipulation
+      const clonedContent = content.cloneNode(true) as HTMLElement;
+  
+      // Create wrapper for PDF styling
+      const pdfContainer = document.createElement("div");
+      pdfContainer.className = "pdf-export";
+  
+      // Add PDF styles
+      const style = document.createElement("style");
+      style.textContent = `
+        .pdf-export {
+          padding: 20px;
+          font-family: Arial, sans-serif;
+          background-color: white;
+        }
+        .pdf-header {
+          display: flex;
+          justify-content: flex-end; /* Aligns logo to the right */
+          align-items: center;
+          margin-bottom: 60px;
+          margin-right: 60px;
+        }
+        .pdf-header img {
+          max-height: 60px;
+          object-fit: contain;
+        }
+        .pdf-title {
+          text-align: center;
+          font-size: 20px;
+          font-weight: bold;
+          margin-bottom: 20px;
+        }
+        .pdf-export ul {
+          list-style-type: disc;
+          margin-left: 20px;
+        }
+        .pdf-export li {
+          margin-bottom: 8px;
+        }
+      `;
+      pdfContainer.appendChild(style);
+  
+      // Add logo header
+      const header = document.createElement("div");
+      header.className = "pdf-header";
+      if (typeof LogoIcon !== "undefined") {
+        const logo = document.createElement("img");
+        logo.src = LogoIcon; // Replace with the path to your logo
+        header.appendChild(logo);
       }
+      pdfContainer.appendChild(header);
+  
+      // Handle Chart.js canvas
+      const originalCanvas = content.querySelector("canvas");
+      if (originalCanvas) {
+        const chartImage = document.createElement("img");
+        chartImage.src = originalCanvas.toDataURL("image/png");
+  
+        // Check if the chart is a pie chart and resize accordingly
+        if (currentChart?.type === "pie") {
+          chartImage.style.width = "65%"; // Reduce the width for pie charts
+          chartImage.style.height = "auto"; // Maintain aspect ratio
+        } else {
+          chartImage.style.width = "100%"; // Default width for other charts
+          chartImage.style.height = "auto";
+        }
+  
+        // Replace the canvas in cloned content with the image
+        const clonedCanvas = clonedContent.querySelector("canvas");
+        if (clonedCanvas && clonedCanvas.parentNode) {
+          clonedCanvas.parentNode.replaceChild(chartImage, clonedCanvas);
+        }
+      }
+  
+      pdfContainer.appendChild(clonedContent);
+  
+      // Temporarily add to DOM for rendering
+      document.body.appendChild(pdfContainer);
+  
+      // Capture the content
+      const canvas = await html2canvas(pdfContainer, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        scrollY: -window.scrollY,
+        windowWidth: pdfContainer.scrollWidth,
+        windowHeight: pdfContainer.scrollHeight,
+      } as any);
+  
+      // Remove temporary container
+      document.body.removeChild(pdfContainer);
+  
+      // Generate PDF
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+  
+      // Calculate dimensions
+      const margin = 10;
+      const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+      const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  
+      // Add image to PDF
+      if (imgHeight > pageHeight) {
+        // If content is taller than page, use multiple pages
+        let heightLeft = imgHeight;
+        let position = 0;
+  
+        while (heightLeft > 0) {
+          pdf.addImage(imgData, "PNG", margin, position + margin, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+          position -= pageHeight;
+  
+          if (heightLeft > 0) {
+            pdf.addPage();
+          }
+        }
+      } else {
+        // If content fits on one page
+        pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
+      }
+  
+      // Save the PDF
+      pdf.save("generated-chart.pdf");
+    } catch (error) {
+      console.error("Error exporting content to PDF:", error);
+    }
+  };    
+
+  // Export chart content as PNG
+  const exportContentAsPNG = async () => {
+    const content = document.getElementById("export-content");
+    if (!content) {
+      console.error("No content found to export.");
+      return;
+    }
+
+    try {
+      // Capture the content as a canvas
+      const canvas = await html2canvas(content, {
+        scale: 2, // Increase the scale for better quality
+        useCORS: true,
+        allowTaint: true,
+        scrollY: -window.scrollY, // Adjust for scroll position
+      } as any);
+
+      // Convert the canvas to a PNG image
+      const imgData = canvas.toDataURL("image/png");
+
+      // Create a link element for downloading the image
+      const link = document.createElement("a");
+      link.href = imgData;
+      link.download = "generated-chart.png"; // File name for the downloaded image
+
+      // Append the link to the document and trigger the download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error exporting content to PNG:", error);
     }
   };
+
   return (
-    <div className="flex flex-col items-center">
-      <div className="p-5 w-full mx-auto">
-        <h2>Charts</h2>
+    <div className="flex flex-col items-center w-full">
+      <div className="p-5 w-full max-w-7xl mx-auto">
         {(isSchoolDataLoading || isVocationalDataLoading || isUniversityDataLoading) && <p>Loading charts...</p>}
-  
+
         {/* Export Button */}
         {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
-          <div className="mb-4 flex justify-end">
-            <button
-              onClick={exportContentAsPDF}
-              className="bg-lightblue hover:bg-primary"
-              style={{
-                color: "white",
-                padding: "10px 20px",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                fontSize: "16px",
-                transition: "background-color 0.3s ease",
-              }}
-            >
-              Export as PDF
-            </button>
-          </div>
+          <div className="mb-4 flex justify-center w-full gap-4">
+          <button
+            onClick={exportContentAsPDF}
+            className="bg-lightblue hover:bg-primary text-white px-5 py-2.5 rounded-md transition-colors duration-300"
+          >
+            Export as PDF
+          </button>
+          <button
+          onClick={exportContentAsPNG}
+          className="text-white px-5 py-2.5 rounded-md transition-colors duration-300"
+          style={{
+            backgroundColor: 'rgba(184, 51, 29, 1)',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(138, 38, 21, 1)')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(184, 51, 29, 1)')}
+          >
+          Export as PNG
+          </button>
+        </div>       
         )}
-  
-        <div id="export-content">
+        <center><h2>Charts</h2></center>
+        <div id="export-content" className="w-full">
           {!isSchoolDataLoading && !isVocationalDataLoading && !isUniversityDataLoading && currentChart && (
-            <div className="flex">
-              {/* Chart Section */}
-              <div className="w-2/3">
-                {currentChart && <DynamicChart jsonData={currentChart} />}
-              </div>
-  
-              {/* List Section */}
-              <div className="w-1/3 pl-5">
-                {isprogramGradesListLoading ? (
-                  <p>Loading program grades...</p>
-                ) : (
-                  programGradesList.length > 0 && ( // Ensure list and title appear only when data is available
-                    <>
-                      <h2 style={{ fontWeight: "bold", textDecoration: "underline" }}>
-                        Latest Judgment of Program: {chartSlots.ProgramNameSlot}
-                      </h2>
-                      <ul>
-                        {programGradesList.map((item, index) => (
-                          <li key={index}>
-                            <strong>{item.universityName}</strong>: {item.latestJudgment}
-                          </li>
-                        ))}
-                      </ul>
-                    </>
-                  )
-                )}
+            <div className="flex justify-center w-full">
+              <div className={`card bg-white rounded-md shadow-lg p-4 ${programGradesList.length > 0 ? 'w-full' : 'w-full max-w-4xl'}`}>
+                <div className={`${programGradesList.length > 0 ? 'flex flex-row items-start justify-between gap-8' : 'flex justify-center'}`}>
+                  <div className={`${programGradesList.length > 0 ? 'w-2/3' : 'w-full'}`}>
+                    {currentChart && <DynamicChart jsonData={currentChart} />}
+                  </div>
+
+                  {programGradesList.length > 0 && (
+                    <div className="w-1/3 mt-0">
+                      {isprogramGradesListLoading ? (
+                        <p>Loading program grades...</p>
+                      ) : (
+                        <div className="p-4">
+                          <h2 className="font-bold underline mb-4 text-gray-700">
+                            Latest Judgment of Program: {chartSlots.ProgramNameSlot}
+                          </h2>
+                          <ul className="space-y-2">
+                            {programGradesList.map((item, index) => (
+                              <li key={index} className="py-1 text-sm">
+                                <span className="font-medium">{item.universityName}</span>: {item.latestJudgment}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );      
+  );
 };
 
 export default BasicChart;
