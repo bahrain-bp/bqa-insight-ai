@@ -154,13 +154,23 @@ const SignIning = ({
                 </div>
 
                 <div className="mt-6 text-center">
-                  <p>
-                    Forgot your password?{' '}
-                    <Link to="/auth/ForgotPassword" className="text-primary">
-                      Reset Password
-                    </Link>
-                  </p>
-                </div>
+  <p>
+    Forgot your password?{' '}
+    <Link to="/auth/ForgotPassword" className="text-primary">
+      Reset Password
+    </Link>
+  </p>
+  <p className="mt-2">
+    Need an account?{' '}
+     {/*<Link to="/auth/CreateUser" className="text-primary">
+      Create User
+    </Link> */}
+
+    <Link to="/auth/CreateUserBQA" className="text-primary">
+      Create User
+    </Link>
+  </p>
+</div>
               </form>
             </div>
           </div>
