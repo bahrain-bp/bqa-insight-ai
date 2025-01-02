@@ -254,7 +254,8 @@ export const Chat = () => {
                             <div className={`c-chat__message ${message.author === "human" ? "bg-lightblue" : "bg-primary"}`}>
                                 {typeof message.body === "string" ? (
                                     <span
-                                        className={"whitespace-pre-line " + message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
+                                        className={`whitespace-pre-line ${message.author === "loading" ? "c-chat__item--loading" : ""}`}
+                                    >{message.body}</span>
                                 ) : (
                                     <div className="flex flex-col">
                                         <span className="font-bold text-lg">{message.body.title}</span>
