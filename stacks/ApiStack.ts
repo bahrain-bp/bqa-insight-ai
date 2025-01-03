@@ -39,6 +39,8 @@ export function ApiStack({stack}: StackContext) {
             },
         },
         routes: {
+      
+            
             // Add the generate-upload-url route
             "POST /generate-upload-url": {
                 function: {
@@ -50,6 +52,7 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable],
                 },
             },
+            
             // retrieve-file-metadata route
             "GET /retrieve-file-metadata": {
                 function: {
