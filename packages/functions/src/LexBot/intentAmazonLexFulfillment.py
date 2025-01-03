@@ -566,7 +566,16 @@ def dispatch(intent_request):
                 return followup(intent_request, response)
             
             elif compareschool_type == "All Government Schools" or compareschool_type == 'All Private Schools':
-                message = f"Comparision of schools: {compareschool_type} for the aspect {compare_school_aspect}"
+                # message = f"Comparision of schools: {compareschool_type} for the aspect {compare_school_aspect}"
+                # compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect)
+                compare_schools_prompt = ""
+                if compareschool_type == "All Government Schools":
+                    compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect, all_government=True)
+                elif compareschool_type == "All Private Schools":
+                    compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect, all_private=True)
+                
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_schools_prompt)
+
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
