@@ -470,6 +470,7 @@ const Filter = () => {
         setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
 
+//-------------------- chart generation connection logic Start -----------------------------------------------------------------------
         if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
             AnalyzeSchoolSlot:
@@ -525,6 +526,7 @@ const Filter = () => {
           setChartSlots(slots);
           console.log("Updated chart slots:", slots);
         }        
+//-------------------- chart generation connection logic End -----------------------------------------------------------------------
 
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");

@@ -51,7 +51,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
             position: "bottom",
             title: {
               display: true,
-              text: "Cycles",
+              text: "Review Cycles",
             },
           },
           y: {
@@ -66,10 +66,13 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
               precision: 0,
               stepSize: 1, // Steps between grades
               callback: (value: number) => {
-                if (value === 1 || value === 2 || value === 3 || value === 4) {
-                  return value; // Only label 1, 2, 3, and 4
+                switch(value) {
+                  case 1: return "Outstanding - 1";
+                  case 2: return "Good - 2";
+                  case 3: return "Satisfactory - 3";
+                  case 4: return "Inadequate - 4";
+                  default: return "";
                 }
-                return ""; // Skip labeling for other values
             },
           },
         },

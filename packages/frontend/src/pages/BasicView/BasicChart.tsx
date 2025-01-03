@@ -172,29 +172,46 @@ const BasicChart = () => {
       if (schoolChart) setCurrentChart(schoolChart);
       else console.error(`No chart found for school: ${chartSlots.AnalyzeSchoolSlot}`);
     } else if (chartSlots.CompareSpecificInstitutesSlot) {
-      // Clear the list before starting a new operation
       setProgramGradesList([]);
-      const matchedCharts: ChartJsonData[] = []
+      const matchedCharts: ChartJsonData[] = [];
+      const allCycles = new Set<string>(); // Collect all unique cycles
+    
       chartSlots.CompareSpecificInstitutesSlot.split(",").map((s: string) => {
-        const trimmed = s.trim()
-        const result = performFuzzySearch(trimmed, allSchoolCharts, "schoolName")
-        if (result && (matchedCharts.indexOf(result) === -1)) matchedCharts.push(result);
-    });
-    const comparisonChart: ChartJsonData = {
-      schoolName: "Comparison Chart",
-      type: "line", // Change the chart type to line
-      data: {
-        datasets: matchedCharts.map((chart) => ({
-          label: chart.schoolName || "Unnamed School", // Use the school name for the label
-          data: chart.data.datasets[0]?.data.map((dataPoint: any) => ({
-            x: dataPoint.x || "Unknown Cycle", // X-axis value (e.g., review cycle)
-            y: dataPoint.y || null, // Y-axis value (e.g., grade)
+        const trimmed = s.trim();
+        const result = performFuzzySearch(trimmed, allSchoolCharts, "schoolName");
+        if (result && matchedCharts.indexOf(result) === -1) {
+          matchedCharts.push(result);
+    
+          // Collect all cycles from the current chart
+          result.data.datasets[0]?.data.forEach((dataPoint: any) => {
+            if (typeof dataPoint === "object" && dataPoint.x) {
+              allCycles.add(dataPoint.x);
+            }
+          });
+        }
+      });
+    
+      const comparisonChart: ChartJsonData = {
+        schoolName: "Comparison Chart",
+        type: "line",
+        data: {
+          datasets: matchedCharts.map((chart) => ({
+            label: chart.schoolName || "Unnamed School",
+            data: Array.from(allCycles).sort().map((cycle) => {
+              // Find the data point for the current cycle
+              const dataPoint = chart.data.datasets[0]?.data.find(
+                (dp: any) => typeof dp === "object" && dp.x === cycle
+              );
+              return {
+                x: cycle, // X-axis value (e.g., review cycle)
+                y: dataPoint && typeof dataPoint === "object" ? dataPoint.y : NaN, // Use NaN for missing values
+              };
+            }),
+            fill: false,
+            borderWidth: 2,
           })),
-          fill: false, // Line charts typically don't fill below the line
-          borderWidth: 2, // Line width
-        })),
-      },
-    };    
+        },
+      };
       setCurrentChart(comparisonChart);
     } else if (chartSlots.CompareSchoolSlot === "All Government Schools") {
       // Clear the list before starting a new operation
@@ -227,6 +244,21 @@ const BasicChart = () => {
               data: Object.values(gradeCounts),
             },
           ],
+        },
+        options: {
+          plugins: {
+            title: {
+              display: true,
+              text: "Overview of Judgments/Grades of All Government Schools", // Main title
+            },
+            subtitle: {
+              display: true,
+              text: "This chart illustrates the proportion/count of government schools rated as Outstanding, Good, Satisfactory, or Inadequate, based on the latest review cycle reports.", // Description
+            },
+            datalabels: {
+              display: false,
+            }
+          },
         },
       };
     
@@ -265,6 +297,21 @@ const BasicChart = () => {
               },
             ],
           },
+          options: {
+            plugins: {
+              title: {
+                display: true,
+                text: "Overview of Judgments/Grades of All Private Schools", // Main title
+              },
+              subtitle: {
+                display: true,
+                text: "This chart illustrates the proportion/count of private schools rated as Outstanding, Good, Satisfactory, or Inadequate, based on the latest review cycle reports.", // Description
+              },
+              datalabels: {
+                display: false,
+              }
+            },
+          },
         };
       
         setCurrentChart(comparisonChart);
@@ -276,36 +323,118 @@ const BasicChart = () => {
       if (vocationalChart) setCurrentChart(vocationalChart);
       else console.error(`No chart found for institute: ${chartSlots.AnalyzeVocationalSlot}`);
   } else if (chartSlots.CompareVocationalSlot) {
-    // Clear the list before starting a new operation
     setProgramGradesList([]);
-    console.log("Checking compare vocational: " , chartSlots.CompareVocationalSlot)
-    const matchedCharts: ChartJsonData[] = []
+      const matchedCharts: ChartJsonData[] = [];
+      const allCycles = new Set<string>(); // Collect all unique cycles
+    
       chartSlots.CompareVocationalSlot.split(",").map((s: string) => {
-        const trimmed = s.trim()
-        const result = performFuzzySearch(trimmed, allVocationalCharts, "schoolName")
-        if (result && (matchedCharts.indexOf(result) === -1)) matchedCharts.push(result);
+        const trimmed = s.trim();
+        const result = performFuzzySearch(trimmed, allVocationalCharts, "schoolName");
+        if (result && matchedCharts.indexOf(result) === -1) {
+          matchedCharts.push(result);
+    
+          // Collect all cycles from the current chart
+          result.data.datasets[0]?.data.forEach((dataPoint: any) => {
+            if (typeof dataPoint === "object" && dataPoint.x) {
+              allCycles.add(dataPoint.x);
+            }
+          });
+        }
       });
+    
       const comparisonChart: ChartJsonData = {
-        schoolName: "Comparison Chart", 
-        type: "line", 
+        schoolName: "Comparison Chart",
+        type: "line",
         data: {
           datasets: matchedCharts.map((chart) => ({
-            label: chart.schoolName || "Unnamed Institute", // Label for each line
-            data: chart.data.datasets[0]?.data.map((dataPoint: any) => ({
-              x: dataPoint.x || "Unknown Cycle", // X-axis value (e.g., review cycle)
-              y: dataPoint.y || null, // Y-axis value (e.g., grade)
-            })),
+            label: chart.schoolName || "Unnamed Vocational Training Center",
+            data: Array.from(allCycles).sort().map((cycle) => {
+              // Find the data point for the current cycle
+              const dataPoint = chart.data.datasets[0]?.data.find(
+                (dp: any) => typeof dp === "object" && dp.x === cycle
+              );
+              return {
+                x: cycle, // X-axis value (e.g., review cycle)
+                y: dataPoint && typeof dataPoint === "object" ? dataPoint.y : NaN, // Use NaN for missing values
+              };
+            }),
+            fill: false,
+            borderWidth: 2,
           })),
         },
       };
-      
       setCurrentChart(comparisonChart);
     } else if (chartSlots.AnalyzeUniversityNameSlot) {
       setProgramGradesList([]);
       const slotValue = chartSlots.AnalyzeUniversityNameSlot.trim().toLowerCase();
       const universityChart = performFuzzySearch(slotValue, allUniversityCharts, "universityName");
-      if (universityChart) setCurrentChart(universityChart);
-      else console.error(`No chart found for university: ${slotValue}`);
+      if (universityChart) {
+        // Modify the Y-axis to always display 1, 2, and 3
+        const modifiedChart = {
+          ...universityChart,
+          options: {
+            ...universityChart.options,
+            scales: {
+              ...((universityChart.options as any)?.scales || {}), // Fallback to empty object if scales is undefined
+              y: {
+                title: {
+                  display: true,
+                  text: "Judgement",
+                },
+                ...((universityChart.options as any)?.scales?.y || {}), // Fallback to empty object if y is undefined
+                min: 0, // Start at 0
+                max: 4, // End at 4
+                reverse: true, // Reverse the Y-axis
+                ticks: {
+                  stepSize: 1, // Step by 1
+                  callback: (value: number) => {
+                    switch (value) {
+                      case 1: return "Confidence";
+                      case 2: return "Limited Confidence";
+                      case 3: return "No Confidence";
+                      default: return ""; // Empty label for other values
+                    }
+                  },
+                },
+              },
+            },
+            plugins: {
+              ...((universityChart.options as any)?.plugins || {}), // Preserve existing plugins
+              datalabels: {
+                display: false, // Disable datalabels
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context: { raw: { y: any }; dataset: { label: any } }) {
+                    console.log("Tooltip context:", context);
+                    console.log("Raw data:", context.raw);
+    
+                    const university = context.dataset.label;
+                    const weightedGrade = context.raw.y;
+    
+                    // Determine the confidence level based on the weighted grade
+                    let confidenceLevel = "";
+                    if (weightedGrade === 1) {
+                      confidenceLevel = "Confidence";
+                    } else if (weightedGrade === 2) {
+                      confidenceLevel = "Limited Confidence";
+                    } else if (weightedGrade === 3) {
+                      confidenceLevel = "No Confidence";
+                    } else {
+                      confidenceLevel = "Unknown Confidence";
+                    }
+    
+                    return `${university} - Judgement: ${confidenceLevel}`;
+                  },
+                },
+              },
+            },
+          },
+        };
+        setCurrentChart(modifiedChart);
+      } else {
+        console.error(`No chart found for university: ${slotValue}`);
+      }    
     } else if (chartSlots.ProgramNameSlot) {
       // Clear the list before starting a new operation
       setProgramGradesList([]);
@@ -403,10 +532,9 @@ const BasicChart = () => {
       // Function to calculate weight for grades
       const calculateWeight = (grade: number): number => {
         switch (grade) {
-          case 1: return 1.0;
-          case 2: return 0.75;
-          case 3: return 0.5;
-          case 4: return 0.25;
+          case 1: return 0.75;
+          case 2: return 0.5;
+          case 3: return 0.25;
           default: return 0;
         }
       };
@@ -511,18 +639,18 @@ const BasicChart = () => {
               },
               ticks: {
                 min: 0.25,
-                max: 1.0,
+                max: 0.75,
                 stepSize: 0.25,
                 callback: (value: number) => {
                   switch (value) {
-                    case 1.0: return "1";
-                    case 0.75: return "2";
-                    case 0.5: return "3";
-                    case 0.25: return "4";
+                    case 0.75: return "Confidence";
+                    case 0.5: return "Limited Confidence";
+                    case 0.25: return "No Confidence";
                     default: return "";
                   }
                 },
               },
+              suggestedMax: 0.751, // Dynamically add space above the highest bar
             },
           },
           plugins: {
@@ -533,16 +661,29 @@ const BasicChart = () => {
             },
             tooltip: {
               callbacks: {
-                label: function(context: { raw: any; dataset: { label: any } }) {
+                label: function (context: { raw: {  y: any; }; dataset: { label: any; }; }) {
+                  console.log("Tooltip context:", context);
+                  console.log("Raw data:", context.raw);
+                  
                   const university = context.dataset.label;
-                  const originalGrade = context.raw?.originalGrade;
-                  const weightedGrade = context.raw?.y;
-                  return originalGrade !== "No grade"
-                    ? `${university}: Original Grade: ${originalGrade}, Weighted: ${weightedGrade}`
-                    : `${university}: No grade available`;
-                },
-              },
-            },            
+                  const weightedGrade = context.raw.y;
+              
+                  // Determine the confidence level based on the weighted grade
+                  let confidenceLevel = "";
+                  if (weightedGrade === 0.75) {
+                    confidenceLevel = "Confidence";
+                  } else if (weightedGrade === 0.5) {
+                    confidenceLevel = "Limited Confidence";
+                  } else if (weightedGrade === 0.25) {
+                    confidenceLevel = "No Confidence";
+                  } else {
+                    confidenceLevel = "Unknown Confidence";
+                  }
+              
+                  return `${university} - Judgement: ${confidenceLevel}`;
+                }
+              }              
+            },                               
             datalabels: {
               display: false,
             },
@@ -557,10 +698,9 @@ const BasicChart = () => {
       // Function to calculate weight for grades
       const calculateWeight = (grade: number): number => {
         switch (grade) {
-          case 1: return 1.0; // Highest weight
-          case 2: return 0.75;
-          case 3: return 0.5;
-          case 4: return 0.25; // Lowest weight
+          case 1: return 0.75; // Highest weight
+          case 2: return 0.5;
+          case 3: return 0.25;
           default: return 0;   // Invalid grade
         }
       };
@@ -648,7 +788,7 @@ const BasicChart = () => {
           labels: universitiesFromData.map((name) => name.charAt(0).toUpperCase() + name.slice(1)),
           datasets: datasets.map((dataset) => ({
             label: dataset.label,
-            data: dataset.data.map((d) => d as { x: string | number; y: number; originalGrade: any }),
+            data: dataset.data.map((d) => d as { x: string | number; y: number; originalGrade: number }),
           })),
         },
         options: {
@@ -668,18 +808,18 @@ const BasicChart = () => {
               },
               ticks: {
                 min: 0.25,
-                max: 1.0,
+                max: 0.75,
                 stepSize: 0.25,
                 callback: (value: number) => {
                   switch (value) {
-                    case 1.0: return "1";
-                    case 0.75: return "2";
-                    case 0.5: return "3";
-                    case 0.25: return "4";
+                    case 0.75: return "Confidence";
+                    case 0.5: return "Limited Confidence";
+                    case 0.25: return "No Conifidence";
                     default: return "";
                   }
                 },
               },
+              suggestedMax: 0.751, // Dynamically add space above the highest bar
             },
           },
           plugins: {
@@ -690,16 +830,28 @@ const BasicChart = () => {
             },
             tooltip: {
               callbacks: {
-                label: function (context: { raw: any; dataset: { label: any } }) {
-                  const program = context.dataset.label;
-                  const rawData = context.raw;
-                  const originalGrade = rawData?.originalGrade !== undefined ? rawData.originalGrade : "N/A";
-                  const weightedGrade = rawData?.y !== undefined ? rawData.y.toFixed(2) : "N/A";
-                  return originalGrade !== "No grade"
-                    ? `${program}: Original Grade: ${originalGrade}, Weighted: ${weightedGrade}`
-                    : `${program}: No grade available`;
-                },
-              },
+                label: function (context: { raw: {  y: any; }; dataset: { label: any; }; }) {
+                  console.log("Tooltip context:", context);
+                  console.log("Raw data:", context.raw);
+                  
+                  const university = context.dataset.label;
+                  const weightedGrade = context.raw.y;
+              
+                  // Determine the confidence level based on the weighted grade
+                  let confidenceLevel = "";
+                  if (weightedGrade === 0.75) {
+                    confidenceLevel = "Confidence";
+                  } else if (weightedGrade === 0.5) {
+                    confidenceLevel = "Limited Confidence";
+                  } else if (weightedGrade === 0.25) {
+                    confidenceLevel = "No Confidence";
+                  } else {
+                    confidenceLevel = "Unknown Confidence";
+                  }
+              
+                  return `${university} - Judgement: ${confidenceLevel}`;
+                }
+              }  
             },
             datalabels: {
               display: false,
@@ -741,7 +893,7 @@ const BasicChart = () => {
           justify-content: flex-end; /* Aligns logo to the right */
           align-items: center;
           margin-bottom: 60px;
-          margin-right: 60px;
+          margin-right: 300px;
         }
         .pdf-header img {
           max-height: 60px;
@@ -768,7 +920,7 @@ const BasicChart = () => {
       header.className = "pdf-header";
       if (typeof LogoIcon !== "undefined") {
         const logo = document.createElement("img");
-        logo.src = LogoIcon; // Replace with the path to your logo
+        logo.src = LogoIcon;
         header.appendChild(logo);
       }
       pdfContainer.appendChild(header);
@@ -779,14 +931,13 @@ const BasicChart = () => {
         const chartImage = document.createElement("img");
         chartImage.src = originalCanvas.toDataURL("image/png");
   
-        // Check if the chart is a pie chart and resize accordingly
-        if (currentChart?.type === "pie") {
-          chartImage.style.width = "65%"; // Reduce the width for pie charts
-          chartImage.style.height = "auto"; // Maintain aspect ratio
+        // Adjust chart width based on programGradesList
+        if (programGradesList && programGradesList.length > 0) {
+          chartImage.style.width = "100%"; // Set width to 100% of the page
         } else {
-          chartImage.style.width = "100%"; // Default width for other charts
-          chartImage.style.height = "auto";
+          chartImage.style.width = "150%"; // Default width to 150% of the page
         }
+        chartImage.style.height = "auto"; // Maintain aspect ratio
   
         // Replace the canvas in cloned content with the image
         const clonedCanvas = clonedContent.querySelector("canvas");
@@ -802,7 +953,7 @@ const BasicChart = () => {
   
       // Capture the content
       const canvas = await html2canvas(pdfContainer, {
-        scale: 2,
+        scale: 1.5, // Maintain high resolution
         useCORS: true,
         allowTaint: true,
         scrollY: -window.scrollY,
@@ -814,7 +965,7 @@ const BasicChart = () => {
       document.body.removeChild(pdfContainer);
   
       // Generate PDF
-      const imgData = canvas.toDataURL("image/png");
+      const imgData = canvas.toDataURL("image/jpeg");
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -822,38 +973,24 @@ const BasicChart = () => {
       });
   
       // Calculate dimensions
-      const margin = 10;
-      const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
-      const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
-      const imgWidth = pageWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const margin = 10;
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgWidth = pageWidth * (programGradesList && programGradesList.length > 0 ? 1.0 : 1.5); // Adjust width dynamically
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Center the image horizontally
+      const xOffset = (pageWidth - imgWidth) / 2;
   
       // Add image to PDF
-      if (imgHeight > pageHeight) {
-        // If content is taller than page, use multiple pages
-        let heightLeft = imgHeight;
-        let position = 0;
-  
-        while (heightLeft > 0) {
-          pdf.addImage(imgData, "PNG", margin, position + margin, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-          position -= pageHeight;
-  
-          if (heightLeft > 0) {
-            pdf.addPage();
-          }
-        }
-      } else {
-        // If content fits on one page
-        pdf.addImage(imgData, "PNG", margin, margin, imgWidth, imgHeight);
-      }
+      pdf.addImage(imgData, "JPEG", xOffset, margin, imgWidth, imgHeight);
   
       // Save the PDF
       pdf.save("generated-chart.pdf");
     } catch (error) {
       console.error("Error exporting content to PDF:", error);
     }
-  };    
+  };
+     
 
   // Export chart content as PNG
   const exportContentAsPNG = async () => {
@@ -889,13 +1026,29 @@ const BasicChart = () => {
     }
   };
 
+  const isChartDataValid = (chart: ChartJsonData | null): boolean => {
+    if (!chart || !chart.data || !chart.data.datasets) return false;
+    
+    return chart.data.datasets.some(dataset =>
+      dataset.data.some(
+        dataPoint => 
+          typeof dataPoint === "object" &&
+          "x" in dataPoint &&
+          "y" in dataPoint &&
+          dataPoint.x !== null &&
+          dataPoint.y !== null &&
+          dataPoint.y !== 0
+      )
+    );
+  };
+  
   return (
     <div className="flex flex-col items-center w-full">
       <div className="p-5 w-full max-w-7xl mx-auto">
-        {(isSchoolDataLoading || isVocationalDataLoading || isUniversityDataLoading) && <p>Loading charts...</p>}
+        {(isSchoolDataLoading || isVocationalDataLoading || isUniversityDataLoading)}
 
         {/* Export Button */}
-        {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && (
+        {!isSchoolDataLoading && !isVocationalDataLoading && currentChart && isChartDataValid(currentChart) && (
           <div className="mb-4 flex justify-center w-full gap-4">
           <button
             onClick={exportContentAsPDF}
@@ -916,9 +1069,9 @@ const BasicChart = () => {
           </button>
         </div>       
         )}
-        <center><h2>Charts</h2></center>
+        {/* <center><h2>Charts</h2></center> */}
         <div id="export-content" className="w-full">
-          {!isSchoolDataLoading && !isVocationalDataLoading && !isUniversityDataLoading && currentChart && (
+          {!isSchoolDataLoading && !isVocationalDataLoading && !isUniversityDataLoading && currentChart && isChartDataValid(currentChart) && (
             <div className="flex justify-center w-full">
               <div className={`card bg-white rounded-md shadow-lg p-4 ${programGradesList.length > 0 ? 'w-full' : 'w-full max-w-4xl'}`}>
                 <div className={`${programGradesList.length > 0 ? 'flex flex-row items-start justify-between gap-8' : 'flex justify-center'}`}>
