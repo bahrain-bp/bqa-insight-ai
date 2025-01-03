@@ -162,6 +162,7 @@ async function insertUniversityMetadata(data: any, fileKey: string)  {
   const params = {
       TableName: process.env.UNIVERSITY_METADATA_TABLE_NAME as string,
                     Item: {
+                      fileKey: fileKey,
                       universityName: data["University Name"],
                       location: data["University Location"],
                       numOfPrograms: data["Number Of Qualifications"],
@@ -169,7 +170,7 @@ async function insertUniversityMetadata(data: any, fileKey: string)  {
                     },
   };
   await dynamoDb.put(params).promise();
-  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'university'); // Add this line here
+  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'university'); 
   return;
 }
 

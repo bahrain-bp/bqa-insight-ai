@@ -10,6 +10,7 @@ import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
+import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
 
 
@@ -22,6 +23,7 @@ export function ApiStack({stack}: StackContext) {
     const {instituteMetadata} = use (InstituteMetadataStack);
     const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
     const { programMetadataTable } = use(ProgramMetadataStack);  
+    const {vocationalCenterMetadataTable} = use (VocationalCentersMetadataStack);
     const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
 
 
@@ -37,6 +39,8 @@ export function ApiStack({stack}: StackContext) {
             },
         },
         routes: {
+      
+            
             // Add the generate-upload-url route
             "POST /generate-upload-url": {
                 function: {
@@ -48,6 +52,7 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable],
                 },
             },
+            
             // retrieve-file-metadata route
             "GET /retrieve-file-metadata": {
                 function: {
@@ -66,8 +71,14 @@ export function ApiStack({stack}: StackContext) {
                         BUCKET_NAME: bucket.bucketName,
                         FILE_METADATA_TABLE_NAME: fileMetadataTable.tableName,
                         INSTITUTE_METADATA_TABLE : instituteMetadata.tableName,
+                        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
+                        VOCATIONAL_CENTER_METADATA_TABLE_NAME :vocationalCenterMetadataTable.tableName,
+                        UNIVERSITY_METADATA_TABLE_NAME :UniversityProgramMetadataTable.tableName,
+                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
+                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
+
                     },
-                    permissions: [bucket, fileMetadataTable, instituteMetadata],
+                    permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable, "bedrock"],
                 },
             },
             "POST /comprehend": {
@@ -221,8 +232,9 @@ export function ApiStack({stack}: StackContext) {
                         TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
                         UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable, vocationalCenterMetadataTable], 
                 },
             },
             "GET /fetchfilters": {
@@ -232,8 +244,10 @@ export function ApiStack({stack}: StackContext) {
                         TABLE_NAME: instituteMetadata.tableName,
                         UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
+
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable,vocationalCenterMetadataTable], 
         
                 }
             },
