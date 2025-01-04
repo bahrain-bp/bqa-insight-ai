@@ -3,6 +3,7 @@ import Breadcrumb from "../components/Breadcrumbs/Breadcrumb";
 import JSZip from "jszip";
 import { FaUpload, FaTrashAlt, FaDownload} from "react-icons/fa"; // Imported FaExclamationCircle
 import { AiOutlineClose } from "react-icons/ai"; // Optional: For closing the disclaimer modal
+import { fetchAuthSession  } from '@aws-amplify/auth';
 
 const API_URL = import.meta.env.VITE_API_URL; // API base URL
 
@@ -35,7 +36,21 @@ const FileManagement: React.FC = () => {
   const fetchFiles = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/retrieve-file-metadata`);
+    // 1. Fetch the current authentication session
+    const session = await fetchAuthSession();
+
+    // 2. Extract the ID token from the session
+    const token = session.tokens?.accessToken;
+
+    // 3. Make the authenticated API request
+    const response = await fetch(`${API_URL}/retrieve-file-metadata`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`, // Attach the JWT token here
+      },
+    });
+    
       if (!response.ok) {
         throw new Error(`Failed to fetch files: ${response.statusText}`);
       }
