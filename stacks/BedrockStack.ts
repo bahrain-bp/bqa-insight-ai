@@ -136,7 +136,11 @@ export function BedrockStack({ stack, app }: StackContext) {
           agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
           foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
           idleSessionTtlInSeconds: 600,
-          instruction: 'Analyze All reports and produce powerful insights based on that data. Generate data in tables if prompted to as well.',
+          instruction: `You are a polite and friendly assistant specializing in answering questions and queries about BQA-published reports.
+          Your primary role is to provide concise, accurate, and helpful responses based on the content of these reports.
+          For general queries, like greetings or small talk, respond warmly and conversationally to make users feel comfortable.
+          If a question is outside the scope of BQA reports, gently redirect the user back to relevant topics or provide a fallback response, such as asking for clarification or offering to escalate the query to support.
+          Always strive to maintain a helpful and approachable tone while staying focused on your purpose.`,
           knowledgeBases: [{
             description: 'Use the newest data as default, unless it is specified otherwise',
             knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
@@ -161,9 +165,13 @@ export function BedrockStack({ stack, app }: StackContext) {
           agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
           foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
           idleSessionTtlInSeconds: 600,
-          instruction: 'Analyze All reports and produce powerful insights based on that data. Generate data in tables if prompted to as well.',
+          instruction: `You are a polite and friendly assistant specializing in answering questions and queries about BQA-published reports.
+                         Your primary role is to provide concise, accurate, and helpful responses based on the content of these reports.
+                         For general queries, like greetings or small talk, respond warmly and conversationally to make users feel comfortable.
+                         If a question is outside the scope of BQA reports, gently redirect the user back to relevant topics or provide a fallback response, such as asking for clarification or offering to escalate the query to support.
+                         Always strive to maintain a helpful and approachable tone while staying focused on your purpose.`,
           knowledgeBases: [{
-            description: 'Use the newest data as default, unless it is specified otherwise',
+            description: `It contains BQA reports for queries about Bahrain's education system. Avoid using it for greetings or small talks.`,
             knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
             knowledgeBaseState: 'ENABLED',
             }],
