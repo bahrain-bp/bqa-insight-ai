@@ -67,33 +67,44 @@ const Filter = () => {
   const [userAdditions, setUserAdditions] = useState<string>("");
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
 
+ 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
         const prompt = new URLSearchParams();
-        if (selectedOptions["Institute Classification"]?.length) {
-          prompt.append("classification", selectedOptions["Institute Classification"][0]);
-        }
-        if (selectedOptions["Institute Level"]?.length) {
-          prompt.append("level", selectedOptions["Institute Level"][0]);
-        }
-        if (selectedOptions["Location"]?.length) {
-          prompt.append("location", selectedOptions["Location"][0]);
-        }
-        if (selectedOptions["University Name"]?.length) {
-          prompt.append("universityName", selectedOptions["University Name"][0]);
-        }
-        if (selectedOptions["Programme Name"]?.length) {
-          prompt.append("programmeName", selectedOptions["Programme Name"][0]);
-        }
-        if (selectedOptions["Vocational Center Name"]?.length) {
-          prompt.append("vocationalCenterName", selectedOptions["Vocational Center Name"][0]);
+        
+        // Apply dependencies for schools regardless of mode
+        if (educationType === "schools") {
+          if (selectedOptions["Institute Classification"]?.length) {
+            prompt.append("classification", selectedOptions["Institute Classification"][0]);
+          }
+          if (selectedOptions["Institute Level"]?.length) {
+            prompt.append("level", selectedOptions["Institute Level"][0]);
+          }
+          if (selectedOptions["Location"]?.length) {
+            prompt.append("location", selectedOptions["Location"][0]);
+          }
+          if (selectedOptions["Institute Name"]?.length) {
+            prompt.append("instituteName", selectedOptions["Institute Name"][0]);
+          }
+        } else {
+          // For universities and vocational, only apply dependencies if NOT in Compare mode
+          if (mode !== "Compare") {
+            if (selectedOptions["University Name"]?.length) {
+              prompt.append("universityName", selectedOptions["University Name"][0]);
+            }
+            if (selectedOptions["Programme Name"]?.length) {
+              prompt.append("programmeName", selectedOptions["Programme Name"][0]);
+            }
+            if (selectedOptions["Vocational Center Name"]?.length) {
+              prompt.append("vocationalCenterName", selectedOptions["Vocational Center Name"][0]);
+            }
+          }
         }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${prompt.toString()}`);
     
         if (!response.ok) {
-          // Log the actual error message from the server
           const errorText = await response.text();
           console.error('Server error:', errorText);
           throw new Error(`Server returned ${response.status}: ${errorText}`);
@@ -132,7 +143,6 @@ const Filter = () => {
         }
       } catch (error) {
         console.error("Error fetching filter options:", error);
-        // Reset to default values on error
         setFilterOptions({
           "Institute Classification": [],
           "Institute Level": [],
@@ -146,7 +156,12 @@ const Filter = () => {
     if (educationType) {
       fetchFilterOptions();
     }
-  }, [selectedOptions, educationType]);
+  }, [
+    // Only include selectedOptions in dependency array for schools
+    // or for universities/vocational when not in Compare mode
+    educationType === "schools" || mode !== "Compare" ? selectedOptions : null,
+    educationType
+  ]);
 
   useEffect(() => {
     if (!userModifiedSentence) {
@@ -208,32 +223,32 @@ const Filter = () => {
 
 
 
-const getFilterValues = (header: string): string[] => {
-    const filters = getCurrentFilters();
+  const getFilterValues = (header: string): string[] => {
+    // Special handling for Compare mode
+    if (mode === "Compare") {
+      if (educationType === "schools" && header === "Institute Name") {
+        return filterOptions["Institute Name"] || [];
+      } else if (educationType === "universities" && header === "University Name") {
+        return universityFilters["University Name"] || [];
+      } else if (educationType === "vocational" && header === "Vocational Center Name") {
+        return vocationalFilters["Vocational Center Name"] || [];
+      }
+    }
   
+    // For other cases, use the filtered values
+    const filters = getCurrentFilters();
+    
     if (isSchoolFilters(filters)) {
       if (isSchoolFilterKey(header)) {
-        if (mode === "Compare" && header === "Institute Name") {
-          // Don't filter out selected options in compare mode for schools
-          return filters[header];
-        }
-        return filters[header];
+        return filters[header] || [];
       }
     } else if (isVocationalFilters(filters)) {
       if (isVocationalFilterKey(header)) {
-        if (mode === "Compare" && header === "Vocational Center Name") {
-          // Return all vocational center options in compare mode
-          return vocationalFilters["Vocational Center Name"];
-        }
-        return filters[header];
+        return filters[header] || [];
       }
     } else {
       if (isUniversityFilterKey(header)) {
-        if (mode === "Compare" && header === "University Name") {
-          // Return all university options in compare mode
-          return universityFilters["University Name"];
-        }
-        return filters[header];
+        return (filters[header] as string[]) || [];
       }
     }
     return [];
@@ -264,17 +279,14 @@ const getFilterValues = (header: string): string[] => {
   };
 
  
+
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
   
     if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
-        if (!isFilterActive) {
-          setIsFilterActive(true);
-        }
-  
-        let updatedState = { ...prevState };
-  
+        const updatedState = { ...prevState };
+        
         // Check if we're in compare mode and dealing with a comparison field
         const isCompareField = mode === "Compare" && (
           (educationType === "schools" && header === "Institute Name") ||
@@ -283,23 +295,20 @@ const getFilterValues = (header: string): string[] => {
         );
   
         if (isCompareField) {
-          // For comparison fields, allow multiple selections without affecting other fields
+          // For comparison fields, allow multiple selections
           const currentSelections = prevState[header] || [];
           if (!currentSelections.includes(value)) {
             updatedState[header] = [...currentSelections, value];
           }
-          return updatedState; // Return immediately to prevent dependency clearing
-        } 
+          return updatedState;
+        }
   
         // For non-compare mode or non-comparison fields
-        updatedState = {
-          ...prevState,
-          [header]: [value]
-        };
+        updatedState[header] = [value];
         
-        // Only apply dependencies if NOT in Compare mode
-        if (mode !== "Compare") {
-          if (educationType === "schools" && header === "Institute Classification") {
+        // Only apply dependencies for schools
+        if (educationType === "schools") {
+          if (header === "Institute Classification") {
             updatedState["Institute Level"] = [];
             updatedState["Location"] = [];
             updatedState["Institute Name"] = [];
@@ -311,6 +320,10 @@ const getFilterValues = (header: string): string[] => {
   
         return updatedState;
       });
+
+      if (!isFilterActive) {
+        setIsFilterActive(true);
+      }
     }
   };
 
@@ -553,90 +566,92 @@ const getFilterValues = (header: string): string[] => {
 
 
   return (
-    <div className="p-6">
-      {/* Pop-Up Message */}
-      {submittedMessage && (
-        <div
-          className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
-            messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
-          }`}
-        >
-          {submittedMessage}
-        </div>
-      )}
-        <div className="flex flex-wrap items-center mb-4 gap-4">
-          <div className="flex gap-3 flex-col sm:flex-row flex-1">
-            <label className="block font-semibold text-2xl mr-4 text-nowrap">Insight</label>
-            <select
-              className="p-2 border rounded text-sm grow max-w-48"
-              value={mode}
-              onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
-            >
-              <option value="">Select...</option>
-              <option value="Compare">Compare</option>
-              <option value="Analyze">Analyze</option>
-            </select>
-          </div>
-
-          <div className="flex gap-3 flex-col sm:flex-row flex-1">
-            <label className="block font-semibold text-2xl mr-4 text-nowrap">Education Level</label>
-            <select
-              className="p-2 border rounded text-sm grow max-w-48"
-              value={educationType}
-              onChange={handleEducationTypeChange}
-            >
-              <option value="">Select...</option>
-              <option value="schools">Schools</option>
-              <option value="universities">Universities</option>
-              <option value="vocational">Vocational Centers</option>
-            </select>
-          </div>
-        </div>
-
-        {mode && educationType && (
-          <>
-         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-         {Object.keys(getCurrentFilters()).map((header) => (
-  <div key={header} className="w-full">
-    <label className="block text-sm font-semibold mb-2">{header}</label>
-    
-    {((educationType === "schools" && header === "Institute Name") ||
-      (educationType === "universities" && header === "University Name") ||
-      (educationType === "vocational" && header === "Vocational Center Name")) &&
-    mode === "Compare" ? (
-      // Multi-select dropdown for Compare mode
+<div className="p-6">
+  {/* Pop-Up Message */}
+  {submittedMessage && (
+    <div
+      className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
+        messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
+      }`}
+    >
+      {submittedMessage}
+    </div>
+  )}
+  <div className="flex flex-wrap items-center mb-4 gap-4">
+    <div className="flex gap-3 flex-col sm:flex-row flex-1">
+      <label className="block font-semibold text-2xl mr-4 text-nowrap">Insight</label>
       <select
-        className="p-2 border rounded text-sm w-full"
-        onChange={(e) => handleSelectChange(e, header)}
-        value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
+        className="p-2 border rounded text-sm grow max-w-48"
+        value={mode}
+        onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
       >
-        <option value="Select...">Select...</option>
-        {getFilterValues(header).map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-
-        
+        <option value="">Select...</option>
+        <option value="Compare">Compare</option>
+        <option value="Analyze">Analyze</option>
       </select>
-            ) : (
-              <select
-              className="p-2 border rounded text-sm w-full"
-              onChange={(e) => handleSelectChange(e, header)}
-              value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
-            >
-              <option value="Select...">Select...</option>
-              {getFilterValues(header).map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          )}
-          </div>
-        ))}
-      </div>
-   
+    </div>
+
+    <div className="flex gap-3 flex-col sm:flex-row flex-1">
+      <label className="block font-semibold text-2xl mr-4 text-nowrap">Education Level</label>
+      <select
+        className="p-2 border rounded text-sm grow max-w-48"
+        value={educationType}
+        onChange={handleEducationTypeChange}
+      >
+        <option value="">Select...</option>
+        <option value="schools">Schools</option>
+        <option value="universities">Universities</option>
+        <option value="vocational">Vocational Centers</option>
+      </select>
+    </div>
+  </div>
+
+  {mode && educationType && (
+    <>
+      {/* Inside the grid mapping of filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {Object.keys(getCurrentFilters()).map((header) => (
+    <div key={header} className="w-full">
+      <label className="block text-sm font-semibold mb-2">{header}</label>
+      
+      {((educationType === "schools" && header === "Institute Name") ||
+  (educationType === "universities" && header === "University Name") ||
+  (educationType === "vocational" && header === "Vocational Center Name")) &&
+mode === "Compare" ? (
+
+  <select
+  className="p-2 border rounded text-sm w-full"
+  onChange={(e) => handleSelectChange(e, header)}
+  value="Select..."
+>
+    <option value="Select...">Select...</option>
+    {getFilterValues(header).map((option) => (
+      <option
+        key={option}
+        value={option}
+          disabled={selectedOptions[header]?.includes(option)}
+      >
+          {option} {selectedOptions[header]?.includes(option) ? '(Selected)' : ''}
+          </option>
+    ))}
+  </select>
+) : (
+  <select
+    className="p-2 border rounded text-sm w-full"
+    onChange={(e) => handleSelectChange(e, header)}
+    value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
+  >
+    <option value="Select...">Select...</option>
+    {getFilterValues(header).map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
+)}
+    </div>
+  ))}
+</div>
 
 
 
