@@ -206,37 +206,30 @@ const Filter = () => {
     }
   };
 
-const getFilterValues = (header: string): string[] => {
-  const filters = getCurrentFilters();
+  const getFilterValues = (header: string): string[] => {
+    const filters = getCurrentFilters();
   
-  if (isSchoolFilters(filters)) {
-    if (isSchoolFilterKey(header)) {
-      if (header === "Institute Name" && mode === "Compare") {
-        // Return all options for Institute Name in Compare mode,
-        // except the currently selected one in the dropdown
+    if (isSchoolFilters(filters)) {
+      if (isSchoolFilterKey(header)) {
         return filters[header];
       }
-      return filters[header];
-    }
-  } else if (isVocationalFilters(filters)) {
-    if (isVocationalFilterKey(header)) {
-      if (header === "Vocational Center Name" && mode === "Compare") {
-        // Return all options for Vocational Center Name in Compare mode
+    } else if (isVocationalFilters(filters)) {
+      if (isVocationalFilterKey(header)) {
+        if (header === "Vocational Center Name" && mode === "Compare") {
+          return filters[header].filter((name) => !selectedOptions[header].includes(name));
+        }
         return filters[header];
       }
-      return filters[header];
-    }
-  } else {
-    if (isUniversityFilterKey(header)) {
-      if (header === "University Name" && mode === "Compare") {
-        // Return all options for University Name in Compare mode
+    } else {
+      if (isUniversityFilterKey(header)) {
+        if (header === "University Name" && mode === "Compare") {
+          return filters[header].filter((name) => !selectedOptions[header].includes(name));
+        }
         return filters[header];
       }
-      return filters[header];
     }
-  }
-  return [];
-};
+    return [];
+  };
 
   const handleEducationTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const type = e.target.value as "schools" | "universities" | "vocational" | "";
@@ -408,68 +401,39 @@ const getFilterValues = (header: string): string[] => {
 
   
 
-  
-
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     const sentence = editableSentence;
-  
-    // Validate minimum selections for Compare mode
+
     if (mode === "Compare") {
-      let comparisonKey = "";
-      let entityType = "";
-      let minRequired = 2;  // Minimum required selections
-  
-      switch(educationType) {
-        case "schools":
-          comparisonKey = "Institute Name";
-          entityType = "schools";
-          break;
-        case "universities":
-          comparisonKey = "University Name";
-          entityType = "universities";
-          break;
-        case "vocational":
-          comparisonKey = "Vocational Center Name";
-          entityType = "vocational centers";
-          break;
-        default:
-          showMessage("Please select an education type.", "error");
-          return;
-      }
-  
-      // Check if enough items are selected for comparison
-      if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < minRequired) {
-        showMessage(`Please select at least ${minRequired} ${entityType} to compare.`, "error");
+      const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
+      if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
+        showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
         return;
       }
-    }
-  
-    const requiredFilters: string[] = (() => {
-      switch (educationType) {
-        case "schools":
-          return ["Institute Name"];
-        case "universities":
-          return ["University Name"];
-        case "vocational":
-          return ["Vocational Center Name"];
-        default:
-          return [];
+    
+      if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
+        if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
+          showMessage("Please select at least two institutes in Compare mode.", "error");
+          return;
+        } else if (educationType === "universities" && (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2)) {
+          showMessage("Please select at least two universities in Compare mode.", "error");
+          return;
+        }
       }
-    })();
-  
-    const missingFilters = requiredFilters.filter(
-      (filter) => !selectedOptions[filter] || selectedOptions[filter].length === 0
-    );
-  
+    }
+
+    const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
+    const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
+
     if (missingFilters.length > 0) {
       showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
       return;
     }
-  
+
     if (sentence) {
       try {
-        setLoading(true);
+        setLoading(true); // Set loading state to true when starting the request
         
         let submissionOptions = { ...selectedOptions };
         
@@ -479,7 +443,7 @@ const getFilterValues = (header: string): string[] => {
             "Report Year": [latestYear]
           };
         }
-  
+
         const prompt = {
           userMessage: sentence,
           educationType,
@@ -489,28 +453,24 @@ const getFilterValues = (header: string): string[] => {
             location: submissionOptions["Location"],
             instituteName: submissionOptions["Institute Name"],
             reportYear: submissionOptions["Report Year"]
-          } : educationType === "universities" ? {
+          } : {
             universityName: submissionOptions["University Name"],
             programmeName: submissionOptions["Programme Name"],
             programmeJudgment: submissionOptions["Programme Judgment"]
-          } : {
-            vocationalCenterName: submissionOptions["Vocational Center Name"],
-            centerLocation: submissionOptions["Center Location"],
-            reportYear: submissionOptions["Report Year"]
           })
         };
-  
+
         const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrockAgent`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(prompt),
         });
-  
+
         const body = await response.json();
         setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
-  
-        if (educationType === "schools" && selectedOptions["Institute Name"]?.length > 0) {
+
+        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
             AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
             CompareSpecificInstitutesSlot:
@@ -523,22 +483,24 @@ const getFilterValues = (header: string): string[] => {
             CompareVocationalSlot: undefined,
           };
           
-          setChartSlots(slots);
+          setChartSlots(slots); // Update context with selected filters
           console.log("Updated chart slots:", slots);
+          
         }
-  
+
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");
       } catch (error) {
         console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
       } finally {
-        setLoading(false);
+        setLoading(false); // Reset loading state regardless of success or failure
       }
     } else {
       showMessage("Please select options.", "error");
     }
   };
+
 
 
   const handleClear = () => {
@@ -609,8 +571,7 @@ const getFilterValues = (header: string): string[] => {
                   <label className="block text-sm font-semibold mb-2">{header}</label>
                   
                   {((educationType === "schools" && header === "Institute Name") ||
-                  (educationType === "universities" && header === "University Name") ||
-                  (educationType === "vocational" && header === "Vocational Center Name")) &&
+                    (educationType === "universities" && header === "University Name")) &&
                     
                   mode === "Compare" ? (
                     <select
@@ -621,7 +582,7 @@ const getFilterValues = (header: string): string[] => {
                       <option value="Select...">Select...</option>
               {getFilterValues(header)
                 .filter(option => {
-                  if ((header === "Institute Name" || header === "University Name" || header == "Vocational Center Name") && mode === "Compare") {
+                  if ((header === "Institute Name" || header === "University Name") && mode === "Compare") {
                     return !selectedOptions[header]?.includes(option);
                   }
                   return true;
