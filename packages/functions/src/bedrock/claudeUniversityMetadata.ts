@@ -170,7 +170,7 @@ async function insertUniversityMetadata(data: any, fileKey: string)  {
                     },
   };
   await dynamoDb.put(params).promise();
-  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'university'); // Add this line here
+  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'university'); 
   return;
 }
 

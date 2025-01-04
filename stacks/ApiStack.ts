@@ -39,6 +39,8 @@ export function ApiStack({stack}: StackContext) {
             },
         },
         routes: {
+      
+            
             // Add the generate-upload-url route
             "POST /generate-upload-url": {
                 function: {
@@ -50,6 +52,7 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable],
                 },
             },
+            
             // retrieve-file-metadata route
             "GET /retrieve-file-metadata": {
                 function: {
@@ -229,8 +232,9 @@ export function ApiStack({stack}: StackContext) {
                         TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
                         UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable, vocationalCenterMetadataTable], 
                 },
             },
             "GET /fetchfilters": {
@@ -240,8 +244,10 @@ export function ApiStack({stack}: StackContext) {
                         TABLE_NAME: instituteMetadata.tableName,
                         UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
                         PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
+
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable], 
+                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable,vocationalCenterMetadataTable], 
         
                 }
             },

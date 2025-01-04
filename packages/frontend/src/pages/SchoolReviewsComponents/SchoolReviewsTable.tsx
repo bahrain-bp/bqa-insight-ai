@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import * as XLSX from 'xlsx';
 import { SchoolData, Review } from './types';
 import LogoIcon from '../../images/BQA.png';
+import PDFIcon from '../../images/PDF.png';
+import XSLIcon from '../../images/xls.png';
 
 interface SchoolReviewsTableProps {
   data: SchoolData[];
@@ -86,7 +88,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
         font-weight: bold;
         margin: 20px 0;
         padding-bottom: 20px;
-        clear: both; /* Ensures proper spacing after logo */
+        clear: both; 
       }
       .pdf-export table {
         width: 100%;
@@ -108,7 +110,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
         background-color: #f9f9f9;
       }
       .pdf-export tr {
-        page-break-inside: avoid; /* Prevents row splitting across pages */
+        page-break-inside: avoid; 
       }
     `;
     printDiv.appendChild(style);
@@ -387,26 +389,29 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
       <div className="mb-4 flex flex-col space-y-4">
         <div>
           <span className="font-semibold mr-2">School Type:</span>
-          <button
-            onClick={() => setSchoolTypeFilter('All')}
-            className={`mr-2 px-3 py-1 rounded ${schoolTypeFilter === 'All' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setSchoolTypeFilter('Government')}
-            className={`mr-2 px-3 py-1 rounded ${schoolTypeFilter === 'Government' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
-          >
-            Government
-          </button>
-          <button
-            onClick={() => setSchoolTypeFilter('Private')}
-            className={`mr-2 px-3 py-1 rounded ${schoolTypeFilter === 'Private' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
-          >
-            Private
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setSchoolTypeFilter('All')}
+              className={`px-3 py-1 rounded ${schoolTypeFilter === 'All' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setSchoolTypeFilter('Government')}
+              className={`px-3 py-1 rounded ${schoolTypeFilter === 'Government' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
+            >
+              Government
+            </button>
+            <button
+              onClick={() => setSchoolTypeFilter('Private')}
+              className={`px-3 py-1 rounded ${schoolTypeFilter === 'Private' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}
+            >
+              Private
+            </button>
+          </div>
         </div>
-
+  
+        {/* Display Gender and Levels filter for Government type */}
         {schoolTypeFilter === 'Government' && (
           <div className="flex flex-col md:flex-row md:space-x-8">
             <div>
@@ -423,56 +428,70 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
                 </label>
               ))}
             </div>
-
+  
             <div>
               <span className="font-semibold mr-2">Levels:</span>
               {['Primary', 'Intermediate', 'Secondary'].map((lvl) => (
                 <label key={lvl} className="mr-4">
-                <input
-                  type="checkbox"
-                  checked={selectedLevels.includes(lvl)}
-                  onChange={() => toggleLevel(lvl)}
-                  className="mr-1"
-                />
-                {lvl}
-              </label>
-            ))}
+                  <input
+                    type="checkbox"
+                    checked={selectedLevels.includes(lvl)}
+                    onChange={() => toggleLevel(lvl)}
+                    className="mr-1"
+                  />
+                  {lvl}
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+  
+        {/* Search and Export buttons */}
+        <div className="flex flex-col md:flex-row md:justify-between items-center">
+          <div>
+            <span className="font-semibold mr-2">Search by English School Name:</span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="border border-gray-300 rounded px-3 py-1"
+              placeholder="Enter name..."
+            />
+          </div>
+  
+          <div className="mt-4 md:mt-0 flex space-x-2">
+            <button
+              onClick={exportToExcel}
+              className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Export as Excel"
+            >
+              <img 
+                src={XSLIcon} 
+                alt="Export to Excel" 
+                className="w-9 h-9 object-contain"  // Increased icon size
+              />
+              <span className="ml-2">Export as Excel</span>
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Export as PDF"
+            >
+              <img 
+                src={PDFIcon} 
+                alt="Export to PDF" 
+                className="w-9 h-9 object-contain"  // Increased icon size
+              />
+              <span className="ml-2">Export as PDF</span>
+            </button>
           </div>
         </div>
-      )}
-
-      <div className="flex justify-between items-center">
-        <div>
-          <span className="font-semibold mr-2">Search by English School Name:</span>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1"
-            placeholder="Enter name..."
-          />
-        </div>
-        <div className="space-x-2">
-          <button
-            onClick={exportToExcel}
-            className="bg-[#0F7E0F] hover:bg-[#0D6B0D] text-white px-4 py-2 rounded"
-          >
-            Export as Excel
-          </button>
-          <button
-            onClick={exportToPDF}
-            className="bg-primary hover:bg-primary text-white px-4 py-2 rounded"
-          >
-            Export as PDF
-          </button>
+  
+        {/* Display the number of schools returned */}
+        <div className="mb-2 text-gray-700 font-semibold">
+          {displayedData.length} School(s) Returned
         </div>
       </div>
-    </div>
-
-    <div className="mb-2 text-gray-700 font-semibold">
-      {displayedData.length} School(s) Returned
-    </div>
-
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-200">
         <thead>
