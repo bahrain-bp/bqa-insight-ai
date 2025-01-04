@@ -953,7 +953,7 @@ const BasicChart = () => {
   
       // Capture the content
       const canvas = await html2canvas(pdfContainer, {
-        scale: 1.5, // Maintain high resolution
+        scale: 2, // Maintain high resolution
         useCORS: true,
         allowTaint: true,
         scrollY: -window.scrollY,
@@ -1030,14 +1030,16 @@ const BasicChart = () => {
     if (!chart || !chart.data || !chart.data.datasets) return false;
     
     return chart.data.datasets.some(dataset =>
-      dataset.data.some(
-        dataPoint => 
-          typeof dataPoint === "object" &&
-          "x" in dataPoint &&
-          "y" in dataPoint &&
-          dataPoint.x !== null &&
-          dataPoint.y !== null &&
-          dataPoint.y !== 0
+      dataset.data.some(dataPoint => 
+        // For pie charts, check if any value is non-zero
+        (typeof dataPoint === "number" && dataPoint !== 0) ||
+        // For scatter/line charts, keep original validation
+        (typeof dataPoint === "object" &&
+         "x" in dataPoint &&
+         "y" in dataPoint &&
+         dataPoint.x !== null &&
+         dataPoint.y !== null &&
+         dataPoint.y !== 0)
       )
     );
   };
