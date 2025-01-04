@@ -206,24 +206,32 @@ const Filter = () => {
     }
   };
 
-  const getFilterValues = (header: string): string[] => {
+
+
+const getFilterValues = (header: string): string[] => {
     const filters = getCurrentFilters();
   
     if (isSchoolFilters(filters)) {
       if (isSchoolFilterKey(header)) {
+        if (mode === "Compare" && header === "Institute Name") {
+          // Don't filter out selected options in compare mode for schools
+          return filters[header];
+        }
         return filters[header];
       }
     } else if (isVocationalFilters(filters)) {
       if (isVocationalFilterKey(header)) {
-        if (header === "Vocational Center Name" && mode === "Compare") {
-          return filters[header].filter((name) => !selectedOptions[header].includes(name));
+        if (mode === "Compare" && header === "Vocational Center Name") {
+          // Return all vocational center options in compare mode
+          return vocationalFilters["Vocational Center Name"];
         }
         return filters[header];
       }
     } else {
       if (isUniversityFilterKey(header)) {
-        if (header === "University Name" && mode === "Compare") {
-          return filters[header].filter((name) => !selectedOptions[header].includes(name));
+        if (mode === "Compare" && header === "University Name") {
+          // Return all university options in compare mode
+          return universityFilters["University Name"];
         }
         return filters[header];
       }
@@ -255,32 +263,42 @@ const Filter = () => {
     setLastGeneratedSentence("");
   };
 
+ 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
-
+  
     if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
         if (!isFilterActive) {
           setIsFilterActive(true);
         }
-
+  
         let updatedState = { ...prevState };
-
-        if ((header === "Institute Name" && educationType === "schools" && mode === "Compare") ||
-            (header === "University Name" && educationType === "universities" && mode === "Compare") ||
-            (header === "Vocational Center Name" && educationType === "vocational" && mode === "Compare")) {
-          if (!updatedState[header]) {
-            updatedState[header] = [];
+  
+        // Check if we're in compare mode and dealing with a comparison field
+        const isCompareField = mode === "Compare" && (
+          (educationType === "schools" && header === "Institute Name") ||
+          (educationType === "universities" && header === "University Name") ||
+          (educationType === "vocational" && header === "Vocational Center Name")
+        );
+  
+        if (isCompareField) {
+          // For comparison fields, allow multiple selections without affecting other fields
+          const currentSelections = prevState[header] || [];
+          if (!currentSelections.includes(value)) {
+            updatedState[header] = [...currentSelections, value];
           }
-          if (!updatedState[header].includes(value)) {
-            updatedState[header] = [...updatedState[header], value];
-          }
-        } else {
-          updatedState = {
-            ...prevState,
-            [header]: [value],
-          };
-          
+          return updatedState; // Return immediately to prevent dependency clearing
+        } 
+  
+        // For non-compare mode or non-comparison fields
+        updatedState = {
+          ...prevState,
+          [header]: [value]
+        };
+        
+        // Only apply dependencies if NOT in Compare mode
+        if (mode !== "Compare") {
           if (educationType === "schools" && header === "Institute Classification") {
             updatedState["Institute Level"] = [];
             updatedState["Location"] = [];
@@ -288,19 +306,13 @@ const Filter = () => {
             updatedState["Report Year"] = [];
           } else if (header === "Institute Level") {
             updatedState["Institute Name"] = [];
-          } else if (educationType === "vocational" && header === "Center Classification") {
-            updatedState["Center Location"] = [];
-            updatedState["Vocational Center Name"] = [];
-            updatedState["Report Year"] = [];
           }
         }
-
+  
         return updatedState;
       });
     }
   };
-
-
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
@@ -583,47 +595,50 @@ const Filter = () => {
 
         {mode && educationType && (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {Object.keys(getCurrentFilters()).map((header) => (
-                <div key={header} className="w-full">
-                  <label className="block text-sm font-semibold mb-2">{header}</label>
-                  
-                  {((educationType === "schools" && header === "Institute Name") ||
-                    (educationType === "universities" && header === "University Name")) &&
-                    
-                  mode === "Compare" ? (
-                    <select
-                      className="p-2 border rounded text-sm w-full"
-                      onChange={(e) => handleSelectChange(e, header)}
-                      value="Select..."
-                    >
-                      <option value="Select...">Select...</option>
-              {getFilterValues(header)
-                .filter(option => {
-                  if ((header === "Institute Name" || header === "University Name") && mode === "Compare") {
-                    return !selectedOptions[header]?.includes(option);
-                  }
-                  return true;
-                })
-                .map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-                    </select>
-                  ) : (
-                    <select
-                      className="p-2 border rounded text-sm w-full"
-                      onChange={(e) => handleSelectChange(e, header)}
-                      value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
-                    >
-                      <option value="Select...">Select...</option>
-                      {getFilterValues(header).map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
+         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+         {Object.keys(getCurrentFilters()).map((header) => (
+  <div key={header} className="w-full">
+    <label className="block text-sm font-semibold mb-2">{header}</label>
+    
+    {((educationType === "schools" && header === "Institute Name") ||
+      (educationType === "universities" && header === "University Name") ||
+      (educationType === "vocational" && header === "Vocational Center Name")) &&
+    mode === "Compare" ? (
+      // Multi-select dropdown for Compare mode
+      <select
+        className="p-2 border rounded text-sm w-full"
+        onChange={(e) => handleSelectChange(e, header)}
+        value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
+      >
+        <option value="Select...">Select...</option>
+        {getFilterValues(header).map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+
+        
+      </select>
+            ) : (
+              <select
+              className="p-2 border rounded text-sm w-full"
+              onChange={(e) => handleSelectChange(e, header)}
+              value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
+            >
+              <option value="Select...">Select...</option>
+              {getFilterValues(header).map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
-            </div>
+            </select>
+          )}
+          </div>
+        ))}
+      </div>
+   
+
+
 
               <div className="mt-4">
                 {Object.keys(selectedOptions).map((header) =>
