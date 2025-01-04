@@ -380,49 +380,36 @@ def dispatch(intent_request):
                 return followup(intent_request, response)
 
             elif analysis_type == 'Institutional Review':
-                return elicit_intent(
+                standard = get_slot(
                     intent_request,
                     'StandardSlot',
-                    "StandardIntent",
                 )
+                if standard is None:
+                    print("standard slot not available")
+                    return elicit_slot(
+                        intent_request,
+                        'StandardSlot',
+                        slots=get_slots(intent_request),
+                    )
+               
+                university_name = get_slot(
+                    intent_request,
+                    'AnalyzeUniversityNameSlot',
+                )
+                if university_name is None:
+                    return elicit_slot(
+                        intent_request,
+                        'AnalyzeUniversityNameSlot',
+                        slots=get_slots(intent_request),
+                    )
 
-    elif intent_name == 'StandardIntent':
-      
-        print("Standard intent, request:", intent_request)
-        standard = get_slot(
-            intent_request,
-            'StandardSlot',
-        )
-        if standard is None:
-            print("standard slot not available")
-            return elicit_slot(
-                intent_request,
-                'StandardSlot',
-                slots=get_slots(intent_request),
-            )
-        
-
-        university_name = get_slot(
-            intent_request,
-            'AnalyzeUniversityNameSlot',
-        )
-        if university_name is None:
-            return elicit_slot(
-                intent_request,
-                'AnalyzeUniversityNameSlot',
-            )
-
-        # university here
-        # message = f"the standared of the program is: {standard} {university_name}"
-        analyze_university_prompt = create_uni_analyze_prompt(standard, university_name)
-        message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_prompt)
-        response = create_message(message)
-        session_attributes = get_session_attributes(intent_request)
-        
-        return followup(intent_request, response)
-    
-    
-        
+                # university here
+                # message = f"the standared of the program is: {standard} {university_name}"
+                analyze_university_prompt = create_uni_analyze_prompt(standard, university_name)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_prompt)
+                response = create_message(message)
+            
+                return followup(intent_request, response)
     # Handle ComparingIntent
     elif intent_name == 'ComparingIntent':
         slots = get_slots(intent_request)

@@ -284,18 +284,7 @@ export function BotStack({stack}: StackContext) {
         },
     })
 
-    const uniStandard = locale.addIntent({
-        intentName: 'StandardIntent',
-        description: 'Intent about standards for universitites',
-        sampleUtterances: [
-            { utterance: 'Standard' },
-        ],
-        fulfillmentCodeHook: {
-            enabled: true,
-        },
-    });
-
-    uniStandard.addSlot({
+    analyzingIntent.addSlot({
         slotName: 'AnalyzeUniversityNameSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Analyzing Universities for BQA',
@@ -316,12 +305,12 @@ export function BotStack({stack}: StackContext) {
         }
     })
 
-    uniStandard.addSlot({
+    analyzingIntent.addSlot({
         slotName: 'StandardSlot',
         slotTypeName: 'AMAZON.FreeFormInput',
         description: 'Standard to analyze',
         valueElicitationSetting: {
-            slotConstraint: 'Required',
+            slotConstraint: 'Optional',
             promptSpecification: {
                 messageGroups: [
                     {
