@@ -406,25 +406,40 @@ const Filter = () => {
     const sentence = editableSentence;
 
     if (mode === "Compare") {
-      const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
-      if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
-        showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
-        return;
+      let comparisonKey;
+      if (educationType === "schools") {
+        comparisonKey = "Institute Name";
+      } else if (educationType === "universities") {
+        comparisonKey = "University Name";
+      } else if (educationType === "vocational") {
+        comparisonKey = "Vocational Center Name";
       }
-    
-      if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
-        if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
-          showMessage("Please select at least two institutes in Compare mode.", "error");
-          return;
-        } else if (educationType === "universities" && (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2)) {
-          showMessage("Please select at least two universities in Compare mode.", "error");
-          return;
-        }
+
+      if (!comparisonKey || !selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
+        const entityType = educationType === "schools" 
+          ? "institutes" 
+          : educationType === "universities" 
+            ? "universities" 
+            : "vocational centers";
+        showMessage(`Please select at least two ${entityType} to compare.`, "error");
+        return;
       }
     }
 
-    const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
-    const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
+    const requiredFilters: string[] = (() => {
+      switch (educationType) {
+        case "schools":
+          return ["Institute Name"];
+        case "universities":
+          return ["University Name"];
+        case "vocational":
+          return ["Vocational Center Name"];
+        default:
+          return [];
+      }
+    })();
+
+    const missingFilters = requiredFilters.filter((filter) => !selectedOptions[filter] || selectedOptions[filter].length === 0);
 
     if (missingFilters.length > 0) {
       showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
@@ -433,7 +448,7 @@ const Filter = () => {
 
     if (sentence) {
       try {
-        setLoading(true); // Set loading state to true when starting the request
+        setLoading(true);
         
         let submissionOptions = { ...selectedOptions };
         
@@ -453,10 +468,14 @@ const Filter = () => {
             location: submissionOptions["Location"],
             instituteName: submissionOptions["Institute Name"],
             reportYear: submissionOptions["Report Year"]
-          } : {
+          } : educationType === "universities" ? {
             universityName: submissionOptions["University Name"],
             programmeName: submissionOptions["Programme Name"],
             programmeJudgment: submissionOptions["Programme Judgment"]
+          } : {
+            vocationalCenterName: submissionOptions["Vocational Center Name"],
+            centerLocation: submissionOptions["Center Location"],
+            reportYear: submissionOptions["Report Year"]
           })
         };
 
@@ -470,7 +489,7 @@ const Filter = () => {
         setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
 
-        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
+        if (educationType === "schools" && selectedOptions["Institute Name"]?.length > 0) {
           const slots = {
             AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
             CompareSpecificInstitutesSlot:
@@ -483,9 +502,8 @@ const Filter = () => {
             CompareVocationalSlot: undefined,
           };
           
-          setChartSlots(slots); // Update context with selected filters
+          setChartSlots(slots);
           console.log("Updated chart slots:", slots);
-          
         }
 
         console.log("API Response:", body);
@@ -494,7 +512,7 @@ const Filter = () => {
         console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
       } finally {
-        setLoading(false); // Reset loading state regardless of success or failure
+        setLoading(false);
       }
     } else {
       showMessage("Please select options.", "error");
