@@ -35,7 +35,7 @@ def get_slot(intent_request, slotName):
 
 def get_slot_history(session_attributes):
     slot_string = session_attributes.get('slotHistory')
-    if slot_string is None:
+    if slot_string is None or slot_string == "":
         return []
     # expected format:
     # "BQAIntent:BQASlot,AnalyzingIntent:InstitutionTypeSlot,AnalyzingIntent:SchoolMetricSlot"
@@ -56,7 +56,9 @@ def set_slot_history(slot_list, session_attributes):
         slots.append(':'.join(slot))
     slot_string = ','.join(slots)
     if slot_string is None:
-        slot_string = ""
+        if 'slotHistory' in session_attributes:
+            session_attributes.pop('slotHistory')
+        return
     session_attributes['slotHistory'] = slot_string
 
 def update_slot_history(session_attributes, slot_to_elicit, intent_name):
@@ -77,8 +79,18 @@ def update_slot_history(session_attributes, slot_to_elicit, intent_name):
 def retry_last_slot(intent_request):
     session_attributes = get_session_attributes(intent_request)
     slot_list = get_slot_history(session_attributes)
+    session_attributes['retry'] = 'false'
+
     # remove last slot
     last_slot = slot_list.pop()
+    set_slot_history(slot_list, session_attributes)
+
+    if len(slot_list) == 0:
+        return elicit_intent(
+            intent_request,
+            "BQASlot",
+            "BQAIntent",
+        )
     # get slots from session_attributes if they exist
     WAS_FOLLOWUP = 'slots' in session_attributes and 'OtherQuestionsSlot' in last_slot
     if WAS_FOLLOWUP:
@@ -87,20 +99,10 @@ def retry_last_slot(intent_request):
     else:
         intent_request['sessionState']['intent']['slots'].pop(last_slot[1])
     current_intent = last_slot[0]
-    set_slot_history(slot_list, session_attributes)
-    session_attributes['retry'] = 'false'
     # get last slot, this will be reset
-    if len(slot_list) > 0:
-        last_slot = slot_list[-1]
-        print("The last item is ", last_slot)
-        print("The array is ", slot_list)
-    else:
-        # if nothing in the history is left, return to main menu
-        return elicit_intent(
-            intent_request,
-            "BQASlot",
-            "BQAIntent",
-        )
+    last_slot = slot_list[-1]
+    print("The last item is ", last_slot)
+    print("The array is ", slot_list)
 
     if current_intent != last_slot[0]:
         response = elicit_intent(
