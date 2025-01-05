@@ -1,43 +1,54 @@
-# OpenSearch Serverless Configuration 
+# OpenSearch Serverless Configuration
 
- 
+This README provides step-by-step instructions to configure the vector store for the Knowledge Base, as there is no direct support through the AWS CDK.
 
-This document explains how to set up the vector store for the Knowledge Base, since there is no direct way through the AWS CDK. 
+## Steps
 
- 
+### 1. Create a Collection
+A collection is a group of indexes tailored for a specific use case. For this setup, the collection will analyze reports. Use the **Easy Create** option and choose **Vector Search** as the type.
 
---- 
+![Creating a Collection](images/CollectionCreation.png)
+![Easy Create Option](images/EasyCreate.png)
 
- 
+---
 
-## Steps: 
+### 2. Create a Vector Index
+The vector index stores vector embeddings and associated metadata, adding context to the vectors.
 
-1. Create a collection: A collection is a group of indexes that supports a specific use case. In our case, analyzing reports. We can use “Easy Create” to quickly create the collection and use vector search as the type. 
+![Creating a Vector Index](images/vectorIndex.png)
 
-![Alt text](<images/CollectionCreation.png>)
-![Alt text](images/EasyCreate.png)
+---
 
-2. Create a vector index: This will contain vector embeddings with metadata if it is available to add more context to stored vectors.
-![Alt text](images/vectorIndex.png)
+### 3. Create a Vector Field
+Configure a vector field with the following properties:
+- **Name:** `bedrock-knowledge-base-default-vector`
+- **Dimension:** `1024` (aligns with the output of Bedrock Embed Titan v2.0).
 
-3. Create a vector field: Name it “bedrock-knowledge-base-default-vector" with a dimension of “1024” since this is the output of Bedrock Embed Titan v2.0.
-![Alt text](images/vectorIndex.png)
+![Vector Field Setup](images/vectorIndex.png)
 
-Then the Knowledge Base needs to have a predefined role so that it can communicate with the vector store: 
+---
 
-- Here is the trust permission:
-    ![Alt text](images/knowledge-base-role-trust.png)
+### 4. Configure the Knowledge Base Role
+The Knowledge Base requires a predefined role to interface with the vector store. Ensure the following configurations:
 
-- Here is the required permissions:
-    - Invoke Model for embeedding model ![Alt text](images/bedrockInvokePermission.png)
-    - OpenSearch Serverless full access ![Alt text](images/OSSFullAccess.png)
-    - Amazon Open Search Full Access (AWS Managed Policy)
-    - S3 Full Access for the specific bucket.
-  
-> [!NOTE]
-The collection ARN in OpenSearch Serverless full access policy must be updated with the new ARN of the collection when setting up the project. 
+#### Trust Permission
+![Trust Permission](images/knowledge-base-role-trust.png)
 
-Finally, the data access policy of the collection must be updated so it can be assumed by the knowledgebase role, as follows:
-![Alt text](images/DataAccessPolicy.png)
+#### Required Permissions
+1. **Invoke Model** for embedding model:
+   ![Invoke Permission](images/bedrockInvokePermission.png)
+2. **OpenSearch Serverless Full Access**:
+   ![OpenSearch Serverless Access](images/OSSFullAccess.png)
+3. **Amazon OpenSearch Full Access** (AWS Managed Policy).
+4. **S3 Full Access** for the specific bucket.
 
-> ![Note] Since the collection is created through the console, the logged in user will be added as trust relationship also.
+> [!WARNING] Update the collection ARN in the OpenSearch Serverless full access policy with the new ARN during project setup.
+
+---
+
+### 5. Update Data Access Policy
+Modify the collection’s data access policy to allow the Knowledge Base role to assume it. Example:
+
+![Data Access Policy](images/DataAccessPolicy.png)
+
+> [!NOTE] When creating the collection through the console, the logged-in user is automatically added to the trust relationship.
