@@ -9,6 +9,7 @@ export interface ChartJsonData {
   schoolName?: string; // For schools
   vocationalName?: string; // For vocational institutes
   schoolType?: string; // For schools (Government, Private)
+  universityName?: string;
   options?: object;
   type: ChartType;
   data: {
@@ -50,7 +51,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
             position: "bottom",
             title: {
               display: true,
-              text: "Cycles",
+              text: "Review Cycles",
             },
           },
           y: {
@@ -59,12 +60,22 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
               text: "Grades",
             },
             reverse: true,
-            min: 1,
-            max: 4,
+            min: 0,
+            max: 5,
             ticks: {
               precision: 0,
-            }
+              stepSize: 1, // Steps between grades
+              callback: (value: number) => {
+                switch(value) {
+                  case 1: return "Outstanding - 1";
+                  case 2: return "Good - 2";
+                  case 3: return "Satisfactory - 3";
+                  case 4: return "Inadequate - 4";
+                  default: return "";
+                }
+            },
           },
+        },
         } : undefined,
       }
     );
@@ -142,7 +153,7 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
       type={parsedData.type}
       data={formattedData as any} // Cast as any to satisfy Chart.js type requirements
       options={chartOptions}
-      style={{ width: "100%", height: "100%" }}
+      style={{ width: "100%", height: "100%", display: "block", margin: "auto" }}
     />
   );
 };

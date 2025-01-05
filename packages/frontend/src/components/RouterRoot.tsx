@@ -15,10 +15,14 @@ export const ChartContext = createContext<ChartContextType>({
 
 export type LexChartSlots = {
     AnalyzeSchoolSlot?: string,
-    ProgramNameSlot?: string,
     AnalyzeVocationalSlot?: string,
+    UniNameSlot?: string,
+    AnalyzeUniversityNameSlot?: string,
+    ProgramNameSlot?: string,
     CompareUniversityWUniSlot?: string,
-    CompareUniversityWProgramsSlot?: string,
+    CompareUniversityWprogSlot?: string,
+    CompareUniversityUniSlot?: string,
+    CompareUniversityWprogUniversityNameSlot? : string,
     CompareSchoolSlot?: "All Government Schools" | "All Private Schools",
     CompareSpecificInstitutesSlot?: string,
     CompareVocationalSlot?: string,

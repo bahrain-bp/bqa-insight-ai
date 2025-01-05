@@ -514,22 +514,67 @@ const Filter = () => {
         setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
 
-        if (educationType === "schools" && selectedOptions["Institute Name"]?.length > 0) {
+//-------------------- chart generation connection logic Start -----------------------------------------------------------------------
+        if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
-            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            AnalyzeSchoolSlot:
+              mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
             CompareSpecificInstitutesSlot:
               mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
-            ProgramNameSlot: undefined,
+            CompareSchoolSlot: undefined,
             AnalyzeVocationalSlot: undefined,
             CompareUniversityWUniSlot: undefined,
             CompareUniversityWProgramsSlot: undefined,
+            CompareVocationalSlot: undefined,
+            ProgramNameSlot: undefined,
+          };
+        
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots);
+        } else if (educationType === "universities" && selectedOptions["University Name"].length > 0) {
+          const slots = {
+            AnalyzeUniversityNameSlot:
+              mode === "Analyze" && educationType === "universities" ? selectedOptions["University Name"][0] : undefined,
+            CompareUniversityUniSlot:
+              mode === "Compare" && educationType === "universities" ? selectedOptions["University Name"].join(", ") : undefined,
+            CompareUniversityWprogSlot:
+              mode === "Compare" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
+                ? selectedOptions["Programme Name"].join(", ")
+                : undefined,
+                CompareUniversityWprogUniversityNameSlot:
+                mode === "Compare" && educationType === "universities" && selectedOptions["University Name"].length > 0 && selectedOptions["Programme Name"].length > 0
+                  ? `${selectedOptions["University Name"].join(", ")}|${selectedOptions["Programme Name"].join(", ")}`
+                  : undefined,              
+            AnalyzeSchoolSlot: undefined,
+            CompareSpecificInstitutesSlot: undefined,
             CompareSchoolSlot: undefined,
             CompareVocationalSlot: undefined,
+            ProgramNameSlot:
+              mode === "Analyze" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
+                ? selectedOptions["Programme Name"][0]
+                : undefined,
           };
           
           setChartSlots(slots);
           console.log("Updated chart slots:", slots);
-        }
+        } else if (educationType === "vocational" && selectedOptions["Vocational Center Name"].length > 0) {
+          const slots = {
+            AnalyzeVocationalSlot:
+              mode === "Analyze" && educationType === "vocational" ? selectedOptions["Vocational Center Name"][0] : undefined,
+            CompareVocationalSlot:
+              mode === "Compare" && educationType === "vocational" ? selectedOptions["Vocational Center Name"].join(", ") : undefined,
+            AnalyzeSchoolSlot: undefined,
+            CompareSpecificInstitutesSlot: undefined,
+            CompareSchoolSlot: undefined,
+            CompareUniversityWUniSlot: undefined,
+            CompareUniversityWProgramsSlot: undefined,
+            ProgramNameSlot: undefined,
+          };
+        
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots);
+        }        
+//-------------------- chart generation connection logic End -----------------------------------------------------------------------
 
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");

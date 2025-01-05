@@ -39,7 +39,7 @@ const BasicView = () => {
         </div>
       </div>
       <div className='basis-1/2 w-full'>
-        <BasicChart />
+      <BasicChart activeTab={activeTab} />
       </div>
     </div>
   </>
