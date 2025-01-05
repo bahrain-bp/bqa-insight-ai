@@ -535,12 +535,16 @@ const Filter = () => {
           const slots = {
             AnalyzeUniversityNameSlot:
               mode === "Analyze" && educationType === "universities" ? selectedOptions["University Name"][0] : undefined,
-            CompareUniversityWprogUniversityNameSlot:
+            CompareUniversityUniSlot:
               mode === "Compare" && educationType === "universities" ? selectedOptions["University Name"].join(", ") : undefined,
             CompareUniversityWprogSlot:
               mode === "Compare" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
                 ? selectedOptions["Programme Name"].join(", ")
                 : undefined,
+                CompareUniversityWprogUniversityNameSlot:
+                mode === "Compare" && educationType === "universities" && selectedOptions["University Name"].length > 0 && selectedOptions["Programme Name"].length > 0
+                  ? `${selectedOptions["University Name"].join(", ")}|${selectedOptions["Programme Name"].join(", ")}`
+                  : undefined,              
             AnalyzeSchoolSlot: undefined,
             CompareSpecificInstitutesSlot: undefined,
             CompareSchoolSlot: undefined,
@@ -553,12 +557,12 @@ const Filter = () => {
           
           setChartSlots(slots);
           console.log("Updated chart slots:", slots);
-        } else if (educationType === "vocational" && selectedOptions["Institute Name"].length > 0) {
+        } else if (educationType === "vocational" && selectedOptions["Vocational Center Name"].length > 0) {
           const slots = {
             AnalyzeVocationalSlot:
-              mode === "Analyze" && educationType === "vocational" ? selectedOptions["Institute Name"][0] : undefined,
+              mode === "Analyze" && educationType === "vocational" ? selectedOptions["Vocational Center Name"][0] : undefined,
             CompareVocationalSlot:
-              mode === "Compare" && educationType === "vocational" ? selectedOptions["Institute Name"].join(", ") : undefined,
+              mode === "Compare" && educationType === "vocational" ? selectedOptions["Vocational Center Name"].join(", ") : undefined,
             AnalyzeSchoolSlot: undefined,
             CompareSpecificInstitutesSlot: undefined,
             CompareSchoolSlot: undefined,
