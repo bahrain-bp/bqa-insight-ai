@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { LexChartSlotsContext } from "../components/RouterRoot";
 
-
 const Filter = () => {
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
   const [educationType, setEducationType] = useState<"schools" | "universities" | "vocational" | "">("");
@@ -9,27 +8,30 @@ const Filter = () => {
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
-
   const [latestYear, setLatestYear] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-  const { setChartSlots } = useContext(LexChartSlotsContext); // Context to update chart slots
+  const { setChartSlots } = useContext(LexChartSlotsContext);
 
-
-  const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({
+  const [vocationalFilters, setVocationalFilters] = useState<VocationalFilters>({
+    "Vocational Center Name": [],
+    "Center Location": [],
+    "Report Year": []
+  });
+  
+  const [universityFilters, setUniversityFilters] = useState<UniversityFilters>({
+    "University Name": [],
+    "Programme Name": [],
+    "Programme Judgment": []
+  });
+  
+  const [filterOptions, setFilterOptions] = useState<SchoolFilters>({
     "Institute Classification": [],
     "Institute Level": [],
     "Location": [],
     "Institute Name": [],
     "Report Year": [],
   });
-  const [universityFilters, setUniversityFilters] = useState({
-    "University Name": [],
-    "Programme Name": [],
-    "Programme Judgment": []
-  });
-
-
   interface UniversityFilters {
     "University Name": string[];
     "Programme Name": string[];
@@ -43,7 +45,13 @@ const Filter = () => {
     "Institute Name": string[];
     "Report Year": string[];
   }
-  
+
+  interface VocationalFilters {
+    "Vocational Center Name": string[];
+    "Center Location": string[];
+    "Report Year": string[];
+  }
+
   
 
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
@@ -78,30 +86,68 @@ const Filter = () => {
         if (selectedOptions["Programme Name"]?.length) {
           prompt.append("programmeName", selectedOptions["Programme Name"][0]);
         }
+        if (selectedOptions["Vocational Center Name"]?.length) {
+          prompt.append("vocationalCenterName", selectedOptions["Vocational Center Name"][0]);
+        }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${prompt.toString()}`);
+    
+        if (!response.ok) {
+          // Log the actual error message from the server
+          const errorText = await response.text();
+          console.error('Server error:', errorText);
+          throw new Error(`Server returned ${response.status}: ${errorText}`);
+        }
+    
         const data = await response.json();
-        
-        if (educationType === "schools") {
-          setFilterOptions(data.filters);
-          // Find and store the latest year
-          if (data.filters["Report Year"]?.length > 0) {
-            const years = data.filters["Report Year"].map(Number);
-            const maxYear = Math.max(...years).toString();
-            setLatestYear(maxYear);
-          }
-        } else if (educationType === "universities") {
-          setUniversityFilters(data.universityFilters);
+        switch(educationType) {
+          case "schools":
+            setFilterOptions(data.filters || {
+              "Institute Classification": [],
+              "Institute Level": [],
+              "Location": [],
+              "Institute Name": [],
+              "Report Year": [],
+            });
+            if (data.filters?.["Report Year"]?.length > 0) {
+              const years = data.filters["Report Year"].map(Number);
+              const maxYear = Math.max(...years).toString();
+              setLatestYear(maxYear);
+            }
+            break;
+          case "universities":
+            setUniversityFilters(data.universityFilters || {
+              "University Name": [],
+              "Programme Name": [],
+              "Programme Judgment": []
+            });
+            break;
+          case "vocational":
+            setVocationalFilters(data.vocationalFilters || {
+              "Vocational Center Name": [],
+              "Center Location": [],
+              "Report Year": []
+            });
+            break;
         }
       } catch (error) {
         console.error("Error fetching filter options:", error);
+        // Reset to default values on error
+        setFilterOptions({
+          "Institute Classification": [],
+          "Institute Level": [],
+          "Location": [],
+          "Institute Name": [],
+          "Report Year": [],
+        });
       }
     };
-
+  
     if (educationType) {
       fetchFilterOptions();
     }
   }, [selectedOptions, educationType]);
+
   useEffect(() => {
     if (!userModifiedSentence) {
       const newSentence = generateSentence();
@@ -115,39 +161,51 @@ const Filter = () => {
     }
   }, [selectedOptions, mode]);
 
-  function isSchoolFilterKey(key: string): key is keyof SchoolFilters {
+   function isSchoolFilterKey(key: string): key is keyof SchoolFilters {
     return ["Institute Classification", "Institute Level", "Location", "Institute Name", "Report Year"].includes(key);
   }
   
-  // Type guard to check if a string is a valid key of UniversityFilters
   function isUniversityFilterKey(key: string): key is keyof UniversityFilters {
     return ["University Name", "Programme Name", "Programme Judgment"].includes(key);
   }
-  
-  // Type guard to check if the filters are SchoolFilters
-  function isSchoolFilters(filters: SchoolFilters | UniversityFilters): filters is SchoolFilters {
-    return "Institute Classification" in filters;
+
+  function isVocationalFilterKey(key: string): key is keyof VocationalFilters {
+    return ["Vocational Center Name", "Center Location", "Report Year"].includes(key);
   }
   
-  const getCurrentFilters = (): SchoolFilters | UniversityFilters => {
-    if (educationType === "universities") {
-      return {
-        "University Name": universityFilters["University Name"] || [],
-        "Programme Name": universityFilters["Programme Name"] || [],
-        "Programme Judgment": universityFilters["Programme Judgment"] || [],
-      };
-    } else {
-      return {
-        "Institute Classification": filterOptions["Institute Classification"] || [],
-        "Institute Level": filterOptions["Institute Level"] || [],
-        "Location": filterOptions["Location"] || [],
-        "Institute Name": filterOptions["Institute Name"] || [],
-        "Report Year": filterOptions["Report Year"] || [],
-      };
+  function isSchoolFilters(filters: SchoolFilters | UniversityFilters | VocationalFilters): filters is SchoolFilters {
+    return "Institute Classification" in filters;
+  }
+
+  function isVocationalFilters(filters: SchoolFilters | UniversityFilters | VocationalFilters): filters is VocationalFilters {
+    return "Vocational Center Name" in filters;
+  }
+  
+  const getCurrentFilters = () => {
+    switch(educationType) {
+      case "universities":
+        return {
+          "University Name": universityFilters["University Name"] || [],
+          "Programme Name": universityFilters["Programme Name"] || [],
+          "Programme Judgment": universityFilters["Programme Judgment"] || [],
+        };
+      case "vocational":
+        return {
+          "Vocational Center Name": vocationalFilters["Vocational Center Name"] || [],
+          "Center Location": vocationalFilters["Center Location"] || [],
+          "Report Year": vocationalFilters["Report Year"] || [],
+        };
+      default:
+        return {
+          "Institute Classification": filterOptions["Institute Classification"] || [],
+          "Institute Level": filterOptions["Institute Level"] || [],
+          "Location": filterOptions["Location"] || [],
+          "Institute Name": filterOptions["Institute Name"] || [],
+          "Report Year": filterOptions["Report Year"] || [],
+        };
     }
   };
 
-  // Helper function to safely access filter values
   const getFilterValues = (header: string): string[] => {
     const filters = getCurrentFilters();
   
@@ -155,9 +213,15 @@ const Filter = () => {
       if (isSchoolFilterKey(header)) {
         return filters[header];
       }
+    } else if (isVocationalFilters(filters)) {
+      if (isVocationalFilterKey(header)) {
+        if (header === "Vocational Center Name" && mode === "Compare") {
+          return filters[header].filter((name) => !selectedOptions[header].includes(name));
+        }
+        return filters[header];
+      }
     } else {
       if (isUniversityFilterKey(header)) {
-        // Exclude selected universities in Compare mode
         if (header === "University Name" && mode === "Compare") {
           return filters[header].filter((name) => !selectedOptions[header].includes(name));
         }
@@ -166,19 +230,16 @@ const Filter = () => {
     }
     return [];
   };
-  
-
-
-  
 
   const handleEducationTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const type = e.target.value as "schools" | "universities" | "";
+    const type = e.target.value as "schools" | "universities" | "vocational" | "";
     setEducationType(type);
     
-    // Reset selected options without clearing the mode
     const currentFilters = type === "universities" 
       ? universityFilters 
-      : filterOptions;
+      : type === "vocational"
+        ? vocationalFilters
+        : filterOptions;
       
     setSelectedOptions(
       Object.keys(currentFilters).reduce((acc, header) => {
@@ -187,7 +248,6 @@ const Filter = () => {
       }, {} as Record<string, string[]>)
     );
     
-    // Reset other state variables except mode
     setIsFilterActive(false);
     setEditableSentence("");
     setUserModifiedSentence(false);
@@ -206,9 +266,9 @@ const Filter = () => {
 
         let updatedState = { ...prevState };
 
-        // Enable multi-select only in Compare mode for Institute/University Name
         if ((header === "Institute Name" && educationType === "schools" && mode === "Compare") ||
-            (header === "University Name" && educationType === "universities" && mode === "Compare")) {
+            (header === "University Name" && educationType === "universities" && mode === "Compare") ||
+            (header === "Vocational Center Name" && educationType === "vocational" && mode === "Compare")) {
           if (!updatedState[header]) {
             updatedState[header] = [];
           }
@@ -216,7 +276,6 @@ const Filter = () => {
             updatedState[header] = [...updatedState[header], value];
           }
         } else {
-          // Single select for other fields
           updatedState = {
             ...prevState,
             [header]: [value],
@@ -229,6 +288,10 @@ const Filter = () => {
             updatedState["Report Year"] = [];
           } else if (header === "Institute Level") {
             updatedState["Institute Name"] = [];
+          } else if (educationType === "vocational" && header === "Center Classification") {
+            updatedState["Center Location"] = [];
+            updatedState["Vocational Center Name"] = [];
+            updatedState["Report Year"] = [];
           }
         }
 
@@ -236,6 +299,8 @@ const Filter = () => {
       });
     }
   };
+
+
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
@@ -291,6 +356,13 @@ const Filter = () => {
         parts.push(`programme name is ${selectedOptions["Programme Name"].join(", ")}`);
       if (selectedOptions["Programme Judgment"]?.length > 0)
         parts.push(`programme judgment is ${selectedOptions["Programme Judgment"].join(", ")}`);
+    } else if (educationType == "vocational"){
+      if (selectedOptions["Vocational Center Name"]?.length > 0)
+        parts.push(`Vocational Training Center name is ${selectedOptions["Vocational Center Name"].join(", ")}`);
+      if (selectedOptions["Center Location"]?.length > 0)
+        parts.push(`Vocational Training Center location is ${selectedOptions["Center Location"].join(", ")}`);
+      if (selectedOptions["Report Year"]?.length > 0)
+        parts.push(`report year is ${selectedOptions["Report Year"].join(", ")}`);
     }
     
     return parts.length > 0 ? `Insights for: ${parts.join(", ")}.` : "";
@@ -486,6 +558,7 @@ const Filter = () => {
               <option value="">Select...</option>
               <option value="schools">Schools</option>
               <option value="universities">Universities</option>
+              <option value="vocational">Vocational Centers</option>
             </select>
           </div>
         </div>
@@ -499,6 +572,7 @@ const Filter = () => {
                   
                   {((educationType === "schools" && header === "Institute Name") ||
                     (educationType === "universities" && header === "University Name")) &&
+                    
                   mode === "Compare" ? (
                     <select
                       className="p-2 border rounded text-sm w-full"
