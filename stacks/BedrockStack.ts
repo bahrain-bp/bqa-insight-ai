@@ -12,7 +12,8 @@ export function BedrockStack({ stack, app }: StackContext) {
         type: 'OPENSEARCH_SERVERLESS',
         // the properties below are optional
         opensearchServerlessConfiguration: {
-          collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/tl3oyze7ocph2xyqb54i',
+          // collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/tl3oyze7ocph2xyqb54i',
+          collectionArn: 'arn:aws:aoss:us-east-1:588738578192:collection/w15yhb6d8ws798nmv9l8',
           fieldMapping: {
             metadataField: 'AMAZON_BEDROCK_METADATA',
             textField: 'AMAZON_BEDROCK_TEXT_CHUNK',
