@@ -131,6 +131,9 @@ export async function handler(event: SQSEvent){
         
             await insertInstituteMetadata(extractedOutput, fileKey);
             console.log("IT SHOULD BE INSERTED to instituiteMetaData");
+
+            await insertReportMetadata(extractedOutput, fileKey);
+            console.log("IT SHOULD BE INSERTED to fileMetaData");
   
             await deleteSQSMessage(record.receiptHandle);
             return extractedOutput;
@@ -240,6 +243,21 @@ function parseMetadata(input: string): string {
 
     return parsedData;
 
+}
+// Insert file metadata into DynamoDB
+async function insertReportMetadata(data :any, fileKey : string) {
+  console.log("datatype of data:", typeof data)
+  console.log("data zero:",  data)
+  const params = {
+      TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+          Key : {fileKey},
+          UpdateExpression: "SET instituteName = :instituteName",
+          ExpressionAttributeValues: {
+              ":instituteName": data["Institute Name"],
+          },
+          ReturnValues: "UPDATED_NEW",
+  };
+  return await dynamoDb.update(params).promise();
 }
 
 //   // Learn more about the Llama 3 prompt format at:
