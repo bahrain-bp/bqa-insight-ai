@@ -2,10 +2,13 @@ import { useState } from 'react'
 import Filter from '../Filter'
 import Chat from '../../components/ChatBot/ChatBot'
 import BasicChart from './BasicChart'
+import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb'
 
 const BasicView = () => {
   const [activeTab, setActiveTab] = useState(0)
   return (
+  <>
+    <Breadcrumb pageName="Dashboard" />
     <div className="flex flex-col items-center px-8 h-screen">
       <div className={`w-full mt-4 bg-white shadow-md rounded-md flex flex-col ${activeTab !== 0 ? 'max-h-[50vh] min-h-80' : ''}`}>
         <div className='w-full shrink flex flex-row bg-whiten rounded-t-md'>
@@ -39,6 +42,7 @@ const BasicView = () => {
         <BasicChart />
       </div>
     </div>
+  </>
   )
 }
 

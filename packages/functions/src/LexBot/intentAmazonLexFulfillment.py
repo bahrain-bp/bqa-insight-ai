@@ -33,9 +33,101 @@ def get_slot(intent_request, slotName):
         return slots[slotName]['value']['originalValue']
     return slots[slotName]['value']['resolvedValues'][0]
 
+def get_slot_history(session_attributes):
+    slot_string = session_attributes.get('slotHistory')
+    if slot_string is None or slot_string == "":
+        return []
+    # expected format:
+    # "BQAIntent:BQASlot,AnalyzingIntent:InstitutionTypeSlot,AnalyzingIntent:SchoolMetricSlot"
+    # slots are described by an intent name "BQAIntent:BQASlot"
+    # and each slot is separated by commas
+    # this will parse a string with this format to a 2D list
+
+    slots = slot_string.split(',')
+    total = []
+    for slot in slots:
+        total.append(slot.split(":"))
+    return total
+
+def set_slot_history(slot_list, session_attributes):
+    # this will convert a 2D list with the aforementioned format to a string
+    slots = []
+    for slot in slot_list:
+        slots.append(':'.join(slot))
+    slot_string = ','.join(slots)
+    if slot_string is None:
+        if 'slotHistory' in session_attributes:
+            session_attributes.pop('slotHistory')
+        return
+    session_attributes['slotHistory'] = slot_string
+
+def update_slot_history(session_attributes, slot_to_elicit, intent_name):
+    slot_list = get_slot_history(session_attributes)
+
+    last_slot = None
+    if len(slot_list) > 0:
+        last_slot = slot_list[-1]
+
+    slot_name = ""
+    if last_slot is not None and len(last_slot) > 1:
+        slot_name = last_slot[1]
+
+    if slot_name != slot_to_elicit:
+        slot_list.append([intent_name, slot_to_elicit])
+    set_slot_history(slot_list, session_attributes)
+
+def retry_last_slot(intent_request):
+    session_attributes = get_session_attributes(intent_request)
+    slot_list = get_slot_history(session_attributes)
+    session_attributes['retry'] = 'false'
+
+    # remove last slot
+    last_slot = slot_list.pop()
+    set_slot_history(slot_list, session_attributes)
+
+    if len(slot_list) == 0:
+        return elicit_intent(
+            intent_request,
+            "BQASlot",
+            "BQAIntent",
+        )
+    # get slots from session_attributes if they exist
+    WAS_FOLLOWUP = 'slots' in session_attributes and 'OtherQuestionsSlot' in last_slot
+    if WAS_FOLLOWUP:
+        intent_request['sessionState']['intent']['slots'] = json.loads(session_attributes['slots'])
+        session_attributes.pop('slots')
+    else:
+        intent_request['sessionState']['intent']['slots'].pop(last_slot[1])
+    current_intent = last_slot[0]
+    # get last slot, this will be reset
+    last_slot = slot_list[-1]
+    print("The last item is ", last_slot)
+    print("The array is ", slot_list)
+
+    if current_intent != last_slot[0]:
+        response = elicit_intent(
+            intent_request,
+            last_slot[1],
+            last_slot[0],
+        )
+        if WAS_FOLLOWUP:
+            response['sessionState']['intent']['slots'] = get_slots(intent_request)
+    else:
+        response = elicit_slot(
+            intent_request,
+            last_slot[1],
+            slots=get_slots(intent_request),
+        )
+    print("Response after retry: ", response)
+
+    return response
+
 def elicit_slot(intent_request, slot_to_elicit, message = None, slots = {}, session_attributes = {}):
     if session_attributes == {}:
         session_attributes = get_session_attributes(intent_request)
+
+    intent_name = intent_request['sessionState']['intent']['name']
+    update_slot_history(session_attributes, slot_to_elicit, intent_name)
 
     result = {
         'sessionState':
@@ -61,32 +153,29 @@ def elicit_slot(intent_request, slot_to_elicit, message = None, slots = {}, sess
     return result
 
 
-def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, slots = {}, session_attributes = {}):
-    if session_attributes == {}:
-        session_attributes = get_session_attributes(intent_request)
-    return {
-        'sessionState': {
-            'dialogAction': {
-                'type': 'ElicitSlot',
-                'slotToElicit': slot_to_elicit,
-            },
-            'intent': {
-                'confirmationState': 'None',
-                'name': intent_to_elicit,
-                'slots': slots,
-                'state': 'InProgress',
-            },
-            'sessionAttributes': session_attributes,
-            'originatingRequestId': 'REQUESTID'
-            # 'originatingRequestId': intent_request['sessionState']['originatingRequestId']
-        },
-        'sessionId': intent_request['sessionId'],
-        # 'messages': [ message ],
-        'requestAttributes': intent_request['requestAttributes']
-        if 'requestAttributes' in intent_request else None
-    }
+def elicit_intent(intent_request, slot_to_elicit, intent_to_elicit, message=None, slots = {}, session_attributes = {}):
+    intent_request['sessionState']['intent']['confirmationState'] = 'None'
+    intent_request['sessionState']['intent']['name'] = intent_to_elicit
+    response = elicit_slot(
+        intent_request,
+        slot_to_elicit,
+        slots=slots,
+        session_attributes=session_attributes,
+        message=message,
+    )
+    return response
 
-
+def followup(intent_request, message):
+    response = elicit_intent(
+        intent_request,
+        'OtherQuestionsSlot',
+        'OtherIntent',
+        message=message,
+    )
+    slots = get_slots(intent_request)
+    if 'OtherQuestionsSlot' not in slots:
+        intent_request['sessionState']['sessionAttributes']['slots'] = json.dumps(slots)
+    return response
 
 def close(intent_request, fulfillment_state, message, session_attributes = {}):
     if session_attributes == {}:
@@ -114,17 +203,24 @@ def dispatch(intent_request):
 
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
-    returnToMenu = get_session_attributes(intent_request)['return'] == "true"
-    retrySlots = get_session_attributes(intent_request)['retry'] == "true"
+    returnToMenu = get_session_attributes(intent_request).get('return')
+    retrySlots = get_session_attributes(intent_request).get('retry')
     session_id = intent_request['sessionId']
 
     # If user wants to go back to the main menu, elicit BQAIntent
-    if returnToMenu:
+    if returnToMenu and returnToMenu == 'true':
+        intent_request['sessionState']['sessionAttributes']['return'] = 'false'
+        set_slot_history([],intent_request['sessionState']['sessionAttributes'])
+        if 'slots' in get_session_attributes(intent_request):
+            intent_request['sessionState']['sessionAttributes'].pop('slots')
         return elicit_intent(
             intent_request,
             "BQASlot",
             "BQAIntent",
         )
+
+    if retrySlots and retrySlots == 'true':
+        return retry_last_slot(intent_request)
 
     # # Handle FallbackIntent
     # if intent_name == 'FallbackIntent':
@@ -215,12 +311,7 @@ def dispatch(intent_request):
              message = invoke_agent(agent_id, agent_alias_id, session_id, school_analyze_prompt)
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
-             return close(
-                 intent_request,
-                 'Fulfilled',
-                 response,
-                 session_attributes
-             )
+             return followup(intent_request, response)
         
         elif institute_type == 'Vocational training center':
              vocationalaspect = get_slot(intent_request, "VocationalAspectSlot")
@@ -243,12 +334,7 @@ def dispatch(intent_request):
              response = create_message(message)
              session_attributes = get_session_attributes(intent_request)
              
-             return close(
-                 intent_request,
-                 'Fulfilled',
-                 response,
-                 session_attributes
-             )
+             return followup(intent_request, response)
         
         # If University is selected, check AnalysisTypeSlot
         elif institute_type == 'University':
@@ -293,61 +379,39 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                    intent_request,
-                    'Fulfilled',
-                    response,
-                    session_attributes,
-                )
+                return followup(intent_request, response)
 
             elif analysis_type == 'Institutional Review':
-                return elicit_intent(
+                standard = get_slot(
                     intent_request,
                     'StandardSlot',
-                    "StandardIntent",
                 )
+                if standard is None:
+                    print("standard slot not available")
+                    return elicit_slot(
+                        intent_request,
+                        'StandardSlot',
+                        slots=get_slots(intent_request),
+                    )
+               
+                university_name = get_slot(
+                    intent_request,
+                    'AnalyzeUniversityNameSlot',
+                )
+                if university_name is None:
+                    return elicit_slot(
+                        intent_request,
+                        'AnalyzeUniversityNameSlot',
+                        slots=get_slots(intent_request),
+                    )
 
-    elif intent_name == 'StandardIntent':
-      
-        print("Standard intent, request:", intent_request)
-        standard = get_slot(
-            intent_request,
-            'StandardSlot',
-        )
-        if standard is None:
-            print("standard slot not available")
-            return elicit_slot(
-                intent_request,
-                'StandardSlot',
-            )
-        
-
-        university_name = get_slot(
-            intent_request,
-            'AnalyzeUniversityNameSlot',
-        )
-        if university_name is None:
-            return elicit_slot(
-                intent_request,
-                'AnalyzeUniversityNameSlot',
-            )
-
-        # university here
-        # message = f"the standared of the program is: {standard} {university_name}"
-        analyze_university_prompt = create_uni_analyze_prompt(standard, university_name)
-        message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_prompt)
-        response = create_message(message)
-        session_attributes = get_session_attributes(intent_request)
-        
-        return close(
-            intent_request,
-            'Fulfilled',
-            response,
-            session_attributes,
-        )
-    
-    
-        
+                # university here
+                # message = f"the standared of the program is: {standard} {university_name}"
+                analyze_university_prompt = create_uni_analyze_prompt(standard, university_name)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_prompt)
+                response = create_message(message)
+            
+                return followup(intent_request, response)
     # Handle ComparingIntent
     elif intent_name == 'ComparingIntent':
         slots = get_slots(intent_request)
@@ -403,12 +467,7 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                    intent_request,
-                    'Fulfilled',
-                    response,
-                    session_attributes,
-                )
+                return followup(intent_request, response)
         
             elif compare_types == 'Programs':
                 programs_st = get_slot(intent_request,'CompareUniversityWProgramsSlot')
@@ -443,12 +502,7 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
     
         elif institutecompare_type == 'School':
             compare_school_aspect = get_slot(intent_request,'CompareSchoolAspectlSlot')
@@ -475,16 +529,14 @@ def dispatch(intent_request):
                         'GovernorateSlot',
                         slots=get_slots(intent_request),
                     )
-                message = f"the governorate you selected is: {governorate_name} for the aspect {compare_school_aspect}"
+                
+                # message = f"the governorate you selected is: {governorate_name} for the aspect {compare_school_aspect}"
+                compare_school_by_governorate_prompt = create_compare_schools_prompt(institute_names=governorate_name, aspect=compare_school_aspect, governorate=True)
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_school_by_governorate_prompt)
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
             
             elif compareschool_type == 'Specific Institutes':
                 specific_institutes_name = get_slot(intent_request,'CompareSpecificInstitutesSlot')
@@ -500,24 +552,23 @@ def dispatch(intent_request):
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
             
             elif compareschool_type == "All Government Schools" or compareschool_type == 'All Private Schools':
-                message = f"Comparision of schools: {compareschool_type} for the aspect {compare_school_aspect}"
+                # message = f"Comparision of schools: {compareschool_type} for the aspect {compare_school_aspect}"
+                # compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect)
+                compare_schools_prompt = ""
+                if compareschool_type == "All Government Schools":
+                    compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect, all_government=True)
+                elif compareschool_type == "All Private Schools":
+                    compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect, all_private=True)
+                
+                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_schools_prompt)
+
                 response = create_message(message)
                 session_attributes = get_session_attributes(intent_request)
                 
-                return close(
-                        intent_request,
-                        'Fulfilled',
-                        response,
-                        session_attributes,
-                    )
+                return followup(intent_request, response)
             
         elif institutecompare_type == 'Vocational training center':
             comparevocationalaspect = get_slot(intent_request,'CompareVocationalaspectSlot')
@@ -540,12 +591,7 @@ def dispatch(intent_request):
             response = create_message(message)
             session_attributes = get_session_attributes(intent_request)
             
-            return close(
-                 intent_request,
-                 'Fulfilled',
-                 response,
-                 session_attributes
-             )
+            return followup(intent_request, response)
                  
     # Handle OtherIntent
     elif intent_name == 'OtherIntent':
@@ -558,10 +604,9 @@ def dispatch(intent_request):
         # response = f"You asked: '{other_question}'. Processing your request."
         response = invoke_agent(agent_id, agent_alias_id, session_id, other_question)
         message = create_message(response)
-        return close(
+        return followup(
             intent_request,
-            'Fulfilled',
-            message
+            message,
         )
 
     # Handle other intents as needed...

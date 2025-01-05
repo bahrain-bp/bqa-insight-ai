@@ -4,7 +4,6 @@ import Loader from './Loader';
 import PageTitle from './components/PageTitle';
 import SignIning from './pages/Authentication/SignIn';
 import PasswordResetPage from './pages/Authentication/ForgotPassword';
-import ECommerce from './pages/Dashboard/ECommerce';
 import DefaultLayout from './layout/DefaultLayout';
 import ModifyPassword from './pages/Authentication/ChangePassword';
 import FileManagement from "./pages/FileManagement.tsx";
@@ -14,6 +13,8 @@ import { SchoolReviews } from './pages/SchoolReviews.tsx';
 import { VocationalReviews } from './pages/VocationalReviews.tsx';
 import { UniversityReviews } from './pages/UniversitiesReviews.tsx';
 import ProtectedRoute from './pages/Authentication/ProtectedRouteComp.tsx';
+//import CreateUser from './pages/Authentication/CreateUser.tsx';
+import CreateUserBQA from './pages/Authentication/CreateUserBQA.tsx';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -38,7 +39,7 @@ function App() {
           element={
             <>
               <PageTitle title="InsightAI" />
-              <ECommerce />
+              <BasicView />
             </>
           }
         />
@@ -83,6 +84,19 @@ function App() {
             </>
           }
         />
+        <Route
+  path="/auth/CreateUserBQA"
+  element={
+    <>
+      <PageTitle title="Create User | InsightAI" />
+      <CreateUserBQA 
+        setUser={(newUser) => console.log('Set User:', newUser)} 
+        user={{ email: '', name: '' }} 
+      />
+    </>
+  }
+/>
+
         
           <Route
             path="/fileManagement"
@@ -99,7 +113,6 @@ function App() {
           element={
             <>
               <PageTitle title="Filter" />
-              <BasicView />
             </>
           }
         />

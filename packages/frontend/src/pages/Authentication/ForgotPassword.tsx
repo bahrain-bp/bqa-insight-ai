@@ -2,6 +2,7 @@ import { useState, ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { resetPassword, confirmResetPassword, 
   type ResetPasswordOutput, type ConfirmResetPasswordInput } from 'aws-amplify/auth';
+import Breadcrumb from "../../components/Breadcrumbs/Breadcrumb";
 
 type FormFields = {
   email: string;
@@ -174,6 +175,8 @@ export default function PasswordResetPage() {
   }
 
   return (
+  <>
+    <Breadcrumb pageName="Reset Password" />
     <div>
       {!isCodeSent
         ? renderEmailInputForm()
@@ -181,62 +184,7 @@ export default function PasswordResetPage() {
         ? renderPasswordResetForm()
         : renderResetSuccessMessage()}
     </div>
+  </>
   );
 }
 
-// import React, { useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
-// import { resetPassword } from 'aws-amplify/auth'; // Assuming you're using AWS Amplify
-
-// interface ForgotPasswordProps {
-//   // ...any additional props
-// }
-
-// const ForgotPassword: React.FC<ForgotPasswordProps> = () => {
-//   const [email, setEmail] = useState('');
-//   const [errorMessage, setErrorMessage] = useState('');
-//   const [successMessage, setSuccessMessage] = useState('');
-//   const navigate = useNavigate();
-
-//   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-//     e.preventDefault();
-
-//     try {
-//       await resetPassword({ username: email });
-//       setSuccessMessage('Password reset link sent to your email.');
-//       setTimeout(() => {
-//         navigate('/login'); // Redirect to login page after a delay
-//       }, 3000);
-//     } catch (error) {
-//       setErrorMessage('An error occurred. Please try again later.');
-//     }
-//   };
-
-//   return (
-//     <div className="forgot-password-container">
-//       <h2 className="forgot-password-title">Forgot Password</h2>
-//       <form onSubmit={handleSubmit}>
-//         <div className="form-group">
-//           <label htmlFor="email" className="form-label">
-//             Email Address:
-//           </label>
-//           <input
-//             type="email"
-//             id="email"
-//             value={email}
-//             onChange={(e) => setEmail(e.target.value)}
-//             required
-//             className="form-input"
-//           />
-//         </div>
-//         <button type="submit" className="submit-button">
-//           Send Reset Link
-//         </button>
-//       </form>
-//       {errorMessage && <p className="error-message">{errorMessage}</p>}
-//       {successMessage && <p className="success-message">{successMessage}</p>}
-//     </div>
-//   );
-// };
-
-// export default ForgotPassword;

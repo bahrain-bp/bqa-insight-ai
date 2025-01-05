@@ -45,8 +45,8 @@ export async function handler(event: SQSEvent) {
         {
           "University Name": "Bahrain Polytechnic",
           "University Location": "Isa Town - Southern Governorate",
-          "Number Of Programmes": 22,
-          "Number Of Qualifications": 22
+          "Number of Programmes": 22,
+          "Number of Qualifications": 22
         }
         </formatting_example>
       `;

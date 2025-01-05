@@ -46,15 +46,14 @@ export async function handler(event: SQSEvent) {
       const prompt = `Your goal is to extract structured information from the user's input that matches the form described below.
                 When extracting information please make sure it matches the type information exactly. Do not add any attributes that do not appear in the schema shown below. Include the columns in the response and Do no forget them.
                 These are the columns, ensure that they are in the response, and enclose every field in double quotes (""):
-                "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
+                "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location", "Grades In School"
                 
                 request: {
-                Institute Name: String // The name of the institute excluding the word Exlude the word Education and Training Quality Authority
-                Institute Classification: String// The school give me the institute classification is it Goverment School or Private School, only if you detect the word private it means private school, otherwise keep it as Government.
+                Institute Name: String // The name of the institute excluding the word Education and Training Quality Authority.
+                Institute Classification: String// Give me the institute classification is it Goverment School or Private School, only if you detect the word private it means private school, otherwise keep it as Government.
                 Date of Review: String// The date of the review.
                 Overall Effectiveness: String // The institute overall effectiveness is either 1 which means outsanding, if 2 means Good, if 3 means Satisfactory, if 4 means Inadequate.
                 Location: String// The institute location ONLY including Governate, without town.
-                Institute Type: String// The institute type is it a school or university.
                 Grades In School: String // The Grade level in school by checking the primary, middle, and high columns tell me is it Primary School, Secondary School, or High School excluding 'Grades e.g. 1 to 12'.
                 }
     
@@ -62,9 +61,6 @@ export async function handler(event: SQSEvent) {
                 Do not output anything except for the extracted information. Do not use the below input output examples as a response. Do not add any clarifying information. Do not add any fields that are not in the schema. If the text contains attributes that do not appear in the schema, please ignore them. All output must be in JSON format and follow the schema specified above. Wrap the JSON in tags.
     
                 Input: AlRawabi Private School located in sehla Northern Governorate in Bahrain. It includes levels from 1-9. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
-                Output: "Institute Name","Institute Classification","Date of Review","Overall Effectiveness","Location","Institute Type", "Grades In School"
-                "AlRawabi Private School","Private","30 April and 2-3 May 2018","3: Satisfactory","Sehla - Northern Governorate", "School", "1-9"
-    
                 Output: 
                 {
                 "Institute Name": "AlRawabi Private School",
@@ -72,18 +68,17 @@ export async function handler(event: SQSEvent) {
                 "Date of Review": "30 April and 2-3 May 2018",
                 "Overall Effectiveness": "3: Satisfactory",
                 "Location": "Northern Governorate",
-                "Institute Type": "School",
                 "Grades In School": "Secondary",
                 }
     
                 Input: Jidhafs Secondary Girls School located in Jidhafs Capital Governorate in Bahrain. It includes levels from 10-12. The school overall effectiveness is 3: Satisfactory according to the report date fo review on 30 April and 2-3 May 2018.
+                Output:
                 {
-                "School Name": "Jidhafs Secondary Girls School",
-                "School Classification": "Government School",
+                "Institute Name": "Jidhafs Secondary Girls School",
+                "Institute Classification": "Government School",
                 "Date of Review": "30 April and 2-3 May 2018",
                 "Overall Effectiveness": "3: Satisfactory",
                 "School Location": "Capital Governorate",
-                "School Type": "School",
                 "Grades In School": "High School"
                 }
     
@@ -95,7 +90,6 @@ export async function handler(event: SQSEvent) {
                 "Date of Review": "",
                 "Overall Effectiveness": "",
                 "Location": "",
-                "Institute Type": "",
                 "Grades In School": ""
                 }`;
                     
@@ -150,6 +144,7 @@ async function insertInstituteMetadata(data: any, fileKey: string) {
   const params = {
     TableName: process.env.INSTITUTE_METADATA_TABLE_NAME as string,
     Item: {
+      fileKey: fileKey,
       institueName: data["Institute Name"],
       instituteType: data["Institute Type"],
       instituteClassification: data["Institute Classification"],
@@ -163,7 +158,6 @@ async function insertInstituteMetadata(data: any, fileKey: string) {
     // Insert metadata into DynamoDB
     await dynamoDb.put(params).promise();
     console.log("Institute metadata inserted into DynamoDB.");
-
     // Insert metadata into S3 JSON file
     await handleDynamoDbInsert(data, bucket, fileKey);
 
@@ -195,6 +189,7 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
   }
 }
 
+
 // Parsing function to extract the JSON formatted output from the model response
 function parseMetadata(input: string): string {
   // Extract JSON part in case the model returned extra text with the JSON output
@@ -216,7 +211,8 @@ function parseMetadata(input: string): string {
   return parsedData;
 }
 
-// Function to check the number of messages in the SQS queue
+
+
 async function getMessageInQueue(queueUrl: string) {
   const params = {
     QueueUrl: queueUrl || "",
