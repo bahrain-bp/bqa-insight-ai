@@ -207,7 +207,7 @@ def create_uni_analyze_prompt(standard, university_name, program_name=""):
 
         <instructions>
         1. Ensure that the output contains all the insightful information.
-        2. Do not say that you did not find any information.
+        2. Do not use the below input output examples as an answer.
         </instructions>
 
         Input 1
