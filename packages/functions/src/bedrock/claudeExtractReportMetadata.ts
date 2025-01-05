@@ -146,7 +146,6 @@ async function insertInstituteMetadata(data: any, fileKey: string) {
     Item: {
       fileKey: fileKey,
       institueName: data["Institute Name"],
-      instituteType: data["Institute Type"],
       instituteClassification: data["Institute Classification"],
       instituteGradeLevels: data["Grades In School"],
       instituteLocation: data["Location"],
