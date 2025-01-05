@@ -6,7 +6,11 @@ import { LexChartSlotsContext } from "../../components/RouterRoot";
 import Fuse from "fuse.js"; // Import Fuse.js for fuzzy searching
 import LogoIcon from '../../images/BQA.png';
 
-const BasicChart = () => {
+interface BasicChartProps {
+  activeTab: number;
+}
+
+const BasicChart: React.FC<BasicChartProps> = ({ activeTab }) => {
   const { chartSlots } = useContext(LexChartSlotsContext); // Context for dynamic filtering
   const [isSchoolDataLoading, setIsSchoolDataLoading] = useState(true);
   const [isVocationalDataLoading, setIsVocationalDataLoading] = useState(true);
@@ -17,6 +21,12 @@ const BasicChart = () => {
   const [allVocationalCharts, setAllVocationalCharts] = useState<ChartJsonData[]>([]);
   const [allUniversityCharts, setAllUniversityCharts] = useState<ChartJsonData[]>([]);
   const [programGradesList, setProgramGradesList] = useState<{ universityName: string; latestJudgment: string }[]>([]);
+
+  useEffect(() => {
+    setCurrentChart(null);
+    setProgramGradesList([]);
+    console.log("Cleared charts due to tab change.");
+  }, [activeTab]);
 
   // Fetch school reviews
   useEffect(() => {
