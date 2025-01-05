@@ -143,6 +143,14 @@ export const Chat = () => {
         return lexChartSlots
     }
 
+    const disableButtons = () => {
+        const buttons = chatListRef?.current?.getElementsByTagName('input')
+        if (buttons) {
+            const buttonsArray = Array.from(buttons)
+            buttonsArray.map((button) => button.disabled = true)
+        }
+    }
+
     const messageLex = async (message: string | undefined, options: {retry?: "true" | "false", return?: "true" | "false",} = {retry: 'false', return: 'false'}) => {
         if (isWaitingForBot) return
         try {
@@ -186,6 +194,7 @@ export const Chat = () => {
             replaceLastMessage({ author: "bot", body: "An error has occurred. Please try again." })
         } finally {
             setIsWaitingForBot(false)
+            disableButtons()
         }
     }
 
@@ -239,12 +248,14 @@ export const Chat = () => {
                     {messages.map((message, index) => (
                         <li
                             key={index}
+                            id={'chat-message-' + index}
                             className={`c-chat__item ${message.author === "human" ? "c-chat__item--human" : ""}`}
                         >
                             <div className={`c-chat__message ${message.author === "human" ? "bg-lightblue" : "bg-primary"}`}>
                                 {typeof message.body === "string" ? (
                                     <span
-                                        className={"whitespace-pre-line" + message.author === "loading" ? "c-chat__item--loading" : ""}>{message.body}</span>
+                                        className={`whitespace-pre-line ${message.author === "loading" ? "c-chat__item--loading" : ""}`}
+                                    >{message.body}</span>
                                 ) : (
                                     <div className="flex flex-col">
                                         <span className="font-bold text-lg">{message.body.title}</span>
@@ -254,7 +265,7 @@ export const Chat = () => {
                                             <input type="button" value={btn.text} key={i} onClick={async () => {
                                                     await messageLex(btn.value)
                                                 }}
-                                                className="bg-lightblue whitespace-break-spaces text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer"/>
+                                                className="bg-lightblue whitespace-break-spaces text-white px-2 py-1 mx-1 rounded my-2 cursor-pointer disabled:bg-lightblue-700 disabled:cursor-default disabled:text-stroke"/>
                                         ))}</span>
                                     </div>
                                 )}
@@ -264,7 +275,7 @@ export const Chat = () => {
                 </ul>
 
             {/* Chat Input Form */}
-            <form className="c-chat__form gap-2 bg-whiten rounded-b-md" onSubmit={handleSubmit}>
+            <form className="c-chat__form flex-wrap gap-2 bg-whiten rounded-b-md" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     name="input"
@@ -272,22 +283,24 @@ export const Chat = () => {
                     autoFocus
                     autoComplete="off"
                     required
-                    className="grow p-2"
+                    className="grow-[10] p-2"
                 />
-                <input
-                    type="button"
-                    name="back"
-                    value="Back"
-                    className="bg-graydark text-white rounded cursor-pointer px-3 shrink"
-                    onClick={retrySlot}
-                />
-                <input
-                    type="button"
-                    name="return"
-                    value="Main Menu"
-                    className="bg-lightblue text-white rounded cursor-pointer px-3 shrink"
-                    onClick={returnToMenu}
-                />
+                <div className="flex flex-1 gap-2 h-[40px]">
+                    <input
+                        type="button"
+                        name="back"
+                        value="Back"
+                        className="bg-graydark text-white rounded cursor-pointer px-3 shrink"
+                        onClick={retrySlot}
+                    />
+                    <input
+                        type="button"
+                        name="return"
+                        value="Main Menu"
+                        className="bg-lightblue text-white rounded cursor-pointer px-3 grow"
+                        onClick={returnToMenu}
+                    />
+                </div>
             </form>
         </div>
     );
