@@ -59,8 +59,9 @@ const FileManagement: React.FC = () => {
       setLoading(false);
     }
   };
-
+  // Function to handle file uploads - takes an array of File objects as parameter
   const uploadFiles = async (filesToUpload: File[]) => {
+    // Prevents unnecessary processing when the files array is empty
     if (filesToUpload.length === 0) return;
   
     setUploading(true);
@@ -120,7 +121,7 @@ const FileManagement: React.FC = () => {
 
   const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const filesToUpload = Array.from(event.target.files || []);
-
+// Pass the files from the folder to the upload function for processing
     await uploadFiles(filesToUpload);
   };
 
@@ -209,10 +210,12 @@ const FileManagement: React.FC = () => {
   // FOLDER UPLOAD //
   const directoryUploadAttributes = { directory: "true", webkitdirectory: "true", mozdirectory: "true" };
 
+// Handler function specifically for folder upload events
   const handleFolderUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
-
+// Convert FileList object from folder selection to array of Files
     const files = Array.from(event.target.files);
+    // Pass the files array to the upload function for processing
     await uploadFiles(files);
   };
 

@@ -183,9 +183,9 @@ async function insertInstituteMetadata(data :any , fileKey: string) {
     try {
       await dynamoDb.put(params).promise();
       console.log("Institute metadata inserted into DynamoDB.");
-
-      // Insert metadata into S3 JSON file
       
+    // After successful DynamoDB insert
+    // The handleDynamoDbInsert function creates a JSON file with the metadata in the specified S3 bucket
       await handleDynamoDbInsert(data, bucket ,fileKey);
       if (!extractMetadataQueueUrl) throw Error("No queue url")
       await getMessageInQueue(extractMetadataQueueUrl)

@@ -117,6 +117,7 @@ export function ApiStack({stack}: StackContext) {
                     timeout: "60 seconds"
                 }
             },
+           
             "POST /sync": {
                 function: {
                     handler: "packages/functions/src/bedrock/sync.syncKnowlegeBase",
@@ -128,6 +129,7 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+             // delete-sync route
             "POST /deleteSync": {
                 function: {
                     handler: "packages/functions/src/bedrock/deleteSync.syncKnowlegeBase",

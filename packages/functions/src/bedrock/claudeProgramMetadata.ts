@@ -155,6 +155,7 @@ async function insertProgramMetadata(data: any, fileKey: string) {
         },
     };
     await dynamoDb.put(params).promise();
+    // After DynamoDB insert, create a corresponding metadata JSON file in S3 bucket
     await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); 
     return;
 }
