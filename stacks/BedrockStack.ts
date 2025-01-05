@@ -142,7 +142,7 @@ export function BedrockStack({ stack, app }: StackContext) {
           If a question is outside the scope of BQA reports, gently redirect the user back to relevant topics or provide a fallback response, such as asking for clarification or offering to escalate the query to support.
           Always strive to maintain a helpful and approachable tone while staying focused on your purpose.`,
           knowledgeBases: [{
-            description: 'Use the newest data as default, unless it is specified otherwise',
+            description: `It contains BQA reports for queries about Bahrain's education system. Avoid using it for greetings or small talks.`,
             knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
             knowledgeBaseState: 'ENABLED',
             }],
