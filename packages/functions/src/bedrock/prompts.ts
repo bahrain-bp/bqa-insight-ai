@@ -1,4 +1,4 @@
-function createComparePrompt(instituteName: string, metric: string, governorate: boolean = false): string {
+export function createComparePrompt(instituteName: string, metric: string, governorate: boolean = false): string {
     return `
         Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
         Input 1
@@ -37,7 +37,7 @@ function createComparePrompt(instituteName: string, metric: string, governorate:
     `;
 }
 
-function createAnalyzeSchoolPrompt(school: string): string {
+export function createAnalyzeSchoolPrompt(school: string): string {
     const prompt =  `
     Your goal is to analyze the provided school report and provide insights on the school’s overall performance based on its achievements, challenges, and areas for improvement.
 
@@ -120,7 +120,7 @@ function createAnalyzeSchoolPrompt(school: string): string {
     return prompt
 }
 
-function createCompareSchoolsPrompt(instituteNames?: string, governorate: boolean = false) {
+export function createCompareSchoolsPrompt(instituteNames?: string, governorate: boolean = false) {
     let question = `How did ${instituteNames} do overall?`
     if (governorate) {
         question = `How did all schools in ${instituteNames} do overall?`
@@ -241,7 +241,7 @@ function createCompareSchoolsPrompt(instituteNames?: string, governorate: boolea
     return prompt
 }
 
-function createAnalyzeUniversityPrompt(programme: string, university: string) {
+export function createAnalyzeUniversityPrompt(programme: string, university: string) {
     const prompt = `
     Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
 
@@ -379,7 +379,7 @@ function createAnalyzeUniversityPrompt(programme: string, university: string) {
     return prompt
 }
 
-function createCompareUniversityPrompt(programme: string, institutes: string) {
+export function createCompareUniversityPrompt(programme: string, institutes: string) {
     const prompt = `
         Your goal is to compare between the provided Programmes-within-College review reports and provide insights on the programmes'overall performance based on the different standards or indicators and judgment as well as the overview of the Bachelor Degree.
                 
@@ -527,7 +527,7 @@ function createCompareUniversityPrompt(programme: string, institutes: string) {
     return prompt
 }
 
-function createAnalyzeVocationalTrainingCenter(instituiteName: string) {
+export function createAnalyzeVocationalTrainingCenter(instituiteName: string) {
     const prompt = `
     Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
 
@@ -642,7 +642,7 @@ function createAnalyzeVocationalTrainingCenter(instituiteName: string) {
     return prompt
 }
 
-function createCompareVocationalTrainingCenter(instituiteNames: string) {
+export function createCompareVocationalTrainingCenter(instituiteNames: string) {
     const prompt = `
     Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
 
