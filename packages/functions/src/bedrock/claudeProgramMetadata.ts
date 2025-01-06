@@ -1,26 +1,29 @@
-import * as AWS from "aws-sdk";
-import { InvokeModelCommand, BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
+import * as AWS from "aws-sdk"; // Importing necessary AWS SDK modules and Bedrock Client
+import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDB } from "aws-sdk";
 import { SQSEvent } from "aws-lambda";
 import { handleDynamoDbInsert } from "src/lambda/fillingJson";
+import {jsonParse} from "./jsonParse";
 
-const dynamoDb = new DynamoDB.DocumentClient();
-const client = new BedrockRuntimeClient({ region: "us-east-1" });
-const sqs = new AWS.SQS();
-const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
-const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
-const bucket = process.env.BUCKET_NAME || "";
+// Initializing AWS services and Bedrock client
+const dynamoDb = new DynamoDB.DocumentClient(); // DynamoDB client for reading and writing data
+const client = new BedrockRuntimeClient({ region: "us-east-1" }); // Bedrock client for model inference
+const sqs = new AWS.SQS(); // SQS client for interacting with Amazon SQS
+const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0"; // Model ID for the Claude model in Bedrock
+const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL; // SQS queue URL from environment variables
 
-// Using Llama model to extract metadata about programs
+// Lambda handler function triggered by SQS events
 export async function handler(event: SQSEvent) {
+     // Loop through each message in the SQS event
     for (const record of event.Records) {
         try {
             let sqsEvent;
+             // Parse the SQS message body
             try {
                 sqsEvent = JSON.parse(record.body); // Parse the SQS message body
             } catch (error) {
                 console.error("Error parsing SQS message:", record.body, error);
-                continue;
+                continue; // Skip to the next record if parsing fails
             }
 
             // Destructure `text` and `fileKey` from the parsed SQS message
@@ -31,6 +34,7 @@ export async function handler(event: SQSEvent) {
                 continue;
             }
 
+            //Prompt for the Claude model to extract metadata about programmes within universities
             const prompt = 
             `
               Your goal is to extract structured information from the user's input that matches the form described below.
@@ -51,6 +55,7 @@ export async function handler(event: SQSEvent) {
               </formatting_example>
             `;
 
+             // Configuration for additional tools to be used by Claude model
             const toolConfig = {
                 "tools": [
                     {
@@ -82,6 +87,7 @@ export async function handler(event: SQSEvent) {
                 ]
             };
 
+             // Constructing the input payload for Bedrock model inference
             const input = {
                 modelId: ModelId,
                 messages: [{
@@ -90,28 +96,29 @@ export async function handler(event: SQSEvent) {
                         text: prompt,
                     }]
                 }],
-                inferenceConfig: { // InferenceConfiguration
-                    maxTokens: Number(2000),
-                    temperature: Number(1),
-                    topP: Number(0.999),
-                    topK: Number(250),
+                inferenceConfig: { // Configuration for model inference
+                    maxTokens: Number(2000), // Maximum tokens to generate
+                    temperature: Number(1), // Sampling temperature for randomness
+                    topP: Number(0.999), // Top-p sampling for token selection
+                    topK: Number(250), // Top-k sampling for token selection
                 },
                 toolConfig: toolConfig
             };
 
+            // Sending the inference request to the Claude model
             //@ts-ignore
             const command = new ConverseCommand(input);
-
             const response = await client.send(command);
-            console.log("HERE IS RESPONSE: ", response);
-    
+
+             // Extracting the response content 
             const modelResponse = response.output?.message?.content?.[0].text
-
-            const afterRegex = regexFunction(modelResponse || "");
-    
-            const parsedResponse = JSON.parse(afterRegex || "");
             console.log("model output: ", modelResponse);
+        
+            // Parse the structured JSON response
+            const parsedResponse = jsonParse(modelResponse || "");
+            console.log("Model parsed output: ", parsedResponse);
 
+             // Save extracted metadata to DynamoDB and S3
             await insertProgramMetadata(parsedResponse, fileKey);
             console.log("IT SHOULD BE INSERTED TO PROGRAM METADATA TABLE");
 
@@ -122,6 +129,21 @@ export async function handler(event: SQSEvent) {
             console.error("Error processing SQS message:", error);
         }
     }
+}
+
+//Function to insert Program metadata into DynamoDB
+async function insertProgramMetadata(data: any, fileKey: string) {
+    const params = {
+        TableName: process.env.PROGRAM_METADATA_TABLE_NAME as string,
+        Item: {
+            universityName: data["University Name"],
+            programmeName: data["Programme Name"],
+            programmeJudgment: data["Programme Judgment"]
+        },
+    };
+    await dynamoDb.put(params).promise();
+    await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); // Add this line here
+    return;
 }
 
 // Function to delete an SQS message after processing
@@ -142,35 +164,4 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
     } catch (error) {
         console.error("Error deleting SQS message:", error);
     }
-}
-
-// Insert Program metadata into DynamoDB and S3
-async function insertProgramMetadata(data: any, fileKey: string) {
-    const params = {
-        TableName: process.env.PROGRAM_METADATA_TABLE_NAME as string,
-        Item: {
-            fileKey: fileKey,
-            universityName: data["University Name"],
-            programmeName: data["Programme Name"],
-            programmeJudgment: data["Programme Judgment"]
-        },
-    };
-    await dynamoDb.put(params).promise();
-    // After DynamoDB insert, create a corresponding metadata JSON file in S3 bucket
-    await handleDynamoDbInsert(data, bucket, fileKey, 'program'); 
-    return;
-}
-
-function regexFunction(input: string): string {
-    
-  // extract JSON  part incase there is text also
-  const jsonRegex = /{([\s\S]*?)}/;
-  const extractedJson = input.match(jsonRegex);
-
-  if (!extractedJson) {
-      throw new Error("No JSON-like structure found in the input.");
-  }
-
-  return extractedJson[0];
-
 }

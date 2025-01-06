@@ -1,5 +1,12 @@
-# TODO: change the questions in compare prompt and others
-def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False):
+def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False, all_government=False, all_private=False):
+    question = f"How did {institute_names} do in terms of {aspect}?"
+    
+    if governorate:
+        question = f"How did all schools in {institute_names} do in terms of {aspect}?"
+    elif all_government:
+        question = f"How did all government schools across bahrain do in terms of {aspect}?"
+    elif all_private:
+        question = f"How did all private schools across bahrain do in terms of {aspect}?"
     prompt = f'''
         
 Goal: To evaluate and categorize trends in Bahrain's educational sector across government and private schools, focusing on areas such as students' academic achievement, personal development and well-being, teaching and learning quality, and leadership and governance. The aim is to derive actionable insights into performance, enrollment, and other relevant trends.
@@ -92,7 +99,7 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     - Prioritization of infrastructure development and updates to the STEM curriculum.
     - Significant progress in fostering student well-being programs and promoting leadership development among educators.
 
-    Input: How did {institute_names} do in terms of {aspect}?
+    Input: {question}?
     Output:
     The performance of {institute_names} in terms of {aspect} is as follows:
 
@@ -112,7 +119,7 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     2. 
     3. 
     
-?
+
     '''
     return prompt
 
@@ -207,7 +214,7 @@ def create_uni_analyze_prompt(standard, university_name, program_name=""):
 
         <instructions>
         1. Ensure that the output contains all the insightful information.
-        2. Do not say that you did not find any information.
+        2. Do not use the below input output examples as an answer.
         </instructions>
 
         Input 1
@@ -721,92 +728,53 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     </instructions>
 
     Input 1
-    Question: How Did alrawabi private school and Pakistan Urdu School do in terms of overall effectiveness?
+    Question: How Did Agora Training Center do in terms of Management and governorance?
     Output:
-    Al Rawabi Private School
+        Agora Training Center's management and governance have been rated as "Inadequate" in the review conducted by the Education & Training Quality Authority (BQA). Here's a detailed assessment of their performance:
+        Strengths:
 
-    Overall Effectiveness: Satisfactory
-    Key Judgements:
+        Vision and Mission:
+            The center has established relevant vision and mission statements that guide its strategic direction​.
 
-    Academic Achievement:
-        High pass rates in internal examinations for Primary and Intermediate schools, but inconsistent performance in High School external exams, particularly in science subjects.
-        Proficiency rates were satisfactory across levels, though High School students faced challenges in rigorous subjects like chemistry and physics.
-        Students' learning skills, particularly critical thinking and technological competencies, were underdeveloped.
+        Operational Structure:
+            The organizational structure is deemed fit for the current level of operations, with qualified and experienced trainers and staff adequately deployed​.
 
-    Teaching, Learning, and Assessment:
-        Teachers use diverse strategies, but their effectiveness varied significantly, especially in High School.
-        Assessments and feedback mechanisms require better alignment to individual student needs, particularly for low achievers.
+        Stakeholder Relationships:
+            The center maintains proper links with stakeholders, including awarding bodies and international partners​.
 
-    Leadership and Governance:
-        Regular self-evaluation and strategic planning exist, but operational plans lack robust alignment with priorities.
-        High staff turnover impacts professional development program effectiveness.
+        Weaknesses:
+            Strategic Planning and Evaluation:
+            The center lacks a rigorous and inclusive self-evaluation process to inform strategic planning and continuous improvement​.
+            Operational and strategic planning processes are not systematic, leading to ineffective monitoring of overall performance​.
 
-    Student Personal Development:
-        Students exhibit good discipline and respect, engaging in activities that promote social responsibility.
-        Opportunities for leadership development in lessons are limited
+        Quality Assurance:
+            The quality assurance system is insufficient, with gaps in areas such as moderation, verification processes, and training-related policies​.
+            Key policies are either missing or inadequately detailed, impacting their consistent implementation​.
 
-    Comparative Insights:
+        Performance Monitoring:
+            There are no comprehensive procedures for monitoring the performance of staff and trainers, and records are not maintained consistently​.
+            Learner performance data is not aggregated or analyzed, hindering effective decision-making for improvement​.
 
-    Al Rawabi Private School excels in providing a broad curriculum but struggles with High School performance and teacher retention.
-    Pakistan Urdu School demonstrates stronger academic outcomes in senior grades but requires improvements in integrating critical thinking and modern teaching tools.
+        Risk and Maintenance:
+            The center has not conducted detailed risk assessments or developed mitigation plans.
+            Maintenance of the premises is not always carried out, potentially affecting the learning environment​.
 
-    Both schools show a commitment to improving their educational quality but need to address their respective challenges for sustained growth.
+        Stakeholder Feedback and Engagement:
+            Learners' feedback is not systematically aggregated or analyzed to guide enhancements.
+            Employers' views are not formally collected, and efforts toward local community engagement are limited​.
 
-    Input 2
-    Question: What are the improvement areas in private schools in the past years?
-    Output:
-    Private schools in Bahrain have focused on significant improvements in recent years:
-
-    Key Strengths:
-    Academic Results:
-    - Boosting academic performance by adopting international curricula such as IB and Cambridge standards.
-
-    Student Well-being:
-    - Supporting student well-being through wellness programs, mental health initiatives, and mindfulness activities.
-
-    Modern Teaching Methods:
-    - Adopting innovative teaching techniques, including project-based learning and digital tools integration.
-
-    Governance:
-    - Enhancing governance practices through partnerships with international accreditation organizations.
-
-    Input 3
-    Question: What are the government schools doing this year to achieve an outstanding grade?
-    Output:
-    Government schools are actively implementing strategies to achieve outstanding ratings:
-
-    Key Strategies:
-    Student Progress Monitoring:
-    - Introducing rigorous assessment practices to track and improve student progress.
-
-    Teacher-Parent Collaboration:
-    - Fostering partnerships between teachers and parents to enhance learning outcomes.
-
-    Leadership Development:
-    - Developing leadership skills among school administrators through advanced training programs.
-
-    Inclusive Education:
-    - Creating inclusive classrooms to cater to diverse student learning needs and abilities.
-
-    Input 4
-    Question: What are the improvements in private schools compared to government schools?
-    Output:
-    A comparative analysis between private and government schools reveals key differences:
-
-    Key Insights:
-    Private Schools:
-    - Advancements in personalized learning approaches and integration of advanced technology, such as AI-driven learning tools.
-    - A strong focus on international curricula and globally recognized teaching frameworks.
-
-    Government Schools:
-    - Prioritization of infrastructure development and updates to the STEM curriculum.
-    - Significant progress in fostering student well-being programs and promoting leadership development among educators.
+        Recommendations for Improvement:
+            Conduct a comprehensive and inclusive self-evaluation process regularly to inform strategic planning.
+            Implement a robust quality assurance system that covers all aspects of the training process, including moderation and verification.
+            Develop detailed operational plans with clear objectives, timelines, and success metrics.
+            Improve monitoring mechanisms for staff and trainer performance, supported by consistent record-keeping.
+            Systematically collect and analyze feedback from learners, employers, and other stakeholders to guide decision-making and improvements
 
     Input: How did {instituite_name} do in terms of {aspect}?
     Output:
     The performance of {instituite_name} in terms of {aspect} is as follows:
 
-    Key Strengths:
+    Strengths:
     Area 1:
     - 
     - 
@@ -817,10 +785,19 @@ Goal: To evaluate and categorize trends in Bahrain's educational sector across g
     - 
     - 
 
-    Key Challenges:
-    1. 
-    2. 
-    3. 
+    Weaknesses:
+    Area 1:
+    - 
+    - 
+    - 
+    Area 2:
+    - 
+    - 
+    - 
+    Area 3:
+    - 
+    - 
+    -
     
 '''
     
@@ -840,86 +817,40 @@ def create_compare_vocational_training_centres(instituites, aspect):
     Input 1
     Question: How Did alrawabi private school and Pakistan Urdu School do in terms of overall effectiveness?
     Output:
-    Al Rawabi Private School
+    1. Learners’ Achievement
+    Agora Training Centre:
+        Most learners in local achievement courses (92% of enrollment) achieve certificates of completion after meeting course requirements, while learners in externally accredited courses (8% of enrollment) attain qualifications aligned with awarding body standards. However, a minority of learners face challenges in completing tasks competently and timely, and assessments sometimes fail to cover all Intended Learning Outcomes (ILOs) or foster critical thinking.
 
-    Overall Effectiveness: Satisfactory
-    Key Judgements:
+    Al Mawred Institute:
+        Achievement is limited, with approximately half of learners, particularly in English courses, failing to develop required skills and competencies. While a few learners in Arabic and scientific subjects meet lesson objectives, many struggle to complete in-class activities successfully and do not make meaningful progress.
+    
+    2. Assessment Methods
+        Agora Training Centre:
+            Formative and summative assessments are utilized, and for externally accredited courses, these align with awarding body standards. However, assessments in local courses are not consistently mapped to ILOs, marking accuracy is inconsistent, and there is no moderation or verification of results.
 
-    Academic Achievement:
-        High pass rates in internal examinations for Primary and Intermediate schools, but inconsistent performance in High School external exams, particularly in science subjects.
-        Proficiency rates were satisfactory across levels, though High School students faced challenges in rigorous subjects like chemistry and physics.
-        Students' learning skills, particularly critical thinking and technological competencies, were underdeveloped.
+        Al Mawred Institute:
+            Assessment methods are inadequate and rely on basic techniques such as questions, answers, and worksheets. Teachers do not effectively plan assessments or spend sufficient time checking learners’ understanding, leading to poor evaluation of their progress.
+    
+    3. Engagement and Progress
+    Agora Training Centre:
+        Learners generally display a positive attitude and make progress appropriate to their prior knowledge and the nature of short HSE courses. However, there is no clear mechanism to track progress systematically. A few learners reflect critically and work independently but struggle with collaboration in group tasks.
 
-    Teaching, Learning, and Assessment:
-        Teachers use diverse strategies, but their effectiveness varied significantly, especially in High School.
-        Assessments and feedback mechanisms require better alignment to individual student needs, particularly for low achievers.
+    Al Mawred Institute:
+        Learner engagement is minimal, particularly in English courses, where teachers fail to motivate them effectively. The institute does not assess prior attainment or track progress, resulting in many learners failing to achieve meaningful development.
+        Recommendations for Improvement
 
-    Leadership and Governance:
-        Regular self-evaluation and strategic planning exist, but operational plans lack robust alignment with priorities.
-        High staff turnover impacts professional development program effectiveness.
+    Agora Training Centre:
+        Implement robust mechanisms to map assessments to ILOs, ensure consistent marking accuracy, and introduce moderation and verification processes.
+        Develop systems to monitor learners’ progress and maintain detailed records of achievement to inform improvements.
+        Enhance strategies to engage less active learners and support collaboration in group activities.
 
-    Student Personal Development:
-        Students exhibit good discipline and respect, engaging in activities that promote social responsibility.
-        Opportunities for leadership development in lessons are limited
+    Al Mawred Institute:
+        Establish structured and effective assessment methods to evaluate learners’ understanding and progress.
+        Develop mechanisms to assess prior attainment, track progress, and systematically analyze performance data.
+        Provide training for teachers to motivate learners, especially in English courses, and foster greater engagement and active participation.
 
-    Comparative Insights:
 
-    Al Rawabi Private School excels in providing a broad curriculum but struggles with High School performance and teacher retention.
-    Pakistan Urdu School demonstrates stronger academic outcomes in senior grades but requires improvements in integrating critical thinking and modern teaching tools.
-
-    Both schools show a commitment to improving their educational quality but need to address their respective challenges for sustained growth.
-
-    Input 2
-    Question: What are the improvement areas in private schools in the past years?
-    Output:
-    Private schools in Bahrain have focused on significant improvements in recent years:
-
-    Key Strengths:
-    Academic Results:
-    - Boosting academic performance by adopting international curricula such as IB and Cambridge standards.
-
-    Student Well-being:
-    - Supporting student well-being through wellness programs, mental health initiatives, and mindfulness activities.
-
-    Modern Teaching Methods:
-    - Adopting innovative teaching techniques, including project-based learning and digital tools integration.
-
-    Governance:
-    - Enhancing governance practices through partnerships with international accreditation organizations.
-
-    Input 3
-    Question: What are the government schools doing this year to achieve an outstanding grade?
-    Output:
-    Government schools are actively implementing strategies to achieve outstanding ratings:
-
-    Key Strategies:
-    Student Progress Monitoring:
-    - Introducing rigorous assessment practices to track and improve student progress.
-
-    Teacher-Parent Collaboration:
-    - Fostering partnerships between teachers and parents to enhance learning outcomes.
-
-    Leadership Development:
-    - Developing leadership skills among school administrators through advanced training programs.
-
-    Inclusive Education:
-    - Creating inclusive classrooms to cater to diverse student learning needs and abilities.
-
-    Input 4
-    Question: What are the improvements in private schools compared to government schools?
-    Output:
-    A comparative analysis between private and government schools reveals key differences:
-
-    Key Insights:
-    Private Schools:
-    - Advancements in personalized learning approaches and integration of advanced technology, such as AI-driven learning tools.
-    - A strong focus on international curricula and globally recognized teaching frameworks.
-
-    Government Schools:
-    - Prioritization of infrastructure development and updates to the STEM curriculum.
-    - Significant progress in fostering student well-being programs and promoting leadership development among educators.
-
-    Input: How did {instituites} do in terms of {aspect}?
+    Input: Compare between {instituites} based on {aspect}?
     Output:
     The performance of {instituites} in terms of {aspect} is as follows:
 
