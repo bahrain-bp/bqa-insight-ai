@@ -26,10 +26,10 @@ interface ProcessPromptInput {
 }
 
 function detectInstituteType(input: string): InstituteType {
-  console.log('🔍 Detecting institute type from input:', input);
+  console.log('Detecting institute type from input:', input);
   
   if (!input) {
-    console.log('⚠️ No input provided, defaulting to school type');
+    console.log('No input provided, defaulting to school type');
     return 'school';
   }
 
@@ -40,7 +40,7 @@ function detectInstituteType(input: string): InstituteType {
       lowerInput.includes('college') || 
       lowerInput.includes('bachelor') || 
       lowerInput.includes('programme')) {
-    console.log('🎓 Detected type: university');
+    console.log('Detected type: university');
     return 'university';
   }
 
@@ -48,7 +48,7 @@ function detectInstituteType(input: string): InstituteType {
   if (lowerInput.includes('vocational') || 
       lowerInput.includes('training center') || 
       lowerInput.includes('institute of training')) {
-    console.log('🔧 Detected type: vocational');
+    console.log('Detected type: vocational');
     return 'vocational';
   }
 
@@ -60,7 +60,7 @@ function detectAction(input: string): ActionType {
   console.log('Detecting action from input:', input);
   
   if (!input) {
-    console.log('⚠️ No input provided, defaulting to analyze action');
+    console.log('No input provided, defaulting to analyze action');
     return 'analyze';
   }
 
@@ -70,7 +70,7 @@ function detectAction(input: string): ActionType {
       lowerInput.includes('versus') || 
       lowerInput.includes('vs') || 
       lowerInput.includes('between')) {
-    console.log(' Detected action: compare');
+    console.log('Detected action: compare');
     return 'compare';
   }
 
@@ -79,7 +79,6 @@ function detectAction(input: string): ActionType {
 }
 
 function generatePrompt(params: PromptParams): string {
-  console.log('⚙️ Generating prompt with params:', JSON.stringify(params, null, 2));
   
   const { action, instituteType, instituteName, instituteNames, programme, metric, governorate } = params;
 
@@ -108,13 +107,10 @@ function generatePrompt(params: PromptParams): string {
 }
 
 export function processPrompt(input: ProcessPromptInput): string {
-  console.log('Starting prompt processing with input:', JSON.stringify(input, null, 2));
   
   const instituteType = detectInstituteType(input.userMessage);
-  console.log(' Determined institute type:', instituteType);
   
   const action = detectAction(input.userMessage);
-  console.log('Determined action:', action);
 
   const promptParams: PromptParams = {
     action,
@@ -126,10 +122,8 @@ export function processPrompt(input: ProcessPromptInput): string {
     governorate: false
   };
   
-  console.log('Created prompt parameters:', JSON.stringify(promptParams, null, 2));
   
   const finalPrompt = generatePrompt(promptParams);
-  console.log('Generated final prompt:', finalPrompt);
   
   return finalPrompt;
 }
