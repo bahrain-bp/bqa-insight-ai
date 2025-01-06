@@ -157,36 +157,6 @@ export function BedrockStack({ stack, app }: StackContext) {
         agentId: cfnAgent?.attrAgentId || "",
       });
 
-      // llama
-      var cfnAgentLlama = undefined
-      // if (app.stage == "prod" || app.stage == "hasan") {
-        cfnAgentLlama = new bedrock.CfnAgent(stack, "BQACfnAgentLlama", {
-          agentName: "BQAInsightAIModelLlama-"+app.stage,
-          // agentResourceRoleArn: 'arn:aws:iam::588738578192:role/service-role/AmazonBedrockExecutionRoleForAgents_GQ6EX8SHLRV',
-          agentResourceRoleArn: amazonBedrockExecutionRoleForAgents.roleArn,
-          foundationModel: 'arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-sonnet-20240229-v1:0',
-          idleSessionTtlInSeconds: 600,
-          instruction: `You are a polite and friendly assistant specializing in answering questions and queries about BQA-published reports.
-                         Your primary role is to provide concise, accurate, and helpful responses based on the content of these reports.
-                         For general queries, like greetings or small talk, respond warmly and conversationally to make users feel comfortable.
-                         If a question is outside the scope of BQA reports, gently redirect the user back to relevant topics or provide a fallback response, such as asking for clarification or offering to escalate the query to support.
-                         Always strive to maintain a helpful and approachable tone while staying focused on your purpose.`,
-          knowledgeBases: [{
-            description: `It contains BQA reports for queries about Bahrain's education system. Avoid using it for greetings or small talks.`,
-            knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
-            knowledgeBaseState: 'ENABLED',
-            }],
-          }
-        );
-        stack.addOutputs({AgentLLama: cfnAgentLlama.agentName})
-      // }
-
-      const cfnAgentAliasLlama = new bedrock.CfnAgentAlias(stack, 'BQACfnAgentAliasLlama', {
-        agentAliasName: 'BQACfnAgentAliasLlama-'+app.stage,
-        agentId: cfnAgentLlama?.attrAgentId || "",
-      });
-      
-
     syncTopic.addSubscribers(stack, {
         sync: {
             function: {
@@ -206,5 +176,5 @@ export function BedrockStack({ stack, app }: StackContext) {
         DataSource: cfnDataSource.name,
     });
 
-    return { cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias, cfnAgentLlama, cfnAgentAliasLlama };
+    return { cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias};
 }      
