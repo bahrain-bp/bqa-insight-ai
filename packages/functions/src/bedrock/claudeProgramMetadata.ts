@@ -165,4 +165,3 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
         console.error("Error deleting SQS message:", error);
     }
 }
-

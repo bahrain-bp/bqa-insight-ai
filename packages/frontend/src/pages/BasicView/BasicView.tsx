@@ -5,7 +5,9 @@ import BasicChart from './BasicChart'
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb'
 
 const BasicView = () => {
+  // State to manage the active tab (0 for Filter, 1 for Chatbot)
   const [activeTab, setActiveTab] = useState(0)
+  
   return (
   <>
     <Breadcrumb pageName="Dashboard" />
@@ -38,8 +40,10 @@ const BasicView = () => {
           </div>
         </div>
       </div>
+      {/* Chart container (always displayed below the tabbed container) */}
       <div className='basis-1/2 w-full'>
-        <BasicChart />
+      {/* Render the BasicChart component and pass the activeTab state as a prop */}
+      <BasicChart activeTab={activeTab} />
       </div>
     </div>
   </>

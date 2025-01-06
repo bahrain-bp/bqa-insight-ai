@@ -21,17 +21,11 @@ export async function handler(event: S3Event, context: Context): Promise<void> {
                 await emptySchoolTable(process.env.SCHOOL_REVIEWS_TABLE_NAME!, "Private");
                 await processSchoolsReviews(bucketName, objectKey, process.env.SCHOOL_REVIEWS_TABLE_NAME!, 'Private');
                 break;
-            case 'CSVFiles/Results of Higher Education Reviews.csv':
-                await processHigherEducationProgrammeReviews(bucketName, objectKey, process.env.HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME!);
-                break;
-            case 'CSVFiles/Results of National Framework Operations.csv':
-                await processNationalFrameworkOperations(bucketName, objectKey);
-                break;
             case 'CSVFiles/Results of Vocational Reviews.csv':
                 await emptyTable(process.env.VOCATIONAL_REVIEWS_TABLE_NAME!);
                 await processVocationalReviews(bucketName, objectKey, process.env.VOCATIONAL_REVIEWS_TABLE_NAME!);
                 break;
-                case 'CSVFiles/Results of University Reviews.csv':
+            case 'CSVFiles/Results of University Reviews.csv':
                 await emptyTable(process.env.UNIVERSITY_REVIEWS_TABLE_NAME!);
                 await processUniversityReviews(bucketName, objectKey, process.env.UNIVERSITY_REVIEWS_TABLE_NAME!);
                 break;
@@ -42,9 +36,4 @@ export async function handler(event: S3Event, context: Context): Promise<void> {
 }
 
 
-
-async function processNationalFrameworkOperations(bucket: string, key: string): Promise<void> {
-    console.log(`Processing National Framework Operations from ${bucket}/${key}`);
-    // Implement specific processing logic here
-}
 

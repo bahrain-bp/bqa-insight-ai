@@ -110,6 +110,9 @@ export async function handler(event: SQSEvent) {
       await insertVocationalCentreMetadata(extractedOutput, fileKey);
       console.log("IT SHOULD BE INSERTED TO VOCATIONALCENTERMETADATA");
 
+      await insertReportMetadata(extractedOutput, fileKey);
+      console.log("IT SHOULD BE INSERTED to fileMetaData");
+
       await deleteSQSMessage(record.receiptHandle);
       return extractedOutput;
 
@@ -188,4 +191,19 @@ async function insertVocationalCentreMetadata(data: any, fileKey: string) {
   } catch (error) {
     console.error("Error inserting institute metadata into DynamoDB:", error);
   }
+
+  await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'vocational'); 
+  return;
+}
+async function insertReportMetadata(data :any, fileKey : string) {
+  const params = {
+      TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+          Key : {fileKey},
+          UpdateExpression: "SET vocationalCenterName = :vocationalCenterName",
+          ExpressionAttributeValues: {
+              ":vocationalCenterName": data["Vocational Training center"],
+          },
+          ReturnValues: "UPDATED_NEW",
+  };
+  return await dynamoDb.update(params).promise();
 }

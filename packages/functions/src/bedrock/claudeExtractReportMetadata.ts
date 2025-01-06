@@ -94,7 +94,8 @@ export async function handler(event: SQSEvent) {
                 "Grades In School": ""
                 }`;
                     
-
+            
+    
       // Payload for invoking the Claude model
       const payload = {
         anthropic_version: "bedrock-2023-05-31",
@@ -107,8 +108,8 @@ export async function handler(event: SQSEvent) {
         ],
       };
 
-      // Using InvokeModelCommand to invoke the Claude model
-      const command = new InvokeModelCommand({
+       // Using InvokeModelCommand to invoke the Claude model
+       const command = new InvokeModelCommand({
         contentType: "application/json",
         body: JSON.stringify(payload),
         modelId: ModelId,
@@ -129,15 +130,20 @@ export async function handler(event: SQSEvent) {
       await insertInstituteMetadata(extractedOutput, fileKey);
       console.log("IT SHOULD BE INSERTED TO INSTITUTE METADATA");
 
+      await insertReportMetadata(extractedOutput, fileKey);
+      console.log("IT SHOULD BE INSERTED to fileMetaData");
+
       // Delete the processed SQS message
       await deleteSQSMessage(record.receiptHandle);
       return extractedOutput;
-    } catch (error) {
-      // Delete the message in case of error
-      await deleteSQSMessage(record.receiptHandle);
-      console.error("Error processing SQS message:", error);
-    }
-  }
+
+
+
+        } catch (error) {
+            await deleteSQSMessage(record.receiptHandle);
+            console.error("Error processing SQS message:", error);
+        }
+    } 
 }
 
 // Function to insert the extracted institute metadata into the DynamoDB table
@@ -215,3 +221,18 @@ async function getMessageInQueue(queueUrl: string) {
     console.error("Error fetching queue attributes:", err);
   }
 }
+
+// Insert file metadata into DynamoDB
+async function insertReportMetadata(data :any, fileKey : string) {
+  const params = {
+      TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+          Key : {fileKey},
+          UpdateExpression: "SET instituteName = :instituteName",
+          ExpressionAttributeValues: {
+              ":instituteName": data["Institute Name"],
+          },
+          ReturnValues: "UPDATED_NEW",
+  };
+  return await dynamoDb.update(params).promise();
+}
+
