@@ -12,6 +12,7 @@ import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
+import { AuthStack } from "./AuthStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -25,10 +26,11 @@ export function ApiStack({stack}: StackContext) {
     const { programMetadataTable } = use(ProgramMetadataStack);  
     const {vocationalCenterMetadataTable} = use (VocationalCentersMetadataStack);
     const { SchoolReviewsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
+    const {auth} = use(AuthStack)
 
     // Hardcoded userPoolId and userPoolClientId
-    const userPoolId = "us-east-1_3q7TXdnTh";
-    const userPoolClientId = "7mj42l6n2nhedepncpaeks4814";
+    const userPoolId = auth.userPoolId;
+    const userPoolClientId = auth.userPoolClientId;
 
     
     // Create the HTTP API

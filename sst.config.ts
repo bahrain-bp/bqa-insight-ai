@@ -46,8 +46,8 @@ export default {
       .stack(S3Stack)
       .stack(BedrockStack)
       .stack(BotStack)
-      .stack(ApiStack) 
       .stack(AuthStack)
+      .stack(ApiStack) 
       .stack(FrontendStack)
       .stack(AfterDeployStack);
     }
