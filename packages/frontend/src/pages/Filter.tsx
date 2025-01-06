@@ -515,64 +515,61 @@ const Filter = () => {
         showMessage("Data successfully received!", "success");
 
 //-------------------- chart generation connection logic Start -----------------------------------------------------------------------
+        // Generate slots for schools when the user has selected one or more institute names
         if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
+            // Slot for analyzing a specific school, using the first selected institute name if in "Analyze" mode
             AnalyzeSchoolSlot:
               mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            // Slot for comparing multiple schools, joining selected institute names with a comma if in "Compare" mode
             CompareSpecificInstitutesSlot:
               mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
-            CompareSchoolSlot: undefined,
-            AnalyzeVocationalSlot: undefined,
-            CompareUniversityWUniSlot: undefined,
-            CompareUniversityWProgramsSlot: undefined,
-            CompareVocationalSlot: undefined,
-            ProgramNameSlot: undefined,
           };
         
+          // Update the chart slots state with the newly generated slots for schools
           setChartSlots(slots);
-          console.log("Updated chart slots:", slots);
+          console.log("Updated chart slots:", slots); // Log the updated slots for debugging purposes
         } else if (educationType === "universities" && selectedOptions["University Name"].length > 0) {
+          // Generate slots for universities when the user has selected one or more university names
           const slots = {
+            // Slot for analyzing a specific university, using the first selected university name if in "Analyze" mode
             AnalyzeUniversityNameSlot:
               mode === "Analyze" && educationType === "universities" ? selectedOptions["University Name"][0] : undefined,
+            // Slot for comparing multiple universities by name, joining selected names with a comma if in "Compare" mode
             CompareUniversityUniSlot:
               mode === "Compare" && educationType === "universities" ? selectedOptions["University Name"].join(", ") : undefined,
+            // Slot for comparing programs across multiple universities
             CompareUniversityWprogSlot:
               mode === "Compare" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
                 ? selectedOptions["Programme Name"].join(", ")
                 : undefined,
-                CompareUniversityWprogUniversityNameSlot:
+            // Slot for comparing specific universities with specific programs
+            CompareUniversityWprogUniversityNameSlot:
                 mode === "Compare" && educationType === "universities" && selectedOptions["University Name"].length > 0 && selectedOptions["Programme Name"].length > 0
                   ? `${selectedOptions["University Name"].join(", ")}|${selectedOptions["Programme Name"].join(", ")}`
-                  : undefined,              
-            AnalyzeSchoolSlot: undefined,
-            CompareSpecificInstitutesSlot: undefined,
-            CompareSchoolSlot: undefined,
-            CompareVocationalSlot: undefined,
+                  : undefined,   
+            // Slot for analyzing a specific program if in "Analyze" mode           
             ProgramNameSlot:
               mode === "Analyze" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
                 ? selectedOptions["Programme Name"][0]
                 : undefined,
           };
-          
+           // Update the chart slots state with the newly generated slots for universities
           setChartSlots(slots);
-          console.log("Updated chart slots:", slots);
+          console.log("Updated chart slots:", slots); // Log the updated slots for debugging purposes
         } else if (educationType === "vocational" && selectedOptions["Vocational Center Name"].length > 0) {
+          // Generate slots for vocational centers when the user has selected one or more vocational center names
           const slots = {
+            // Slot for analyzing a specific vocational center, using the first selected center name if in "Analyze" mode
             AnalyzeVocationalSlot:
               mode === "Analyze" && educationType === "vocational" ? selectedOptions["Vocational Center Name"][0] : undefined,
-            CompareVocationalSlot:
+            // Slot for comparing multiple vocational centers, joining selected center names with a comma if in "Compare" mode
+              CompareVocationalSlot:
               mode === "Compare" && educationType === "vocational" ? selectedOptions["Vocational Center Name"].join(", ") : undefined,
-            AnalyzeSchoolSlot: undefined,
-            CompareSpecificInstitutesSlot: undefined,
-            CompareSchoolSlot: undefined,
-            CompareUniversityWUniSlot: undefined,
-            CompareUniversityWProgramsSlot: undefined,
-            ProgramNameSlot: undefined,
           };
-        
+          // Update the chart slots state with the newly generated slots for vocational centers
           setChartSlots(slots);
-          console.log("Updated chart slots:", slots);
+          console.log("Updated chart slots:", slots); // Log the updated slots for debugging purposes
         }        
 //-------------------- chart generation connection logic End -----------------------------------------------------------------------
 
