@@ -13,7 +13,7 @@ import { BedrockStack } from "../BedrockStack";
 export function BotStack({stack}: StackContext) {
 
     // Get references to Bedrock resources from the BedrockStack
-    const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias, cfnAgentLlama, cfnAgentAliasLlama} = use(BedrockStack);
+    const {cfnKnowledgeBase, cfnAgent, cfnAgentAlias} = use(BedrockStack);
 
     // Initialize the Lex custom resource provider
     const provider = new LexCustomResource(
@@ -954,8 +954,6 @@ export function BotStack({stack}: StackContext) {
             agentId: cfnAgent.attrAgentId,
             agentAliasId: cfnAgentAlias.attrAgentAliasId,
             KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
-            llamaAgentId: cfnAgentLlama.attrAgentId,
-            llamaAgentAliasId: cfnAgentAliasLlama.attrAgentAliasId,
         },
         
     }); 
