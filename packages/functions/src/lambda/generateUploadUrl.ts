@@ -10,8 +10,6 @@ const ALLOWED_MIME_TYPES = new Set(["application/pdf", "text/csv"]);
 // Define exact allowed CSV filenames
 const ALLOWED_CSV_FILENAMES = new Set([
   "Results of Government Schools Reviews.csv",
-  "Results of Higher Education Reviews.csv",
-  "Results of National Framework Operations.csv",
   "Results of Private Schools Reviews.csv",
   "Results of Vocational Reviews.csv",
   "Results of University Reviews.csv"
