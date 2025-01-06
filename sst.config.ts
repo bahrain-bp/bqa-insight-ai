@@ -13,7 +13,6 @@ import { InstituteMetadataStack } from "./stacks/InstituteMetadataStack";
 import { OpenDataStack } from "./stacks/OpenDataStack";
 import { UniversityProgramMetadataStack } from "./stacks/UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./stacks/ProgramMetadataStack";
-import { AfterDeployStack } from "./stacks/AfterDeployStack";
 import { VocationalCentersMetadataStack } from "./stacks/VocationalCentersMetadataStack";
 
 export default {
@@ -49,8 +48,6 @@ export default {
       .stack(AuthStack)
       .stack(ApiStack) 
       .stack(FrontendStack)
-      .stack(AfterDeployStack);
     }
   }
 } satisfies SSTConfig; 
-export { BotStack };
