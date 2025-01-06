@@ -12,7 +12,7 @@ export function S3Stack({ stack }: StackContext) {
     const {programMetadataTable} = use(ProgramMetadataStack);
     const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
     const {vocationalCenterMetadataTable} = use(VocationalCentersMetadataStack);
-    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -239,12 +239,10 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/lambda/processCSV.handler",
         environment: {
             SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
-            HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME: HigherEducationProgrammeReviewsTable.tableName,
-            NATIONAL_FRAMEWORK_OPERATIONS_TABLE_NAME: NationalFrameworkOperationsTable.tableName,
             VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
             UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
         },
-        permissions: [SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable,UniversityReviewsTable], 
+        permissions: [SchoolReviewsTable,VocationalReviewsTable,UniversityReviewsTable], 
     });
 
     // S3 Notification for CSV files
@@ -257,33 +255,13 @@ export function S3Stack({ stack }: StackContext) {
         
     });
 
-    const bedrockOutputBucket = new Bucket(stack, "BedrockOutputBucket", {
-        cdk: {
-            bucket: {
-                versioned: true, // Enable versioning
-                removalPolicy: stack.stage === "prod" ? RemovalPolicy.RETAIN : RemovalPolicy.DESTROY,
-                publicReadAccess: true,
-            },
-        },
-        cors: [
-            {
-                allowedHeaders: ["*"],
-                allowedMethods: ["GET", "PUT", "POST"], // Allowed HTTP methods
-                allowedOrigins: ["*"], // TODO: Replace "*" with your frontend's domain for production
-                exposedHeaders: ["ETag"],
-                maxAge: "3000 seconds",
-            },
-        ],
-    });
-
 
     // Add outputs for the bucket
     stack.addOutputs({
         BucketName: bucket.bucketName,
-        BedrockOutputBucket: bedrockOutputBucket.bucketName,
         QueueURL: splitPDFQueue.queueUrl,
         SyncTopic: syncTopic.topicName,
     });
 
-    return { bucket, bedrockOutputBucket, queue: splitPDFQueue, syncTopic };
+    return { bucket, queue: splitPDFQueue, syncTopic };
 }

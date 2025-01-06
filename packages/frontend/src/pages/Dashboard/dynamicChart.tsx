@@ -5,72 +5,88 @@ import { Chart } from "react-chartjs-2";
 // Register all Chart.js components
 ChartJS.register(...registerables);
 
+// Define the structure for the JSON data used to configure the chart
 export interface ChartJsonData {
-  schoolName?: string; // For schools
-  vocationalName?: string; // For vocational institutes
-  schoolType?: string; // For schools (Government, Private)
-  options?: object;
-  type: ChartType;
+  schoolName?: string; // Name of the school (if applicable)
+  vocationalName?: string; // Name of the vocational institute (if applicable)
+  schoolType?: string; // Type of school (e.g., Government, Private)
+  universityName?: string; // Name of the university (if applicable)
+  options?: object; // Custom options for the chart
+  type: ChartType; // Chart type (e.g., line, bar, pie)
   data: {
-    labels?: string[]; // Required for pie charts
+    labels?: string[]; // Labels for pie charts
     datasets: Array<{
-      data: Array<{ x: number | string; y: number } | number>; // Allow both formats
-      label: string;
-      backgroundColor?: string[];
-      borderColor?: string[];
+      data: Array<{ x: number | string; y: number } | number>; // Data points in either `{x, y}` or flat number format
+      label: string; // Dataset label
+      backgroundColor?: string[]; // Background colors for the dataset
+      borderColor?: string[]; // Border colors for the dataset
     }>;
   };
 }
 
+// Define the props for the DynamicChart component
 interface DynamicChartProps {
-  jsonData: ChartJsonData | string;
+  jsonData: ChartJsonData | string; // Chart data passed as a JSON object or string
 }
 
+// Component to render dynamic charts based on the provided JSON data
 const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
   console.log("DynamicChart jsonData:", jsonData);
+
+  // Parse JSON data if it's a string; otherwise, use it as is
   const parsedData: ChartJsonData = useMemo(() => {
     return typeof jsonData === "string" ? JSON.parse(jsonData) : jsonData;
   }, [jsonData]);
 
-  // Use default options if none are provided
+  // Use default chart options if none are provided in the data
   const chartOptions = useMemo(() => {
     return (
       parsedData.options || {
-        responsive: true,
+        responsive: true, // Make the chart responsive
         plugins: {
-          datalabels: {display: false},
-          legend: { display: true, position: "top" },
+          datalabels: {display: false}, // Disable data labels
+          legend: { display: true, position: "top" }, // Display legend at the top
           title: {
-            display: false,
+            display: false, // Disable title by default
           },
         },
-        scales: parsedData.type !== "pie" ? { // Scales are not used for pie charts
+        scales: parsedData.type !== "pie" ? { // Scales are only applicable for non-pie charts
           x: {
-            type: "category",
+            type: "category", // Set X-axis as a category
             position: "bottom",
             title: {
               display: true,
-              text: "Cycles",
+              text: "Review Cycles", // Label for the X-axis
             },
           },
           y: {
             title: {
               display: true,
-              text: "Grades",
+              text: "Grades", // Label for the Y-axis
             },
-            reverse: true,
-            min: 1,
-            max: 4,
+            reverse: true, // Reverse the Y-axis
+            min: 0, // Minimum value for Y-axis
+            max: 5, // Maximum value for Y-axis
             ticks: {
-              precision: 0,
-            }
+              precision: 0, // Round to whole numbers
+              stepSize: 1, // Steps between grades
+              callback: (value: number) => { // Label mapping for grades
+                switch(value) {
+                  case 1: return "Outstanding - 1";
+                  case 2: return "Good - 2";
+                  case 3: return "Satisfactory - 3";
+                  case 4: return "Inadequate - 4";
+                  default: return "";
+                }
+            },
           },
+        },
         } : undefined,
       }
     );
   }, [parsedData.options, parsedData.type]);
   
-
+  // Define a color palette for chart elements
   const colorPalette : string[] = 
   [
 
@@ -109,18 +125,18 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
   const formattedData = useMemo(() => {
     if (parsedData.type === "pie") {
       // Format for pie charts
-      const labels = parsedData.data.labels || [];
+      const labels = parsedData.data.labels || []; // Use provided labels or an empty array
       const datasets = parsedData.data.datasets.map((dataset) => ({
         label: dataset.label,
         data: dataset.data.map((point) =>
           typeof point === "number" ? point : point.y
-        ), // Convert mixed formats to flat `number[]`
+        ), // Convert mixed formats to flat `number[]` for `y`
         backgroundColor: dataset.backgroundColor || colorPalette.slice(0, labels.length),
       }));
       return { labels, datasets };
     } else {
       // Format for other chart types (line, bar, etc.)
-      const colors = [...colorPalette];
+      const colors = [...colorPalette]; // copy color palette to ensure color uniqueness
       return {
         datasets: parsedData.data.datasets.map((dataset) => {
           const color = colors.pop() || "rgba(51, 118, 204, 1)";
@@ -129,20 +145,21 @@ const DynamicChart: React.FC<DynamicChartProps> = ({ jsonData }) => {
             data: dataset.data.map((point) => 
               typeof point === "number" ? { x: "", y: point } : { x: point.x, y: point.y }
             ), // Ensure all points are in `{ x, y }` format
-            backgroundColor: color,
-            borderColor: color,
+            backgroundColor: color, // Assign color
+            borderColor: color, // Assign border color
           };
         }),
       };
     }
   }, [parsedData, colorPalette]);
   
+  // Render the chart
   return (
     <Chart
-      type={parsedData.type}
-      data={formattedData as any} // Cast as any to satisfy Chart.js type requirements
-      options={chartOptions}
-      style={{ width: "100%", height: "100%" }}
+      type={parsedData.type} // Specify chart type
+      data={formattedData as any} // Cast as any to satisfy Chart.js type requirements (Pass formatted data)
+      options={chartOptions}  // Pass chart options
+      style={{ width: "100%", height: "100%", display: "block", margin: "auto" }} // Set chart dimensions and centering
     />
   );
 };

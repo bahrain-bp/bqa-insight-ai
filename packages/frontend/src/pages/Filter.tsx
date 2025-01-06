@@ -67,33 +67,44 @@ const Filter = () => {
   const [userAdditions, setUserAdditions] = useState<string>("");
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
 
+ 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
         const prompt = new URLSearchParams();
-        if (selectedOptions["Institute Classification"]?.length) {
-          prompt.append("classification", selectedOptions["Institute Classification"][0]);
-        }
-        if (selectedOptions["Institute Level"]?.length) {
-          prompt.append("level", selectedOptions["Institute Level"][0]);
-        }
-        if (selectedOptions["Location"]?.length) {
-          prompt.append("location", selectedOptions["Location"][0]);
-        }
-        if (selectedOptions["University Name"]?.length) {
-          prompt.append("universityName", selectedOptions["University Name"][0]);
-        }
-        if (selectedOptions["Programme Name"]?.length) {
-          prompt.append("programmeName", selectedOptions["Programme Name"][0]);
-        }
-        if (selectedOptions["Vocational Center Name"]?.length) {
-          prompt.append("vocationalCenterName", selectedOptions["Vocational Center Name"][0]);
+        
+        // Apply dependencies for schools regardless of mode
+        if (educationType === "schools") {
+          if (selectedOptions["Institute Classification"]?.length) {
+            prompt.append("classification", selectedOptions["Institute Classification"][0]);
+          }
+          if (selectedOptions["Institute Level"]?.length) {
+            prompt.append("level", selectedOptions["Institute Level"][0]);
+          }
+          if (selectedOptions["Location"]?.length) {
+            prompt.append("location", selectedOptions["Location"][0]);
+          }
+          if (selectedOptions["Institute Name"]?.length) {
+            prompt.append("instituteName", selectedOptions["Institute Name"][0]);
+          }
+        } else {
+          // For universities and vocational, only apply dependencies if NOT in Compare mode
+          if (mode !== "Compare") {
+            if (selectedOptions["University Name"]?.length) {
+              prompt.append("universityName", selectedOptions["University Name"][0]);
+            }
+            if (selectedOptions["Programme Name"]?.length) {
+              prompt.append("programmeName", selectedOptions["Programme Name"][0]);
+            }
+            if (selectedOptions["Vocational Center Name"]?.length) {
+              prompt.append("vocationalCenterName", selectedOptions["Vocational Center Name"][0]);
+            }
+          }
         }
 
         const response = await fetch(`${import.meta.env.VITE_API_URL}/fetchfilters?${prompt.toString()}`);
     
         if (!response.ok) {
-          // Log the actual error message from the server
           const errorText = await response.text();
           console.error('Server error:', errorText);
           throw new Error(`Server returned ${response.status}: ${errorText}`);
@@ -132,7 +143,6 @@ const Filter = () => {
         }
       } catch (error) {
         console.error("Error fetching filter options:", error);
-        // Reset to default values on error
         setFilterOptions({
           "Institute Classification": [],
           "Institute Level": [],
@@ -146,7 +156,12 @@ const Filter = () => {
     if (educationType) {
       fetchFilterOptions();
     }
-  }, [selectedOptions, educationType]);
+  }, [
+    // Only include selectedOptions in dependency array for schools
+    // or for universities/vocational when not in Compare mode
+    educationType === "schools" || mode !== "Compare" ? selectedOptions : null,
+    educationType
+  ]);
 
   useEffect(() => {
     if (!userModifiedSentence) {
@@ -206,26 +221,34 @@ const Filter = () => {
     }
   };
 
+
+
   const getFilterValues = (header: string): string[] => {
-    const filters = getCurrentFilters();
+    // Special handling for Compare mode
+    if (mode === "Compare") {
+      if (educationType === "schools" && header === "Institute Name") {
+        return filterOptions["Institute Name"] || [];
+      } else if (educationType === "universities" && header === "University Name") {
+        return universityFilters["University Name"] || [];
+      } else if (educationType === "vocational" && header === "Vocational Center Name") {
+        return vocationalFilters["Vocational Center Name"] || [];
+      }
+    }
   
+    // For other cases, use the filtered values
+    const filters = getCurrentFilters();
+    
     if (isSchoolFilters(filters)) {
       if (isSchoolFilterKey(header)) {
-        return filters[header];
+        return filters[header] || [];
       }
     } else if (isVocationalFilters(filters)) {
       if (isVocationalFilterKey(header)) {
-        if (header === "Vocational Center Name" && mode === "Compare") {
-          return filters[header].filter((name) => !selectedOptions[header].includes(name));
-        }
-        return filters[header];
+        return filters[header] || [];
       }
     } else {
       if (isUniversityFilterKey(header)) {
-        if (header === "University Name" && mode === "Compare") {
-          return filters[header].filter((name) => !selectedOptions[header].includes(name));
-        }
-        return filters[header];
+        return (filters[header] as string[]) || [];
       }
     }
     return [];
@@ -255,52 +278,54 @@ const Filter = () => {
     setLastGeneratedSentence("");
   };
 
+ 
+
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>, header: string) => {
     const value = e.target.value;
-
+  
     if (value && value !== "Select...") {
       setSelectedOptions((prevState) => {
-        if (!isFilterActive) {
-          setIsFilterActive(true);
+        const updatedState = { ...prevState };
+        
+        // Check if we're in compare mode and dealing with a comparison field
+        const isCompareField = mode === "Compare" && (
+          (educationType === "schools" && header === "Institute Name") ||
+          (educationType === "universities" && header === "University Name") ||
+          (educationType === "vocational" && header === "Vocational Center Name")
+        );
+  
+        if (isCompareField) {
+          // For comparison fields, allow multiple selections
+          const currentSelections = prevState[header] || [];
+          if (!currentSelections.includes(value)) {
+            updatedState[header] = [...currentSelections, value];
+          }
+          return updatedState;
         }
-
-        let updatedState = { ...prevState };
-
-        if ((header === "Institute Name" && educationType === "schools" && mode === "Compare") ||
-            (header === "University Name" && educationType === "universities" && mode === "Compare") ||
-            (header === "Vocational Center Name" && educationType === "vocational" && mode === "Compare")) {
-          if (!updatedState[header]) {
-            updatedState[header] = [];
-          }
-          if (!updatedState[header].includes(value)) {
-            updatedState[header] = [...updatedState[header], value];
-          }
-        } else {
-          updatedState = {
-            ...prevState,
-            [header]: [value],
-          };
-          
-          if (educationType === "schools" && header === "Institute Classification") {
+  
+        // For non-compare mode or non-comparison fields
+        updatedState[header] = [value];
+        
+        // Only apply dependencies for schools
+        if (educationType === "schools") {
+          if (header === "Institute Classification") {
             updatedState["Institute Level"] = [];
             updatedState["Location"] = [];
             updatedState["Institute Name"] = [];
             updatedState["Report Year"] = [];
           } else if (header === "Institute Level") {
             updatedState["Institute Name"] = [];
-          } else if (educationType === "vocational" && header === "Center Classification") {
-            updatedState["Center Location"] = [];
-            updatedState["Vocational Center Name"] = [];
-            updatedState["Report Year"] = [];
           }
         }
-
+  
         return updatedState;
       });
+
+      if (!isFilterActive) {
+        setIsFilterActive(true);
+      }
     }
   };
-
-
 
   const removeTag = (header: string, value: string) => {
     setSelectedOptions((prevState) => {
@@ -406,25 +431,40 @@ const Filter = () => {
     const sentence = editableSentence;
 
     if (mode === "Compare") {
-      const comparisonKey = educationType === "schools" ? "Institute Name" : "University Name";
-      if (!selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
-        showMessage(`Please select at least two ${educationType === "schools" ? "institutes" : "universities"} to compare.`, "error");
-        return;
+      let comparisonKey;
+      if (educationType === "schools") {
+        comparisonKey = "Institute Name";
+      } else if (educationType === "universities") {
+        comparisonKey = "University Name";
+      } else if (educationType === "vocational") {
+        comparisonKey = "Vocational Center Name";
       }
-    
-      if (!Array.isArray(selectedOptions[comparisonKey]) || selectedOptions[comparisonKey].length < 2) {
-        if (educationType === "schools" && (!Array.isArray(selectedOptions["Institute Name"]) || selectedOptions["Institute Name"].length < 2)) {
-          showMessage("Please select at least two institutes in Compare mode.", "error");
-          return;
-        } else if (educationType === "universities" && (!Array.isArray(selectedOptions["University Name"]) || selectedOptions["University Name"].length < 2)) {
-          showMessage("Please select at least two universities in Compare mode.", "error");
-          return;
-        }
+
+      if (!comparisonKey || !selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
+        const entityType = educationType === "schools" 
+          ? "institutes" 
+          : educationType === "universities" 
+            ? "universities" 
+            : "vocational centers";
+        showMessage(`Please select at least two ${entityType} to compare.`, "error");
+        return;
       }
     }
 
-    const requiredFilters = educationType === "schools" ? ["Institute Name"] : ["University Name"];
-    const missingFilters = requiredFilters.filter((filter) => selectedOptions[filter].length === 0);
+    const requiredFilters: string[] = (() => {
+      switch (educationType) {
+        case "schools":
+          return ["Institute Name"];
+        case "universities":
+          return ["University Name"];
+        case "vocational":
+          return ["Vocational Center Name"];
+        default:
+          return [];
+      }
+    })();
+
+    const missingFilters = requiredFilters.filter((filter) => !selectedOptions[filter] || selectedOptions[filter].length === 0);
 
     if (missingFilters.length > 0) {
       showMessage(`Please select options for: ${missingFilters.join(", ")}`, "error");
@@ -433,7 +473,7 @@ const Filter = () => {
 
     if (sentence) {
       try {
-        setLoading(true); // Set loading state to true when starting the request
+        setLoading(true);
         
         let submissionOptions = { ...selectedOptions };
         
@@ -453,10 +493,14 @@ const Filter = () => {
             location: submissionOptions["Location"],
             instituteName: submissionOptions["Institute Name"],
             reportYear: submissionOptions["Report Year"]
-          } : {
+          } : educationType === "universities" ? {
             universityName: submissionOptions["University Name"],
             programmeName: submissionOptions["Programme Name"],
             programmeJudgment: submissionOptions["Programme Judgment"]
+          } : {
+            vocationalCenterName: submissionOptions["Vocational Center Name"],
+            centerLocation: submissionOptions["Center Location"],
+            reportYear: submissionOptions["Report Year"]
           })
         };
 
@@ -470,23 +514,64 @@ const Filter = () => {
         setBedrockResponse(body.response);
         showMessage("Data successfully received!", "success");
 
+//-------------------- chart generation connection logic Start -----------------------------------------------------------------------
+        // Generate slots for schools when the user has selected one or more institute names
         if (educationType === "schools" && selectedOptions["Institute Name"].length > 0) {
           const slots = {
-            AnalyzeSchoolSlot: mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            // Slot for analyzing a specific school, using the first selected institute name if in "Analyze" mode
+            AnalyzeSchoolSlot:
+              mode === "Analyze" && educationType === "schools" ? selectedOptions["Institute Name"][0] : undefined,
+            // Slot for comparing multiple schools, joining selected institute names with a comma if in "Compare" mode
             CompareSpecificInstitutesSlot:
               mode === "Compare" && educationType === "schools" ? selectedOptions["Institute Name"].join(", ") : undefined,
-            ProgramNameSlot: undefined,
-            AnalyzeVocationalSlot: undefined,
-            CompareUniversityWUniSlot: undefined,
-            CompareUniversityWProgramsSlot: undefined,
-            CompareSchoolSlot: undefined,
-            CompareVocationalSlot: undefined,
           };
-          
-          setChartSlots(slots); // Update context with selected filters
-          console.log("Updated chart slots:", slots);
-          
-        }
+        
+          // Update the chart slots state with the newly generated slots for schools
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots); // Log the updated slots for debugging purposes
+        } else if (educationType === "universities" && selectedOptions["University Name"].length > 0) {
+          // Generate slots for universities when the user has selected one or more university names
+          const slots = {
+            // Slot for analyzing a specific university, using the first selected university name if in "Analyze" mode
+            AnalyzeUniversityNameSlot:
+              mode === "Analyze" && educationType === "universities" ? selectedOptions["University Name"][0] : undefined,
+            // Slot for comparing multiple universities by name, joining selected names with a comma if in "Compare" mode
+            CompareUniversityUniSlot:
+              mode === "Compare" && educationType === "universities" ? selectedOptions["University Name"].join(", ") : undefined,
+            // Slot for comparing programs across multiple universities
+            CompareUniversityWprogSlot:
+              mode === "Compare" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
+                ? selectedOptions["Programme Name"].join(", ")
+                : undefined,
+            // Slot for comparing specific universities with specific programs
+            CompareUniversityWprogUniversityNameSlot:
+                mode === "Compare" && educationType === "universities" && selectedOptions["University Name"].length > 0 && selectedOptions["Programme Name"].length > 0
+                  ? `${selectedOptions["University Name"].join(", ")}|${selectedOptions["Programme Name"].join(", ")}`
+                  : undefined,   
+            // Slot for analyzing a specific program if in "Analyze" mode           
+            ProgramNameSlot:
+              mode === "Analyze" && educationType === "universities" && selectedOptions["Programme Name"].length > 0
+                ? selectedOptions["Programme Name"][0]
+                : undefined,
+          };
+           // Update the chart slots state with the newly generated slots for universities
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots); // Log the updated slots for debugging purposes
+        } else if (educationType === "vocational" && selectedOptions["Vocational Center Name"].length > 0) {
+          // Generate slots for vocational centers when the user has selected one or more vocational center names
+          const slots = {
+            // Slot for analyzing a specific vocational center, using the first selected center name if in "Analyze" mode
+            AnalyzeVocationalSlot:
+              mode === "Analyze" && educationType === "vocational" ? selectedOptions["Vocational Center Name"][0] : undefined,
+            // Slot for comparing multiple vocational centers, joining selected center names with a comma if in "Compare" mode
+              CompareVocationalSlot:
+              mode === "Compare" && educationType === "vocational" ? selectedOptions["Vocational Center Name"].join(", ") : undefined,
+          };
+          // Update the chart slots state with the newly generated slots for vocational centers
+          setChartSlots(slots);
+          console.log("Updated chart slots:", slots); // Log the updated slots for debugging purposes
+        }        
+//-------------------- chart generation connection logic End -----------------------------------------------------------------------
 
         console.log("API Response:", body);
         showMessage("Data successfully sent to the server!", "success");
@@ -494,7 +579,7 @@ const Filter = () => {
         console.error("Error:", error);
         showMessage("An error occurred. Please try again.", "error");
       } finally {
-        setLoading(false); // Reset loading state regardless of success or failure
+        setLoading(false);
       }
     } else {
       showMessage("Please select options.", "error");
@@ -523,89 +608,94 @@ const Filter = () => {
 
 
   return (
-    <div className="p-6">
-      {/* Pop-Up Message */}
-      {submittedMessage && (
-        <div
-          className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
-            messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
-          }`}
-        >
-          {submittedMessage}
-        </div>
-      )}
-        <div className="flex flex-wrap items-center mb-4 gap-4">
-          <div className="flex gap-3 flex-col sm:flex-row flex-1">
-            <label className="block font-semibold text-2xl mr-4 text-nowrap">Insight</label>
-            <select
-              className="p-2 border rounded text-sm grow max-w-48"
-              value={mode}
-              onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
-            >
-              <option value="">Select...</option>
-              <option value="Compare">Compare</option>
-              <option value="Analyze">Analyze</option>
-            </select>
-          </div>
+<div className="p-6">
+  {/* Pop-Up Message */}
+  {submittedMessage && (
+    <div
+      className={`fixed top-4 right-4 z-99999 px-6 py-4 rounded-md shadow-md ${
+        messageType === "success" ? "bg-secondary text-white" : "bg-danger text-white"
+      }`}
+    >
+      {submittedMessage}
+    </div>
+  )}
+  <div className="flex flex-wrap items-center mb-4 gap-4">
+    <div className="flex gap-3 flex-col sm:flex-row flex-1">
+      <label className="block font-semibold text-2xl mr-4 text-nowrap">Insight</label>
+      <select
+        className="p-2 border rounded text-sm grow max-w-48"
+        value={mode}
+        onChange={(e) => setMode(e.target.value as "Compare" | "Analyze" | "")}
+      >
+        <option value="">Select...</option>
+        <option value="Compare">Compare</option>
+        <option value="Analyze">Analyze</option>
+      </select>
+    </div>
 
-          <div className="flex gap-3 flex-col sm:flex-row flex-1">
-            <label className="block font-semibold text-2xl mr-4 text-nowrap">Education Level</label>
-            <select
-              className="p-2 border rounded text-sm grow max-w-48"
-              value={educationType}
-              onChange={handleEducationTypeChange}
-            >
-              <option value="">Select...</option>
-              <option value="schools">Schools</option>
-              <option value="universities">Universities</option>
-              <option value="vocational">Vocational Centers</option>
-            </select>
-          </div>
-        </div>
+    <div className="flex gap-3 flex-col sm:flex-row flex-1">
+      <label className="block font-semibold text-2xl mr-4 text-nowrap">Education Level</label>
+      <select
+        className="p-2 border rounded text-sm grow max-w-48"
+        value={educationType}
+        onChange={handleEducationTypeChange}
+      >
+        <option value="">Select...</option>
+        <option value="schools">Schools</option>
+        <option value="universities">Universities</option>
+        <option value="vocational">Vocational Centers</option>
+      </select>
+    </div>
+  </div>
 
-        {mode && educationType && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {Object.keys(getCurrentFilters()).map((header) => (
-                <div key={header} className="w-full">
-                  <label className="block text-sm font-semibold mb-2">{header}</label>
-                  
-                  {((educationType === "schools" && header === "Institute Name") ||
-                    (educationType === "universities" && header === "University Name")) &&
-                    
-                  mode === "Compare" ? (
-                    <select
-                      className="p-2 border rounded text-sm w-full"
-                      onChange={(e) => handleSelectChange(e, header)}
-                      value="Select..."
-                    >
-                      <option value="Select...">Select...</option>
-              {getFilterValues(header)
-                .filter(option => {
-                  if ((header === "Institute Name" || header === "University Name") && mode === "Compare") {
-                    return !selectedOptions[header]?.includes(option);
-                  }
-                  return true;
-                })
-                .map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-                    </select>
-                  ) : (
-                    <select
-                      className="p-2 border rounded text-sm w-full"
-                      onChange={(e) => handleSelectChange(e, header)}
-                      value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
-                    >
-                      <option value="Select...">Select...</option>
-                      {getFilterValues(header).map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              ))}
-            </div>
+  {mode && educationType && (
+    <>
+      {/* Inside the grid mapping of filters */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+  {Object.keys(getCurrentFilters()).map((header) => (
+    <div key={header} className="w-full">
+      <label className="block text-sm font-semibold mb-2">{header}</label>
+      
+      {((educationType === "schools" && header === "Institute Name") ||
+  (educationType === "universities" && header === "University Name") ||
+  (educationType === "vocational" && header === "Vocational Center Name")) &&
+mode === "Compare" ? (
+
+  <select
+  className="p-2 border rounded text-sm w-full"
+  onChange={(e) => handleSelectChange(e, header)}
+  value="Select..."
+>
+    <option value="Select...">Select...</option>
+    {getFilterValues(header).map((option) => (
+      <option
+        key={option}
+        value={option}
+          disabled={selectedOptions[header]?.includes(option)}
+      >
+          {option} {selectedOptions[header]?.includes(option) ? '(Selected)' : ''}
+          </option>
+    ))}
+  </select>
+) : (
+  <select
+    className="p-2 border rounded text-sm w-full"
+    onChange={(e) => handleSelectChange(e, header)}
+    value={selectedOptions[header]?.length ? selectedOptions[header][0] : "Select..."}
+  >
+    <option value="Select...">Select...</option>
+    {getFilterValues(header).map((option) => (
+      <option key={option} value={option}>
+        {option}
+      </option>
+    ))}
+  </select>
+)}
+    </div>
+  ))}
+</div>
+
+
 
               <div className="mt-4">
                 {Object.keys(selectedOptions).map((header) =>

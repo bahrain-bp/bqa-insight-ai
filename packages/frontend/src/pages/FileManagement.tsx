@@ -3,6 +3,7 @@ import Breadcrumb from "../components/Breadcrumbs/Breadcrumb";
 import JSZip from "jszip";
 import { FaUpload, FaTrashAlt, FaDownload} from "react-icons/fa"; // Imported FaExclamationCircle
 import { AiOutlineClose } from "react-icons/ai"; // Optional: For closing the disclaimer modal
+import { fetchAuthSession   } from '@aws-amplify/auth';
 
 const API_URL = import.meta.env.VITE_API_URL; // API base URL
 
@@ -35,7 +36,16 @@ const FileManagement: React.FC = () => {
   const fetchFiles = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/retrieve-file-metadata`);
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken; 
+
+    const response = await fetch(`${API_URL}/retrieve-file-metadata`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
       if (!response.ok) {
         throw new Error(`Failed to fetch files: ${response.statusText}`);
       }
@@ -71,11 +81,15 @@ const FileManagement: React.FC = () => {
         fileType: file.type,
         fileSize: file.size,
       }));
-  
+
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken;
+
       const response = await fetch(`${API_URL}/generate-upload-url`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ files: fileDetails }),
       });
@@ -130,10 +144,14 @@ const FileManagement: React.FC = () => {
 
     setDeleting(true);
     try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken;
+
       const response = await fetch(`${API_URL}/delete-file`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ fileKeys: selectedFiles }),
       });
@@ -379,7 +397,7 @@ const FileManagement: React.FC = () => {
         {/* Preview Modal */}
         {previewFile && (
           <div
-            className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 z-50"
+            className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 z-[1002]"
             onClick={() => setPreviewFile(null)} // Close modal when clicking outside
             style={{ zIndex: 1002 }}
           >
