@@ -52,6 +52,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
       return baseData;
     });
 
+    // Excel Export Function
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Schools');
@@ -59,6 +60,8 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
     XLSX.writeFile(wb, fileName);
   };
 
+
+  // PDF Export Function
   const exportToPDF = async () => {
     const printDiv = document.createElement('div');
     printDiv.className = 'pdf-export';
@@ -122,15 +125,12 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
     printDiv.appendChild(header);
     const table = document.createElement('table');
     
-    // Add title
     const title = document.createElement('div');
     title.className = 'pdf-title';
     title.textContent = 'School Reviews Summary';
     printDiv.appendChild(title);
 
    
-    
-    // Rest of your existing table creation code...
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     const headers = [
@@ -468,7 +468,7 @@ export function SchoolReviewsTable({ data }: SchoolReviewsTableProps): JSX.Eleme
               <img 
                 src={XSLIcon} 
                 alt="Export to Excel" 
-                className="w-9 h-9 object-contain"  // Increased icon size
+                className="w-9 h-9 object-contain" 
               />
               <span className="ml-2">Export as Excel</span>
             </button>

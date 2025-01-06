@@ -58,6 +58,7 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
     return { grade: latest.Grade, date: latest.BatchReleaseDate };
   }
 
+    // Excel Export Function
   const exportToExcel = () => {
     const exportData = displayedData.map(institute => {
       const { grade: latestGrade, date: latestDate } = getLatestReviewReportData(institute.Reviews);
@@ -84,6 +85,7 @@ export function VocationalReviewsTable({ data }: VocationalReviewsTableProps): J
     XLSX.writeFile(wb, fileName);
   };
 
+  // PDF Export Function
   const exportToPDF = async () => {
     const printDiv = document.createElement('div');
     printDiv.className = 'pdf-export';

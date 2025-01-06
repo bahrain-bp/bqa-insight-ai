@@ -2,14 +2,17 @@ import * as AWS from "aws-sdk";
 
 const s3 = new AWS.S3();
 
+//Inserts a metadata file into an S3 bucket 
 async function insertMetadataFile(
     bucketName: string, 
     fileKey: string, 
     data: any, 
     type: 'institute' | 'university' | 'program' | 'vocational'
 ): Promise<void> {
+    // Construct the key for the metadata file
     const metadataKey = `Text${fileKey}.metadata.json`;
 
+     // Convert the data to JSON string, and  formatting it according to the type
     const metadataContent = JSON.stringify({
         "metadata": type === 'institute' ? {
             "institueName": data["Institute Name"],
@@ -35,6 +38,7 @@ async function insertMetadataFile(
     }, null, 2);
 
     try {
+         // Upload the metadata file to S3
         await s3.putObject({
             Bucket: bucketName,
             Key: metadataKey,
@@ -43,10 +47,11 @@ async function insertMetadataFile(
         }).promise();
         console.log(`Metadata file ${metadataKey} created in bucket ${bucketName}`);
     } catch (error) {
+        // console log any errors
         console.error("Error creating metadata file in S3:", error);
     }
 }
-
+// This function handles what happens after a DynamoDB insert by creating a corresponding metadata file in S3
 export async function handleDynamoDbInsert(
     event: any, 
     bucket: string, 
@@ -57,6 +62,8 @@ export async function handleDynamoDbInsert(
         throw new Error("Bucket name not defined");
     }
 
+     // Remove the .pdf extension from the file key
     const sanitizedFileKey = fileKey.replace(".pdf", "");
+     // Call the insertMetadataFile function with the processed parameters
     await insertMetadataFile(bucket, sanitizedFileKey, event, type);
 }

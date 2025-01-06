@@ -145,6 +145,7 @@ export function ApiStack({stack}: StackContext) {
                     timeout: "60 seconds"
                 }
             },
+           
             "POST /sync": {
                 authorizer: "authApi",
                 function: {
@@ -157,6 +158,7 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+             // delete-sync route
             "POST /deleteSync": {
                 authorizer: "authApi",
                 function: {
