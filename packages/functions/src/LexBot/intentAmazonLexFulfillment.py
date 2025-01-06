@@ -195,17 +195,75 @@ def close(intent_request, fulfillment_state, message, session_attributes = {}):
         'sessionId': intent_request['sessionId'],
         'requestAttributes': intent_request['requestAttributes'] if 'requestAttributes' in intent_request else None
     }
-def dispatch(intent_request):
-    
+
+def invoke_bedrock(intent_request, prompt):
+    print("Invoking bedrock with prompt: ", prompt)
     # Get Bedrock ageant id and alias id
     agent_id = os.getenv("agentId")
     agent_alias_id = os.getenv("agentAliasId")
+    session_id = intent_request['sessionId']
+
+    message = invoke_agent(agent_id, agent_alias_id, session_id, prompt)
+    response = create_message(message)
+    return followup(intent_request, response)
+
+class Step:
+    def __init__(self, name: str="", options_slot: str="", options=(), required_slots=(), callback=None) -> None:
+        self.name = name
+        self.options_slot = options_slot
+        for option in options:
+            assert isinstance(option, Step)
+        self.options = options
+        self.required_slots = required_slots
+        self.callback = callback
+
+    def process_step(self, intent_request):
+        # collect required slots for the callback later
+        slots = {}
+        for slot_name in self.required_slots:
+            slot_value = get_slot(intent_request, slot_name)
+            if not slot_value:
+                return elicit_slot(
+                    intent_request,
+                    slot_name,
+                    slots=get_slots(intent_request),
+                )
+            slots[slot_name] = slot_value
+        print("Required slots: ", slots)
+
+        # process the options if they exist
+        if self.options_slot != "":
+            print(f"Processing step for {self.options_slot} with name {self.name}")
+            slot_value = get_slot(intent_request, self.options_slot)
+            if not slot_value:
+                print(f"Did not find slot {self.options_slot}, eliciting")
+                return elicit_slot(
+                    intent_request,
+                    self.options_slot,
+                    slots=get_slots(intent_request),
+                )
+
+            print("Checking options: ", self.options)
+            for option in self.options:
+                if slot_value == option.name:
+                    return option.process_step(intent_request)
+
+        # execute callback with required slots
+        if self.callback is not None:
+            print("No options, doing callback")
+            response = invoke_bedrock(intent_request, self.callback(slots))
+            print("Callback response: ", response)
+            return response
+        # if no returns, failed
+        print("Nothing :(")
+        raise Exception("Fulfillment failed.")
+
+def dispatch(intent_request):
 
     response = None
     intent_name = intent_request['sessionState']['intent']['name']
     returnToMenu = get_session_attributes(intent_request).get('return')
     retrySlots = get_session_attributes(intent_request).get('retry')
-    session_id = intent_request['sessionId']
 
     # If user wants to go back to the main menu, elicit BQAIntent
     if returnToMenu and returnToMenu == 'true':
@@ -222,25 +280,8 @@ def dispatch(intent_request):
     if retrySlots and retrySlots == 'true':
         return retry_last_slot(intent_request)
 
-    # # Handle FallbackIntent
-    # if intent_name == 'FallbackIntent':
-    #     user_input = intent_request()
-    #     if user_input == 'back':
-    #         return elicit_intent(
-    #             intent_request,
-    #             'BQASlot',  # Replace with your main menu slot if needed
-    #             'BQAIntent',  # Replace with your actual main menu intent name
-    #         )
-    #     else:
-    #         return close(
-    #             intent_request,
-    #             'Fulfilled',
-    #             create_message("I don't understand it, please type 'back' to return to the main menu.")
-    #         )
-
     # Handle BQAIntent
     if intent_name == 'BQAIntent':
-        print("doing BQA INTENT")
         bqa_slot = get_slot(intent_request, 'BQASlot')
         if bqa_slot == 'Analyze':
             response = elicit_intent(
@@ -280,336 +321,144 @@ def dispatch(intent_request):
 
     # Handle AnalyzingIntent
     elif intent_name == 'AnalyzingIntent':
-        slots = get_slots(intent_request)
-        
-        # Check InstituteTypeSlot first
-        institute_type = get_slot(intent_request, 'InstituteTypeSlot')
-        if not institute_type:
-            return elicit_slot(
-                intent_request,
-                'InstituteTypeSlot',
-                slots=get_slots(intent_request),
+        step = Step(
+            'Analyze',
+            options_slot='InstituteTypeSlot',
+            options=(
+                Step(
+                    'School',
+                    required_slots=(
+                        'SchoolAspectSlot',
+                        'AnalyzeSchoolSlot',
+                    ),
+                    callback=lambda slots: create_school_analyze_prompt(slots['AnalyzeSchoolSlot'], slots['SchoolAspectSlot'])
+                ),
+                Step(
+                    'Vocational training center',
+                    required_slots=(
+                        'VocationalAspectSlot',
+                        'AnalyzeVocationalSlot',
+                    ),
+                    callback=lambda slots: create_analyze_vocational_training_centre(slots['AnalyzeVocationalSlot'], slots['VocationalAspectSlot'])
+                ),
+                Step(
+                    'University',
+                    options_slot='AnalyzeUniversitySlot',
+                    options=(
+                        Step(
+                            'Program Review',
+                            required_slots=(
+                                'ProgramNameSlot',
+                                'StandardProgSlot',
+                                'UniNameSlot',
+                            ),
+                            callback=lambda slots: create_uni_analyze_prompt(slots['StandardProgSlot'], slots['UniNameSlot'], slots['ProgramNameSlot'])
+                        ),
+                        Step(
+                            'Institutional Review',
+                            required_slots=(
+                                'StandardProgSlot',
+                                'AnalyzeUniversityNameSlot',
+                            ),
+                            callback=lambda slots: create_uni_analyze_prompt(slots['StandardProgSlot'], slots['AnalyzeUniversityNameSlot'])
+                        ),
+                    )
+                ),
             )
-        
-        if institute_type == 'School':
-             schoolaspect = get_slot(intent_request, "SchoolAspectSlot")
-             if schoolaspect is None:
-                return elicit_slot(
-                    intent_request,
-                    'SchoolAspectSlot',
-                    slots=get_slots(intent_request)
-                ) 
-             schoolname = get_slot(intent_request, "AnalyzeSchoolSlot")
-             if schoolname is None:
-                  return elicit_slot(
-                    intent_request,
-                    'AnalyzeSchoolSlot',
-                    slots=get_slots(intent_request)
-                ) 
-            #  message = f"the school aspect : {schoolaspect} choosen for the {schoolname} school"
-             school_analyze_prompt = create_school_analyze_prompt(schoolname, schoolaspect)
-             message = invoke_agent(agent_id, agent_alias_id, session_id, school_analyze_prompt)
-             response = create_message(message)
-             session_attributes = get_session_attributes(intent_request)
-             return followup(intent_request, response)
-        
-        elif institute_type == 'Vocational training center':
-             vocationalaspect = get_slot(intent_request, "VocationalAspectSlot")
-             if vocationalaspect is None:
-                return elicit_slot(
-                    intent_request,
-                    'VocationalAspectSlot',
-                    slots=get_slots(intent_request)
-                ) 
-             vocational = get_slot(intent_request, "AnalyzeVocationalSlot")
-             if vocational is None:
-                  return elicit_slot(
-                    intent_request,
-                    'AnalyzeVocationalSlot',
-                    slots=get_slots(intent_request)
-                ) 
-            #  message = f"the vocational training center : {vocational} choosen for the {vocationalaspect} aspect"
-             analyze_vocational_training_centre_prompt = create_analyze_vocational_training_centre(vocational, vocationalaspect)
-             message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_vocational_training_centre_prompt)
-             response = create_message(message)
-             session_attributes = get_session_attributes(intent_request)
-             
-             return followup(intent_request, response)
-        
-        # If University is selected, check AnalysisTypeSlot
-        elif institute_type == 'University':
-            analysis_type = get_slot(intent_request, 'AnalyzeUniversitySlot')
-            if not analysis_type:
-               return elicit_slot(
-                intent_request,
-                'AnalyzeUniversitySlot',
-                slots=get_slots(intent_request),
-            )
-          
-
-            # If Program is selected, check ProgramNameSlot
-            if analysis_type == 'Program Review':
-                program_name = get_slot(intent_request, 'ProgramNameSlot')
-                if program_name is None :
-                    return elicit_slot(
-                        intent_request,
-                        'ProgramNameSlot',
-                        slots=get_slots(intent_request),
-                    )
-
-                standard = get_slot(intent_request, 'StandardProgSlot')
-                if standard is None:
-                    return elicit_slot(
-                        intent_request,
-                        'StandardProgSlot',
-                        slots=get_slots(intent_request),
-                    )
-                
-                university = get_slot(intent_request, 'UniNameSlot')
-                if university is None:
-                    return elicit_slot(
-                        intent_request,
-                        'UniNameSlot',
-                        slots=get_slots(intent_request)
-                    )
-
-                # message = f"for the following {standard} the standard {program_name} {university}"
-                analyze_university_programme_prompt = create_uni_analyze_prompt(standard, university, program_name=program_name)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_programme_prompt)
-                response = create_message(message)
-                session_attributes = get_session_attributes(intent_request)
-                
-                return followup(intent_request, response)
-
-            elif analysis_type == 'Institutional Review':
-                standard = get_slot(
-                    intent_request,
-                    'StandardSlot',
-                )
-                if standard is None:
-                    print("standard slot not available")
-                    return elicit_slot(
-                        intent_request,
-                        'StandardSlot',
-                        slots=get_slots(intent_request),
-                    )
-               
-                university_name = get_slot(
-                    intent_request,
-                    'AnalyzeUniversityNameSlot',
-                )
-                if university_name is None:
-                    return elicit_slot(
-                        intent_request,
-                        'AnalyzeUniversityNameSlot',
-                        slots=get_slots(intent_request),
-                    )
-
-                # university here
-                # message = f"the standared of the program is: {standard} {university_name}"
-                analyze_university_prompt = create_uni_analyze_prompt(standard, university_name)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, analyze_university_prompt)
-                response = create_message(message)
-            
-                return followup(intent_request, response)
+        )
+        return step.process_step(intent_request)
     # Handle ComparingIntent
     elif intent_name == 'ComparingIntent':
-        slots = get_slots(intent_request)
-        
-        # Check InstituteTypeSlot first
-        institutecompare_type = get_slot(intent_request, 'InstituteCompareTypeSlot')
-        if not institutecompare_type:
-            return elicit_slot(
-                intent_request,
-                'InstituteCompareTypeSlot',
-                slots=get_slots(intent_request),
+        step =  Step(
+            'Compare',
+            options_slot='InstituteCompareTypeSlot',
+            options=(
+                Step(
+                    'University',
+                    options_slot='CompareUniversitySlot',
+                    options=(
+                        Step(
+                            'Institutional review',
+                            required_slots=(
+                                'CompareUniStandardSlot',
+                                'CompareUniversityUniSlot',
+                            ),
+                            callback=lambda slots: create_compare_uni_prompt(slots['CompareUniversityUniSlot'], slots['CompareUniStandardSlot'])
+                        ),
+                        Step(
+                            'Programs',
+                            required_slots=(
+                                'CompareUniversityWProgramsSlot',
+                                'CompareUniversityWprogSlot',
+                                'CompareUniversityWprogUniversityNameSlot',
+                            ),
+                            callback=lambda slots: create_compare_programme(slots['CompareUniversityWProgramsSlot'], slots['CompareUniversityWprogSlot'], slots['CompareUniversityWprogUniversityNameSlot'])
+                        ),
+                    )
+                ),
+                Step(
+                    'School',
+                    required_slots=(
+                        'CompareSchoolAspectlSlot',
+                    ),
+                    options_slot='CompareSchoolSlot',
+                    options=(
+                        Step(
+                            'Governorate',
+                            required_slots=(
+                                'CompareSchoolAspectlSlot',
+                                'GovernorateSlot',
+                            ),
+                            callback=lambda slots: create_compare_schools_prompt(slots['GovernorateSlot'], slots['CompareSchoolAspectlSlot'], governorate=True)
+                        ),
+                        Step(
+                            'Specific Institutes',
+                            required_slots=(
+                                'CompareSchoolAspectlSlot',
+                                'CompareSpecificInstitutesSlot',
+                            ),
+                            callback=lambda slots: create_compare_schools_prompt(slots['CompareSpecificInstitutesSlot'], slots['CompareSchoolAspectlSlot'])
+                        ),
+                        Step(
+                            'All Government Schools',
+                            required_slots=(
+                                'CompareSchoolAspectlSlot',
+                            ),
+                            callback=lambda slots: create_compare_schools_prompt("", slots['CompareSchoolAspectlSlot'], all_government=True)
+                        ),
+                        Step(
+                            'All Private Schools',
+                            required_slots=(
+                                'CompareSchoolAspectlSlot',
+                            ),
+                            callback=lambda slots: create_compare_schools_prompt("", slots['CompareSchoolAspectlSlot'], all_private=True)
+                        ),
+                    )
+                ),
+                Step(
+                    'Vocational training center',
+                    required_slots=(
+                        'CompareVocationalaspectSlot',
+                        'CompareVocationalSlot',
+                    ),
+                    callback=lambda slots: create_compare_vocational_training_centres(slots['CompareVocationalSlot'], slots['CompareVocationalaspectSlot'])
+                ),
             )
-        
-        if institutecompare_type == 'University':
-            compare_types = get_slot(intent_request,'CompareUniversitySlot')
-            if not compare_types:
-                  return elicit_slot(
-                intent_request,
-                'CompareUniversitySlot',
-                slots=get_slots(intent_request),
-            )
-
-            # comp_type = get_slot(intent_request, 'CompareUniSlot')
-            # if not comp_type:
-            #       return elicit_slot(
-            #         intent_request,
-            #         'CompareUniSlot',
-            #         slots=get_slots(intent_request)
-            #  )
-
-
-            if compare_types == 'Institutional review':
-                standard_name = get_slot(intent_request,'CompareUniStandardSlot')
-                if standard_name is None:
-                    return elicit_slot(
-                        intent_request,
-                        'CompareUniStandardSlot',
-                        slots=get_slots(intent_request),
-                    )
-                
-                universities = get_slot(intent_request,'CompareUniversityUniSlot')
-                if not universities:
-                    return elicit_slot(
-                        intent_request,
-                        'CompareUniversityUniSlot',
-                        slots=get_slots(intent_request)
-                    )
-                
-
-                # message = f"based on {standard_name} and the universities: {universities} here is the new one"
-                compare_uni_prompt = create_compare_uni_prompt(universities, standard_name)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_uni_prompt)
-                response = create_message(message)
-                session_attributes = get_session_attributes(intent_request)
-                
-                return followup(intent_request, response)
-        
-            elif compare_types == 'Programs':
-                programs_st = get_slot(intent_request,'CompareUniversityWProgramsSlot')
-                if programs_st is None:
-                    return elicit_slot(
-                        intent_request,
-                        'CompareUniversityWProgramsSlot',
-                        slots=get_slots(intent_request),
-                    )
-                
-                program_names = get_slot(intent_request,'CompareUniversityWprogSlot')
-                if program_names is None:
-                    return elicit_slot(
-                        intent_request,
-                        'CompareUniversityWprogSlot',
-                        slots=get_slots(intent_request)
-                    )
-                
-                universities = get_slot(intent_request,'CompareUniversityWprogUniversityNameSlot')
-                if universities is None:
-                    return elicit_slot(
-                        intent_request,
-                        'CompareUniversityWprogUniversityNameSlot',
-                        slots=get_slots(intent_request)
-                    )
-                
-
-        
-                # message = f"the program standatd {programs_st} for the {program_names} in {universities}"
-                create_comapre_university_prompt = create_compare_programme(programs_st, program_names, universities)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, create_comapre_university_prompt)
-                response = create_message(message)
-                session_attributes = get_session_attributes(intent_request)
-                
-                return followup(intent_request, response)
-    
-        elif institutecompare_type == 'School':
-            compare_school_aspect = get_slot(intent_request,'CompareSchoolAspectlSlot')
-            if compare_school_aspect is None:
-                return elicit_slot(
-                    intent_request,
-                    'CompareSchoolAspectlSlot',
-                    slots=get_slots(intent_request),
-                )  
-            
-            compareschool_type = get_slot(intent_request,'CompareSchoolSlot')
-            if compareschool_type is None:
-                return elicit_slot(
-                    intent_request,
-                    'CompareSchoolSlot',
-                    slots=get_slots(intent_request)
-                )
-            
-            if compareschool_type == 'Governorate':
-                governorate_name = get_slot(intent_request,'GovernorateSlot')
-                if governorate_name is None:
-                    return elicit_slot(
-                        intent_request,
-                        'GovernorateSlot',
-                        slots=get_slots(intent_request),
-                    )
-                
-                # message = f"the governorate you selected is: {governorate_name} for the aspect {compare_school_aspect}"
-                compare_school_by_governorate_prompt = create_compare_schools_prompt(institute_names=governorate_name, aspect=compare_school_aspect, governorate=True)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_school_by_governorate_prompt)
-                response = create_message(message)
-                session_attributes = get_session_attributes(intent_request)
-                
-                return followup(intent_request, response)
-            
-            elif compareschool_type == 'Specific Institutes':
-                specific_institutes_name = get_slot(intent_request,'CompareSpecificInstitutesSlot')
-                if specific_institutes_name is None:
-                    return elicit_slot(
-                        intent_request,
-                        'CompareSpecificInstitutesSlot',
-                        slots=get_slots(intent_request),
-                    )
-                # message = f"Comparision of Institutes: {specific_institutes_name} for the aspect {compare_school_aspect}"
-                compare_schools_prompt = create_compare_schools_prompt(specific_institutes_name, compare_school_aspect)
-                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_schools_prompt)
-                response = create_message(message)
-                session_attributes = get_session_attributes(intent_request)
-                
-                return followup(intent_request, response)
-            
-            elif compareschool_type == "All Government Schools" or compareschool_type == 'All Private Schools':
-                # message = f"Comparision of schools: {compareschool_type} for the aspect {compare_school_aspect}"
-                # compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect)
-                compare_schools_prompt = ""
-                if compareschool_type == "All Government Schools":
-                    compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect, all_government=True)
-                elif compareschool_type == "All Private Schools":
-                    compare_schools_prompt = create_compare_schools_prompt(institute_names="", aspect=compare_school_aspect, all_private=True)
-                
-                message = invoke_agent(agent_id, agent_alias_id, session_id, compare_schools_prompt)
-
-                response = create_message(message)
-                session_attributes = get_session_attributes(intent_request)
-                
-                return followup(intent_request, response)
-            
-        elif institutecompare_type == 'Vocational training center':
-            comparevocationalaspect = get_slot(intent_request,'CompareVocationalaspectSlot')
-            if comparevocationalaspect is None:
-                return elicit_slot(
-                    intent_request,
-                    'CompareVocationalaspectSlot',
-                    slots=get_slots(intent_request),
-                )  
-            comparevocational_type = get_slot(intent_request, "CompareVocationalSlot")
-            if comparevocational_type is None:
-                  return elicit_slot(
-                    intent_request,
-                    'CompareVocationalSlot',
-                    slots=get_slots(intent_request)
-                ) 
-            # message = f"the vocational training center : {comparevocational_type} choosen for the {comparevocationalaspect} aspect"
-            compare_training_center_prompt = create_compare_vocational_training_centres(comparevocational_type, comparevocationalaspect)
-            message = invoke_agent(agent_id, agent_alias_id, session_id, compare_training_center_prompt)
-            response = create_message(message)
-            session_attributes = get_session_attributes(intent_request)
-            
-            return followup(intent_request, response)
-                 
-    # Handle OtherIntent
-    elif intent_name == 'OtherIntent':
-        other_question = get_slot(intent_request, 'OtherQuestionsSlot')
-        if not other_question:
-            elicit_slot(
-                intent_request,
-                "OtherQuestionsSlot",
-            )
-        # response = f"You asked: '{other_question}'. Processing your request."
-        response = invoke_agent(agent_id, agent_alias_id, session_id, other_question)
-        message = create_message(response)
-        return followup(
-            intent_request,
-            message,
         )
 
-    # Handle other intents as needed...
+        return step.process_step(intent_request)
+    # Handle OtherIntent
+    elif intent_name == 'OtherIntent':
+        step = Step(
+            'Other',
+            required_slots=(
+                'OtherQuestionsSlot',
+            ),
+            callback=lambda slots: slots['OtherQuestionsSlot'],
+        )
+
+        return step.process_step(intent_request)
+
     else:
         # General fallback for undefined intents
         return close(
