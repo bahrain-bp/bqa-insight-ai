@@ -9,6 +9,7 @@ const client = new BedrockRuntimeClient({ region: "us-east-1" });
 const sqs = new AWS.SQS();
 const ModelId = "anthropic.claude-3-sonnet-20240229-v1:0";
 const extractMetadataQueueUrl = process.env.EXTRACT_METADATA_QUEUE_URL;
+const bucket = process.env.BUCKET_NAME || "";
 
 // Using Llama model to extract metadata about programs
 export async function handler(event: SQSEvent) {
@@ -156,7 +157,7 @@ async function insertProgramMetadata(data: any, fileKey: string) {
     };
     await dynamoDb.put(params).promise();
     // After DynamoDB insert, create a corresponding metadata JSON file in S3 bucket
-    await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); 
+    await handleDynamoDbInsert(data, bucket, fileKey, 'program'); 
     return;
 }
 

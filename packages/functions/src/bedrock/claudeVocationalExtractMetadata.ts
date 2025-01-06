@@ -114,6 +114,9 @@ export async function handler(event: SQSEvent){
           
             await insertVocationalCentreMetadata(extractedOutput, fileKey);
             console.log("IT SHOULD BE INSERTED to instituiteMetaData");
+
+            await insertReportMetadata(extractedOutput, fileKey);
+            console.log("IT SHOULD BE INSERTED to fileMetaData");
   
             await deleteSQSMessage(record.receiptHandle);
             return extractedOutput;
@@ -230,4 +233,18 @@ async function insertVocationalCentreMetadata(data: any, fileKey: string) {
   // After DynamoDB insert, create a corresponding metadata JSON file in S3 bucket
   await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'vocational'); 
   return;
+}
+async function insertReportMetadata(data :any, fileKey : string) {
+  console.log("datatype of data:", typeof data)
+  console.log("data zero:",  data)
+  const params = {
+      TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+          Key : {fileKey},
+          UpdateExpression: "SET vocationalCenterName = :vocationalCenterName",
+          ExpressionAttributeValues: {
+              ":vocationalCenterName": data["Vocational Training center"],
+          },
+          ReturnValues: "UPDATED_NEW",
+  };
+  return await dynamoDb.update(params).promise();
 }

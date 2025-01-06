@@ -1,6 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { S3, DynamoDB } from "aws-sdk";
-import { DynamoDBClient} from "@aws-sdk/client-dynamodb";
 import { syncDeleteKnowlegeBase } from "src/bedrock/deleteSync";
 
 const s3 = new S3();
@@ -22,7 +21,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
       };
     }
 
-    const { fileKeys } = JSON.parse(event.body); // Expecting an array of fileKeys
+    const { fileKeys } = JSON.parse(event.body);
 
     if (!Array.isArray(fileKeys) || fileKeys.length === 0) {
       return {
@@ -33,12 +32,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
 
     const deletePromises = fileKeys.map(async (fileKey) => {
       try {
-        const uniqueKey = fileKey.replace(/^Files\//, ""); // Extract unique key
+        const uniqueKey = fileKey.replace(/^Files\//, "");
         const splitDirectory = `SplitFiles/${uniqueKey}`;
-        const txtFileKey = `TextFiles/${uniqueKey}.txt`; // Construct the corresponding .txt file key
-
-        // Remove .pdf from the uniqueKey and create a new key for .metadata.json file
-        const metadataFileKey = `TextFiles/${uniqueKey.replace('.pdf', '')}.metadata.json`; // Removes .pdf if present
+        const txtFileKey = `TextFiles/${uniqueKey}.txt`;
+        const metadataFileKey = `TextFiles/${uniqueKey.replace('.pdf', '')}.metadata.json`;
 
         // Delete the main file from S3
         await s3.deleteObject({ Bucket: BUCKET_NAME, Key: fileKey }).promise();
@@ -98,7 +95,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         } else {
           console.log(`No corresponding metadata.json file found for key: ${metadataFileKey}`);
         }
-        
+
+        // Get file metadata to access all necessary information
         const fileMetadata = await dynamodb
           .get({
             TableName: TABLE_NAME,
@@ -106,10 +104,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           })
           .promise();
 
-        console.log(`${fileMetadata.Item?.institueName} fileMetadata institutename`);
-
+        // Handle institute deletion
         if (fileMetadata.Item?.instituteName) {
-          // Query for all records with the same institute name BEFORE deleting
           const instituteRecords = await dynamodb
             .scan({
               TableName: TABLE_NAME,
@@ -120,13 +116,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             })
             .promise();
 
-          // Delete from file metadata table
           await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
           console.log(`Deleted from file metadata table: ${fileKey}`);
 
-          // Now check if this was the last file for this institute
           if (instituteRecords.Items && instituteRecords.Items.length <= 1) {
-            // This was the last file, so delete from institute metadata
             await dynamodb
               .delete({
                 TableName: INSTITUTE_METADATA_TABLE,
@@ -135,89 +128,106 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
               .promise();
             console.log(`Deleted institute from metadata table: ${fileMetadata.Item.instituteName}`);
           } else {
-            // There are other files for this institute, so keep the institute record
             const remainingFiles = instituteRecords.Items ? instituteRecords.Items.length - 1 : 0;
             console.log(`Keeping institute record as ${remainingFiles} files remain`);
           }
-        } else {
-          // If there's no institute name, just delete from file metadata
+        }
+
+        // Handle university deletion
+        if (fileMetadata.Item?.universityName) {
+          const universityRecords = await dynamodb
+            .scan({
+              TableName: TABLE_NAME,
+              FilterExpression: "universityName = :universityName",
+              ExpressionAttributeValues: {
+                ":universityName": fileMetadata.Item.universityName
+              }
+            })
+            .promise();
+
+          // Delete program metadata if exists
+          const programRecords = await dynamodb
+            .scan({
+              TableName: PROGRAM_METADATA_TABLE_NAME,
+              FilterExpression: "universityName = :universityName",
+              ExpressionAttributeValues: {
+                ":universityName": fileMetadata.Item.universityName
+              }
+            })
+            .promise();
+
+          if (programRecords.Items && programRecords.Items.length > 0) {
+            for (const program of programRecords.Items) {
+              await dynamodb.delete({ 
+                TableName: PROGRAM_METADATA_TABLE_NAME, 
+                Key: { 
+                  universityName: program.universityName,
+                  programmeName: program.programmeName 
+                } 
+              }).promise();
+              console.log(`Deleted program from metadata table: ${program.programmeName}`);
+            }
+          }
+
+          // Only delete from university metadata if this is the last file
+          if (universityRecords.Items && universityRecords.Items.length <= 1) {
+            await dynamodb.delete({ 
+              TableName: UNIVERSITY_METADATA_TABLE_NAME, 
+              Key: { 
+                universityName: fileMetadata.Item.universityName
+              } 
+            }).promise();
+            console.log(`Deleted university from metadata table: ${fileMetadata.Item.universityName}`);
+          } else {
+            const remainingFiles = universityRecords.Items ? universityRecords.Items.length - 1 : 0;
+            console.log(`Keeping university record as ${remainingFiles} files remain`);
+          }
+        }
+
+        // Handle vocational center deletion
+        if (fileMetadata.Item?.vocationalCenterName) {
+          const vocationalRecords = await dynamodb
+            .scan({
+              TableName: TABLE_NAME,
+              FilterExpression: "vocationalCenterName = :vocationalCenterName",
+              ExpressionAttributeValues: {
+                ":vocationalCenterName": fileMetadata.Item.vocationalCenterName
+              }
+            })
+            .promise();
+
+          // Only delete from vocational center metadata if this is the last file
+          if (vocationalRecords.Items && vocationalRecords.Items.length <= 1) {
+            await dynamodb.delete({ 
+              TableName: VOCATIONAL_CENTER_METADATA_TABLE_NAME, 
+              Key: { 
+                vocationalCenterName: fileMetadata.Item.vocationalCenterName
+              } 
+            }).promise();
+            console.log(`Deleted vocational center from metadata table: ${fileMetadata.Item.vocationalCenterName}`);
+          } else {
+            const remainingFiles = vocationalRecords.Items ? vocationalRecords.Items.length - 1 : 0;
+            console.log(`Keeping vocational center record as ${remainingFiles} files remain`);
+          }
+        }
+
+        // Delete from file metadata table if not already deleted via institute path
+        if (!fileMetadata.Item?.instituteName) {
           await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
           console.log(`Deleted from file metadata table: ${fileKey}`);
         }
 
-        // Check and Delete from Program Metadata Table   
-        const programScan = await dynamodb.scan({
-          TableName: PROGRAM_METADATA_TABLE_NAME,
-          FilterExpression: "fileKey = :fileKey",
-          ExpressionAttributeValues: {
-            ":fileKey": fileKey
-          }
-        }).promise();
+        // Delete from knowledge base
+        const uri = `s3://${BUCKET_NAME}/${fileKey}`;
+        await syncDeleteKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "", uri);
+        console.log("Successfully deleted from knowledge base");
 
-        if (programScan.Items && programScan.Items.length > 0) {
-          const program = programScan.Items[0];
-          await dynamodb.delete({ 
-            TableName: PROGRAM_METADATA_TABLE_NAME, 
-            Key: { 
-              universityName: program.universityName,
-              programmeName: program.programmeName 
-            } 
-          }).promise();
-          console.log(`Deleted from program metadata table: ${program.programmeName}`);
-        }
-
-        // Check and Delete from University Metadata Table 
-        const universityScan = await dynamodb.scan({
-          TableName: UNIVERSITY_METADATA_TABLE_NAME,
-          FilterExpression: "fileKey = :fileKey",
-          ExpressionAttributeValues: {
-            ":fileKey": fileKey
-          }
-        }).promise();
-
-        if (universityScan.Items && universityScan.Items.length > 0) {
-          const university = universityScan.Items[0];
-          await dynamodb.delete({ 
-            TableName: UNIVERSITY_METADATA_TABLE_NAME, 
-            Key: { 
-              universityName: university.universityName
-            } 
-          }).promise();
-          console.log(`Deleted from university metadata table: ${university.universityName}`);
-        }
-
-        // Check and Delete from Vocational Center Metadata Table
-        const vocationalScan = await dynamodb.scan({
-          TableName: VOCATIONAL_CENTER_METADATA_TABLE_NAME,
-          FilterExpression: "fileKey = :fileKey",
-          ExpressionAttributeValues: {
-            ":fileKey": fileKey
-          }
-        }).promise();
-
-        if (vocationalScan.Items && vocationalScan.Items.length > 0) {
-          const vocationalCenter = vocationalScan.Items[0];
-          await dynamodb.delete({ 
-            TableName: VOCATIONAL_CENTER_METADATA_TABLE_NAME, 
-            Key: { 
-              vocationalCenterName: vocationalCenter.vocationalCenterName
-            } 
-          }).promise();
-          console.log(`Deleted from vocational center metadata table: ${vocationalCenter.vocationalCenterName}`);
-        }
-
-        console.log(`Deleted metadata from DynamoDB: ${fileKey}`);
       } catch (err) {
         console.error(`Failed to delete fileKey: ${fileKey}`, err);
-        throw err; // Ensure any failure is caught at the top level
+        throw err;
       }
-    
-      const uri = `s3://${BUCKET_NAME}/${fileKey}`;
-      await syncDeleteKnowlegeBase(process.env.KNOWLEDGE_BASE_ID || "", process.env.DATASOURCE_BASE_ID || "", uri);
-      console.log("Successful sync deleting...");
     });
 
-    // Wait for all deletion promises to resolve
     await Promise.all(deletePromises);
 
     return {
