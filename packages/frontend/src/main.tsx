@@ -12,12 +12,12 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <RouterRoot/>
   </React.StrictMode>,
 )
+console.log("Pool: ", import.meta.env.VITE_USER_POOL_ID)
 Amplify.configure({
   Auth: {
-    Cognito:{
-    userPoolId: 'us-east-1_3q7TXdnTh',
-    userPoolClientId: '7mj42l6n2nhedepncpaeks4814',
-  },
-}
-}
-);
+    Cognito: {
+      userPoolId: import.meta.env.VITE_USER_POOL_ID || "",
+      userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID || "",
+    },
+  }
+});
