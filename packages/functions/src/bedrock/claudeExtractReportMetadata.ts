@@ -5,6 +5,7 @@ import { SQSEvent } from "aws-lambda";
 import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
 import { handleDynamoDbInsert } from "src/lambda/fillingJson";
 import { Topic } from "sst/node/topic";
+import {jsonParse} from "./jsonParse";
 
 // Initializing AWS services
 const dynamoDb = new DynamoDB.DocumentClient(); // DynamoDB client for reading and writing data
@@ -121,7 +122,7 @@ export async function handler(event: SQSEvent) {
       console.log("Final output: ", output);
 
       // Parse the extracted metadata
-      const extractedOutput = parseMetadata(output);
+      const extractedOutput = jsonParse(output);
       console.log("Extracted Output:", extractedOutput);
 
       // Insert metadata into DynamoDB and handle S3 JSON insertion
@@ -187,30 +188,6 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
     console.error("Error deleting SQS message:", error);
   }
 }
-
-
-// Parsing function to extract the JSON formatted output from the model response
-function parseMetadata(input: string): string {
-  // Extract JSON part in case the model returned extra text with the JSON output
-  const jsonRegex = /{([\s\S]*?)}/;
-  const extractedJson = input.match(jsonRegex);
-
-  if (!extractedJson) {
-    throw new Error("No JSON-like structure found in the input.");
-  }
-
-  // Parse the input string into a JSON object
-  const parsedData = JSON.parse(extractedJson[0]);
-
-  // Ensure the parsed data is an object
-  if (typeof parsedData !== "object" || parsedData === null) {
-    throw new Error("Input is not a valid JSON object.");
-  }
-
-  return parsedData;
-}
-
-
 
 async function getMessageInQueue(queueUrl: string) {
   const params = {

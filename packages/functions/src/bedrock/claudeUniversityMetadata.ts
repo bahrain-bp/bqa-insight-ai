@@ -3,6 +3,7 @@ import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-r
 import { DynamoDB } from "aws-sdk";
 import { SQSEvent } from "aws-lambda";
 import { handleDynamoDbInsert } from "src/lambda/fillingJson";
+import {jsonParse} from "./jsonParse";
 
 const dynamoDb = new DynamoDB.DocumentClient(); // DynamoDB client for reading and writing data
 const client = new BedrockRuntimeClient({ region: "us-east-1" }); // Bedrock client for model inference
@@ -113,13 +114,10 @@ export async function handler(event: SQSEvent) {
 
       // Extract the text content from the model's response
       const modelResponse = response.output?.message?.content?.[0].text;
-      console.log("model output: ", modelResponse);
-
-      // Extract JSON content from the response using regex
-      const afterRegex = regexFunction(modelResponse || "");
 
       // Parse the extracted JSON content
-      const parsedResponse = JSON.parse(afterRegex || "");
+      const parsedResponse = jsonParse(modelResponse || "");
+      console.log("Model parsed output: ", parsedResponse);
 
       // Insert the extracted metadata into DynamoDB
       await insertUniversityMetadata(parsedResponse, fileKey);
@@ -149,19 +147,6 @@ async function insertUniversityMetadata(data: any, fileKey: string) {
   await dynamoDb.put(params).promise();
   await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, "university");
   return;
-}
-
-// Function to extract JSON content from a mixed string response
-function regexFunction(input: string): string {
-  // Regex to extract the JSON-like part of the string
-  const jsonRegex = /{([\s\S]*?)}/;
-  const extractedJson = input.match(jsonRegex);
-
-  if (!extractedJson) {
-    throw new Error("No JSON-like structure found in the input.");
-  }
-
-  return extractedJson[0]; // Return the extracted JSON string
 }
 
 // Function to delete an SQS message after processing

@@ -5,6 +5,7 @@ import { SQSEvent } from "aws-lambda";
 import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
 import { handleDynamoDbInsert } from "src/lambda/fillingJson";
 import { Topic } from "sst/node/topic";
+import {jsonParse} from "./jsonParse";
 
 // Initialize AWS DynamoDB, Bedrock runtime, SQS, and SNS clients
 const dynamoDb = new DynamoDB.DocumentClient();
@@ -102,8 +103,8 @@ export async function handler(event: SQSEvent) {
       const output = decodedResponseBody.content[0].text;
 
       // Extract metadata from the model's response
-      const extractedOutput = parseMetadata(output);
-      console.log("Extracted Output:", extractedOutput);
+      const extractedOutput = jsonParse(output);
+      console.log("Extracted Parsed Output:", extractedOutput);
 
       // Insert the extracted metadata into DynamoDB
       await insertVocationalCentreMetadata(extractedOutput, fileKey);
@@ -162,19 +163,6 @@ async function getMessageInQueue(queueUrl: string) {
   } catch (err) {
     console.error("Error fetching queue attributes:", err);
   }
-}
-
-// Function to parse the extracted metadata from the Bedrock model's output
-function parseMetadata(input: string): any {
-  const jsonRegex = /{([\s\S]*?)}/; // Regex to extract JSON-like content
-  const extractedJson = input.match(jsonRegex);
-
-  // Throw error if JSON is not found
-  if (!extractedJson) {
-    throw new Error("No JSON-like structure found in the input.");
-  }
-
-  return JSON.parse(extractedJson[0]); // Return parsed JSON data
 }
 
 // Insert the vocational training center metadata into DynamoDB

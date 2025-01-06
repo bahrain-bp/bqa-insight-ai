@@ -3,6 +3,7 @@ import { BedrockRuntimeClient, ConverseCommand } from "@aws-sdk/client-bedrock-r
 import { DynamoDB } from "aws-sdk";
 import { SQSEvent } from "aws-lambda";
 import { handleDynamoDbInsert } from "src/lambda/fillingJson";
+import {jsonParse} from "./jsonParse";
 
 // Initializing AWS services and Bedrock client
 const dynamoDb = new DynamoDB.DocumentClient(); // DynamoDB client for reading and writing data
@@ -109,13 +110,13 @@ export async function handler(event: SQSEvent) {
             const command = new ConverseCommand(input);
             const response = await client.send(command);
 
-             // Extracting the response content and applying regex to ensure JSON format
+             // Extracting the response content 
             const modelResponse = response.output?.message?.content?.[0].text
-            const afterRegex = regexFunction(modelResponse || "");
-    
-            // Parse the structured JSON response
-            const parsedResponse = JSON.parse(afterRegex || "");
             console.log("model output: ", modelResponse);
+        
+            // Parse the structured JSON response
+            const parsedResponse = jsonParse(modelResponse || "");
+            console.log("Model parsed output: ", parsedResponse);
 
              // Save extracted metadata to DynamoDB and S3
             await insertProgramMetadata(parsedResponse, fileKey);
@@ -143,20 +144,6 @@ async function insertProgramMetadata(data: any, fileKey: string) {
     await dynamoDb.put(params).promise();
     await handleDynamoDbInsert(data, process.env.BUCKET_NAME || "", fileKey, 'program'); // Add this line here
     return;
-}
-
-// Function to extract JSON content from a mixed string response
-function regexFunction(input: string): string {
- // Regex to extract the JSON-like part of the string
-  const jsonRegex = /{([\s\S]*?)}/;
-  const extractedJson = input.match(jsonRegex);
-
-  if (!extractedJson) {
-      throw new Error("No JSON-like structure found in the input.");
-  }
-
-  return extractedJson[0]; // Return the extracted JSON string to be parsed as JSON
-
 }
 
 // Function to delete an SQS message after processing
