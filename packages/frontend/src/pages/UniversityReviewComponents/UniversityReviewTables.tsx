@@ -43,6 +43,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     return reviews[reviews.length - 1];
   }
 
+  // Excel Export Function
   const exportToExcel = () => {
     const exportData = displayedData.map(university => {
       const latestReview = getLatestReview(university.Reviews);
@@ -66,6 +67,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     XLSX.writeFile(wb, fileName);
   };
 
+  // PDF Export Function
   const exportToPDF = async () => {
     const printDiv = document.createElement('div');
     printDiv.className = 'pdf-export';

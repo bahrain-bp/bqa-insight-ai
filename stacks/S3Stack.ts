@@ -7,12 +7,13 @@ import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack
 import { OpenDataStack } from "./OpenDataStack";
 import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 export function S3Stack({ stack }: StackContext) {
-    const {fileMetadataTable } = use(FileMetadataStack);
-    const {instituteMetadata} = use (InstituteMetadataStack);
-    const {programMetadataTable} = use(ProgramMetadataStack);
-    const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack);
-    const {vocationalCenterMetadataTable} = use(VocationalCentersMetadataStack);
-    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
+// Importing table resources from various stacks to reference in the application
+    const {fileMetadataTable } = use(FileMetadataStack); //Handles metadata related to uploaded files.
+    const {instituteMetadata} = use (InstituteMetadataStack); //Stores metadata about schools 
+    const {programMetadataTable} = use(ProgramMetadataStack); //Contains data related to university programs.
+    const {UniversityProgramMetadataTable} = use(UniversityProgramMetadataStack); // Manages metadata for universities specifically.
+    const {vocationalCenterMetadataTable} = use(VocationalCentersMetadataStack); //Holds metadata for vocational training centers.
+    const { SchoolReviewsTable, VocationalReviewsTable, UniversityReviewsTable } = use(OpenDataStack);
 
     // Create an SST Bucket with versioning and CORS
     const bucket = new Bucket(stack, "ReportBucket", {
@@ -50,98 +51,101 @@ export function S3Stack({ stack }: StackContext) {
         },
     });
 
+//Lambda function to extract university metadata using Claude AI
     const extractUniversityMetadata = new Function(stack, "claudeUniversityMetadata", {
+        // Specify the function handler location
         handler: "packages/functions/src/bedrock/claudeUniversityMetadata.handler",
-        timeout: "300 seconds",
+        timeout: "300 seconds", // Set the timeout to allow up to 300 seconds for execution
+         // Grant permission to the lambda function to access the required AWS services
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , extractMetadataQueue, UniversityProgramMetadataTable
         ],
+        //Define the environment variables with table and bucket names to be used in the Lambda function
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
-        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
-        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
         UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
-        bind: [syncTopic]
+        bind: [syncTopic] // Bind the sync topic to enable triggering or event handling
     });
 
-    // claudeVocationalExtractMetadata
-
+   
+//Lambda function to extract vocational training centers metadata using Claude AI
     const extractVocationalCentreMetadata = new Function(stack, "claudeVocationalExtractMetadata", {
+        // Specify the function handler location
         handler: "packages/functions/src/bedrock/claudeVocationalExtractMetadata.handler",
-        timeout: "300 seconds",
+        timeout: "300 seconds", // Set the timeout to allow up to 300 seconds for execution
+        // Grant permission to the lambda function to access the required AWS services
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , extractMetadataQueue, vocationalCenterMetadataTable
         ],
+        //Define the environment variables with table and bucket names to be used in the Lambda function
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
-        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
-        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
-        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
         VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
         bind: [syncTopic]
     });
+
+//Lambda function to extract programs within universities metadata using Claude AI
     const extractProgramMetadata = new Function(stack, "claudeProgramMetadata", {
+        // Specify the function handler location
         handler: "packages/functions/src/bedrock/claudeProgramMetadata.handler",
-        timeout: "300 seconds",
+        timeout: "300 seconds", // Set the timeout to allow up to 300 seconds for execution
+        // Grant permission to the lambda function to access the required AWS services
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , extractMetadataQueue, programMetadataTable
         ],
+        //Define the environment variables with table and bucket names to be used in the Lambda function
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
-        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
         PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
-        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName,
         },
         bind: [syncTopic]
     });
 
+//Lambda function to extract schools metadata using Claude AI
     const extractReportMetadata = new Function(stack, "claudeExtractReportMetadata", {
+        // Specify the function handler location
         handler: "packages/functions/src/bedrock/claudeExtractReportMetadata.handler",
-        timeout: "300 seconds",
+        timeout: "300 seconds", // Set the timeout to allow up to 300 seconds for execution
+        // Grant permission to the lambda function to access the required AWS services
         permissions: [
-            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable
+            bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue
         ],
+        //Define the environment variables with table and bucket names to be used in the Lambda function
         environment: {
         FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
         INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
-        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
-        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
         bind: [syncTopic]
     });
+
+//Lambda function that manages the process of invoking the institutes' Lambda functions based on the report type
     const triggerExtractLambda = new Function(stack, "triggerExtractLambda", {
+        // Specify the function handler location
         handler: "packages/functions/src/bedrock/triggerExtractLambda.handler",
-        timeout: "300 seconds",
+        timeout: "300 seconds", // Set the timeout to allow up to 300 seconds for execution
+        // Grant permission to the lambda function to access the required AWS services
         permissions: [
             bucket, "bedrock", "textract" , fileMetadataTable , instituteMetadata, extractMetadataQueue, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable, "lambda:InvokeFunction"
         ],
+        //Define the environment variables with lambda functions and bucket names to be used in the Lambda function
         environment: {
         SCHOOL_LAMBDA_FUNCTION_NAME : extractReportMetadata.functionName,
         UNIVERSITY_LAMBDA_FUNCTION_NAME : extractUniversityMetadata.functionName,
         PROGRAM_LAMBDA_FUNCTION_NAME: extractProgramMetadata.functionName,
         VOCATIONAL_LAMBDA_FUNCTION_NAME: extractVocationalCentreMetadata.functionName,
-        FILE_METADATA_TABLE_NAME : fileMetadataTable.tableName,
-        INSTITUTE_METADATA_TABLE_NAME : instituteMetadata.tableName,
         EXTRACT_METADATA_QUEUE_URL: extractMetadataQueue.queueUrl,
-        PROGRAM_METADATA_TABLE_NAME : programMetadataTable.tableName,
-        UNIVERSITY_METADATA_TABLE_NAME : UniversityProgramMetadataTable.tableName,
-        VOCATIONAL_CENTER_METADATA_TABLE_NAME : vocationalCenterMetadataTable.tableName,
         BUCKET_NAME: bucket.bucketName
         },
-        // bind: [syncTopic],
     });
 
     extractMetadataQueue.addConsumer(stack, {
@@ -239,12 +243,10 @@ export function S3Stack({ stack }: StackContext) {
         handler: "packages/functions/src/lambda/processCSV.handler",
         environment: {
             SCHOOL_REVIEWS_TABLE_NAME: SchoolReviewsTable.tableName,
-            HIGHER_EDUCATION_PROGRAMME_REVIEWS_TABLE_NAME: HigherEducationProgrammeReviewsTable.tableName,
-            NATIONAL_FRAMEWORK_OPERATIONS_TABLE_NAME: NationalFrameworkOperationsTable.tableName,
             VOCATIONAL_REVIEWS_TABLE_NAME: VocationalReviewsTable.tableName,
             UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
         },
-        permissions: [SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable,UniversityReviewsTable], 
+        permissions: [SchoolReviewsTable,VocationalReviewsTable,UniversityReviewsTable], 
     });
 
     // S3 Notification for CSV files

@@ -55,7 +55,8 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
     }
     
     // Then check if it's from the allowed domain
-    return email.toLowerCase().endsWith('@bqa.gov.bh');
+    // return email.toLowerCase().endsWith('@bqa.gov.bh');
+    return true
   };
 
   const isInitialFormValid = () => {

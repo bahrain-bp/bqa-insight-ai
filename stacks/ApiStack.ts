@@ -12,6 +12,7 @@ import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
 import { VocationalCentersMetadataStack } from "./VocationalCentersMetadataStack";
 import { OpenDataStack } from "./OpenDataStack";
+import { AuthStack } from "./AuthStack";
 
 
 export function ApiStack({stack}: StackContext) {
@@ -24,10 +25,12 @@ export function ApiStack({stack}: StackContext) {
     const { UniversityProgramMetadataTable } = use(UniversityProgramMetadataStack); 
     const { programMetadataTable } = use(ProgramMetadataStack);  
     const {vocationalCenterMetadataTable} = use (VocationalCentersMetadataStack);
-    const { SchoolReviewsTable, HigherEducationProgrammeReviewsTable, NationalFrameworkOperationsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
+    const { SchoolReviewsTable, VocationalReviewsTable , UniversityReviewsTable } = use(OpenDataStack);
+    const {auth} = use(AuthStack)
 
-
-
+    // Hardcoded userPoolId and userPoolClientId
+    const userPoolId = auth.userPoolId;
+    const userPoolClientId = auth.userPoolClientId;
 
     
     // Create the HTTP API
@@ -38,11 +41,31 @@ export function ApiStack({stack}: StackContext) {
                 bind: [table], // Make sure bucket is available to the function
             },
         },
+        authorizers: {
+            authApi: {
+              type: "user_pool",
+              userPool: {
+                id: userPoolId,
+                clientIds: [userPoolClientId],
+              },
+            },
+            adminAuthApi: {
+              type: "user_pool",
+              userPool: {
+                id: userPoolId,
+                clientIds: [userPoolClientId],
+              },
+              identitySource: ["$request.header.Authorization"],
+              authorizationScopes: ["aws.cognito.signin.user.admin"],
+              properties: {
+                AllowedGroupsOverride: ["Admin"],
+              },
+            },
+          },
         routes: {
-      
-            
             // Add the generate-upload-url route
             "POST /generate-upload-url": {
+                authorizer: "authApi",
                 function: {
                     handler: "packages/functions/src/lambda/generateUploadUrl.handler",
                     environment: {
@@ -55,6 +78,7 @@ export function ApiStack({stack}: StackContext) {
             
             // retrieve-file-metadata route
             "GET /retrieve-file-metadata": {
+                authorizer: "authApi", 
                 function: {
                     handler: "packages/functions/src/lambda/retrieveFileMetadata.handler",
                     environment: {
@@ -65,6 +89,7 @@ export function ApiStack({stack}: StackContext) {
             },
             // delete-file route
             "POST /delete-file": {
+                authorizer: "authApi",
                 function: {
                     handler: "packages/functions/src/lambda/deleteFile.handler",
                     environment: {
@@ -120,7 +145,9 @@ export function ApiStack({stack}: StackContext) {
                     timeout: "60 seconds"
                 }
             },
+           
             "POST /sync": {
+                authorizer: "authApi",
                 function: {
                     handler: "packages/functions/src/bedrock/sync.syncKnowlegeBase",
                     permissions: ["bedrock"],
@@ -131,7 +158,9 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
+             // delete-sync route
             "POST /deleteSync": {
+                authorizer: "authApi",
                 function: {
                     handler: "packages/functions/src/bedrock/deleteSync.syncKnowlegeBase",
                     permissions: ["bedrock"],
