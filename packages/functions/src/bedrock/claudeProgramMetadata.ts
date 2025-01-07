@@ -122,6 +122,9 @@ export async function handler(event: SQSEvent) {
             await insertProgramMetadata(parsedResponse, fileKey);
             console.log("IT SHOULD BE INSERTED TO PROGRAM METADATA TABLE");
 
+            await insertReportMetadata(parsedResponse, fileKey);
+            console.log("IT SHOULD BE INSERTED to fileMetaData");
+
             return parsedResponse;
 
         } catch (error) {
@@ -164,4 +167,17 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
     } catch (error) {
         console.error("Error deleting SQS message:", error);
     }
+}
+// Insert file metadata into DynamoDB
+async function insertReportMetadata(data :any, fileKey : string) {
+  const params = {
+      TableName: process.env.FILE_METADATA_TABLE_NAME as string,
+          Key : {fileKey},
+          UpdateExpression: "SET universityName = :universityName",
+          ExpressionAttributeValues: {
+              ":universityName": data["University Name"],
+          },
+          ReturnValues: "UPDATED_NEW",
+  };
+  return await dynamoDb.update(params).promise();
 }
