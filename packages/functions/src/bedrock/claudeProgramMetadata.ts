@@ -168,7 +168,7 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
         console.error("Error deleting SQS message:", error);
     }
 }
-// Insert file metadata into DynamoDB
+// function to insert the university name in the filemetadata table to have a link between the university and program 
 async function insertReportMetadata(data :any, fileKey : string) {
   const params = {
       TableName: process.env.FILE_METADATA_TABLE_NAME as string,
