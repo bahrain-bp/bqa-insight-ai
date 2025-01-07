@@ -1,5 +1,4 @@
 import {Api, StackContext, use} from "sst/constructs";
-import {DBStack} from "./DBStack";
 import {S3Stack} from "./S3Stack"; 
 import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
@@ -16,7 +15,6 @@ import { AuthStack } from "./AuthStack";
 
 
 export function ApiStack({stack}: StackContext) {
-    const {table} = use(DBStack);
     const {bucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
     const {bot, alias} = use(BotStack);
@@ -35,12 +33,6 @@ export function ApiStack({stack}: StackContext) {
     
     // Create the HTTP API
     const api = new Api(stack, "Api", {
-        defaults: {
-            function: {
-                // Bind the table and bucket name to our API
-                bind: [table], // Make sure bucket is available to the function
-            },
-        },
         authorizers: {
             authApi: {
               type: "user_pool",
