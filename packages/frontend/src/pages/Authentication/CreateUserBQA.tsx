@@ -3,40 +3,46 @@ import { useNavigate, Link } from 'react-router-dom';
 import { signUp, confirmSignUp } from 'aws-amplify/auth';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 
+// Defining the structure of the form fields
 interface FormFields {
   email: string;
   code: string;
   password: string;
   confirmPassword: string;
 }
+
+// Defining the properties of the component, including setUser function and user data
 interface CreateUserBQAProps {
-    setUser: (newUser: any) => void;
-    user: {
-      email: string;
-      name: string;
-    };
-  }
-const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
+  setUser: (newUser: any) => void;
+  user: {
+    email: string;
+    name: string;
+  };
+}
+
+const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser }) => {
+  // State hooks for managing form fields, loading status, and error/success messages
   const [formFields, setFormFields] = useState<FormFields>({
     email: '',
     code: '',
     password: '',
     confirmPassword: ''
   });
-  const [isCodeSent, setIsCodeSent] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
-  const [successMessage, setSuccessMessage] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
+  const [isCodeSent, setIsCodeSent] = useState(false); // To track if the verification code was sent
+  const [errorMessage, setErrorMessage] = useState<string>(''); // To track error messages
+  const [successMessage, setSuccessMessage] = useState<string>(''); // To track success messages
+  const [isLoading, setIsLoading] = useState<boolean>(false); // To track the loading state
+  const navigate = useNavigate(); // Navigation hook for routing
 
+  // Handles changes in form fields
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newFields = {
       ...formFields,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value // Dynamically updates the form field based on name
     };
     setFormFields(newFields);
     
-    // Handle email validation error message here instead
+    // Handle email validation error message when email changes
     if (e.target.name === 'email') {
       if (!validateEmail(e.target.value)) {
         setErrorMessage('Only @bqa.gov.bh email addresses are allowed to register');
@@ -46,36 +52,37 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
     }
   };
 
-  // Updated email validation to only allow @bqa.gov.bh domain
+  // Email validation: checks if the email is in a valid format and belongs to the allowed domain
   const validateEmail = (email: string): boolean => {
-    // First check if it's a valid email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // Basic regex for email format validation
     if (!emailRegex.test(email)) {
       return false;
     }
     
-    // Then check if it's from the allowed domain
-    // return email.toLowerCase().endsWith('@bqa.gov.bh');
-    return true
+    // Only allows email addresses with the domain @bqa.gov.bh (currently commented out)
+    return true;
   };
 
+  // Validates the form when registering, checking email, password, and confirmation password
   const isInitialFormValid = () => {
-    // Only return the boolean result, don't set any state here
     return validateEmail(formFields.email) && 
-           formFields.password.length >= 8 &&
-           formFields.password === formFields.confirmPassword;
-  };
-  const isConfirmationFormValid = () => {
-    return formFields.code.length > 0;
+           formFields.password.length >= 8 && // Password length validation
+           formFields.password === formFields.confirmPassword; // Password match validation
   };
 
+  // Validates the confirmation form for entering the verification code
+  const isConfirmationFormValid = () => {
+    return formFields.code.length > 0; // Code must be entered
+  };
+
+  // Handles the form submission for creating the account (sign-up)
   const handleInitialSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage('');
     setSuccessMessage('');
     setIsLoading(true);
 
-    // Additional check before submission
+    // Additional check before submitting: ensures email is valid
     if (!validateEmail(formFields.email)) {
       setErrorMessage('Only @bqa.gov.bh email addresses are allowed to register');
       setIsLoading(false);
@@ -83,6 +90,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
     }
 
     try {
+      // Calling AWS Amplify's signUp function to create a new user account
       await signUp({
         username: formFields.email,
         password: formFields.password,
@@ -90,20 +98,21 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
           userAttributes: {
             email: formFields.email,
           },
-          autoSignIn: true
+          autoSignIn: true // Automatically signs in the user after successful account creation
         }
       });
 
       setSuccessMessage('Verification code sent to your email.');
-      setIsCodeSent(true);
+      setIsCodeSent(true); // Set to true to render the confirmation form
     } catch (error) {
       console.error('Error details:', error);
       setErrorMessage(error instanceof Error ? error.message : 'An error occurred during sign up');
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading animation
     }
   };
 
+  // Handles the form submission for confirming the user's account with the verification code
   const handleConfirmation = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage('');
@@ -111,15 +120,17 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
     setIsLoading(true);
   
     try {
+      // Calling AWS Amplify's confirmSignUp function to confirm the user's sign-up
       await confirmSignUp({
         username: formFields.email,
         confirmationCode: formFields.code
       });
   
-      // Add this line to update the user after successful confirmation
+      // Updating the user state after successful confirmation
       setUser({ email: formFields.email, name: '' });
   
       setSuccessMessage('Account created successfully! Redirecting to login...');
+      // Redirect to the login page after a successful confirmation
       setTimeout(() => {
         navigate('/Auth/SignIn');
       }, 3000);
@@ -127,10 +138,11 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
       console.error('Error details:', error);
       setErrorMessage(error instanceof Error ? error.message : 'Error confirming sign up');
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading animation
     }
   };
 
+  // Renders the initial form to create an account
   const renderInitialForm = () => (
     <form onSubmit={handleInitialSubmit}>
       <div className="mb-6">
@@ -144,7 +156,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
             placeholder="Enter your @bqa.gov.bh email"
             className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             value={formFields.email}
-            onChange={handleInputChange}
+            onChange={handleInputChange} // Handle email input change
             disabled={isLoading}
           />
         </div>
@@ -162,7 +174,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
             placeholder="Enter password"
             className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             value={formFields.password}
-            onChange={handleInputChange}
+            onChange={handleInputChange} // Handle password input change
             disabled={isLoading}
           />
         </div>
@@ -179,7 +191,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
             placeholder="Confirm password"
             className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             value={formFields.confirmPassword}
-            onChange={handleInputChange}
+            onChange={handleInputChange} // Handle confirm password input change
             disabled={isLoading}
           />
         </div>
@@ -190,12 +202,13 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
           type="submit"
           value={isLoading ? "Creating Account..." : "Create Account"}
           className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90 disabled:opacity-50"
-          disabled={isLoading || !isInitialFormValid()}
+          disabled={isLoading || !isInitialFormValid()} // Disable button if the form is not valid
         />
       </div>
     </form>
   );
 
+  // Renders the confirmation form where the user enters the verification code
   const renderConfirmationForm = () => (
     <form onSubmit={handleConfirmation}>
       <div className="mb-6">
@@ -209,7 +222,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
             placeholder="Enter verification code"
             className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
             value={formFields.code}
-            onChange={handleInputChange}
+            onChange={handleInputChange} // Handle verification code input change
             disabled={isLoading}
           />
         </div>
@@ -220,7 +233,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
           type="submit"
           value={isLoading ? "Verifying..." : "Verify Account"}
           className="w-full cursor-pointer rounded-lg border border-primary bg-primary p-4 text-white transition hover:bg-opacity-90 disabled:opacity-50"
-          disabled={isLoading || !isConfirmationFormValid()}
+          disabled={isLoading || !isConfirmationFormValid()} // Disable button if the form is not valid
         />
       </div>
     </form>
@@ -247,6 +260,7 @@ const CreateUserBQA: React.FC<CreateUserBQAProps> = ({ setUser}) => {
               </div>
             )}
 
+            {/* Render either the initial form or the confirmation form based on the state */}
             {!isCodeSent ? renderInitialForm() : renderConfirmationForm()}
 
             <p className="text-center">
