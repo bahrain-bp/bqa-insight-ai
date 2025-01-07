@@ -3,32 +3,48 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Breadcrumb from '../../components/Breadcrumbs/Breadcrumb';
 import { signIn, getCurrentUser } from '@aws-amplify/auth';
 
+// Type definition for the state setter function
+// This ensures that we are working with the correct types for state management
 type SetStateType<T> = React.Dispatch<React.SetStateAction<T>>;
 
 const SignIning = ({
-  setUser,
+  setUser, // State setter function passed from the parent component
 }: {
   setUser: SetStateType<any>;
-  user: any;
+  user: any; // Current signed-in user (could be null if not signed in)
 }) => {
+  // State to store the email entered by the user
   const [email, setEmail] = useState<string>('');
+  // State to store the password entered by the user
   const [password, setPassword] = useState<string>('');
+  // State to store any error messages from the sign-in process
   const [errorMessage, setErrorMessage] = useState<string>('');
+  // Hook to programmatically navigate to different routes in the app
   const navigate = useNavigate();
+  // Hook to get the current location of the page
   const location = useLocation();
   
   // Get the redirect path from location state, default to /fileManagement
   const from = location.state?.from || '/fileManagement';
     
-  const handleSignIn = async (email: string, password: string) => {
+   // Function to handle the sign-in process
+   const handleSignIn = async (email: string, password: string) => {
     try {
+      // Attempt to sign in using the Amplify Auth module
       const user = await signIn({ username: email, password });
+      
+      // If sign-in is successful, set the signed-in user to the state
       setUser(user);
+      
+      // Clear any previous error messages
       setErrorMessage('');
-      // Redirect to the page they tried to visit
+      
+      // Navigate the user to the page they were trying to visit
       navigate(from);
     } catch (error: any) {
       console.error('Error signing in', error);
+      
+      // Handle specific error types to give feedback to the user
       if (error.name === 'NotAuthorizedException') {
         setErrorMessage('Incorrect email or password. Please try again.');
       } else if (error.name === 'UserNotFoundException') {
@@ -39,20 +55,27 @@ const SignIning = ({
     }
   };
 
+  // useEffect hook to check if a user is already signed in
+  // This will run once when the component loads
   useEffect(() => {
     const checkUserSignIn = async () => {
       try {
+        // Try to get the current signed-in user using Amplify's getCurrentUser method
         const currentUser = await getCurrentUser();
+        
+        // If a user is found, set the user state
         setUser(currentUser);
-        // If already signed in, redirect to the intended page
+        
+        // If the user is already signed in, redirect them to the page they were attempting to visit
         navigate(from);
       } catch (error) {
-        // User is not signed in, stay on signin page
+        // If there is no signed-in user (i.e., the user is not logged in), stay on the sign-in page
         console.log("User not signed in:", error);
       }
     };
-    checkUserSignIn();
-  }, []);
+
+    checkUserSignIn(); // Execute the check when the component loads
+  }, []); // Empty dependency array means this effect runs once on mount
   
   return (
     <>
@@ -62,23 +85,26 @@ const SignIning = ({
         <div className="flex justify-center">
           <div className="max-w-md">
             <div className="p-4 sm:p-12.5 xl:p-17.5 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+              {/* Main title */}
               <h2 className="mb-9 text-2xl font-bold text-black dark:text-white sm:text-title-xl2">
                 Login to InsightAI
               </h2>
 
-              {/* Error Message Display */}
+              {/* Display error message if an error exists */}
               {errorMessage && (
                 <div className="mb-6 p-4 rounded-lg bg-danger bg-opacity-10 border border-danger text-danger text-sm">
                   {errorMessage}
                 </div>
               )}
 
+               {/* Sign-in form */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSignIn(email, password);
                 }}
               >
+                {/* Email input field */}
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Email 
@@ -110,6 +136,7 @@ const SignIning = ({
                   </div>
                 </div>
                     
+                {/* Password input field */}
                 <div className="mb-6">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                    Password
@@ -145,6 +172,7 @@ const SignIning = ({
                   </div>
                 </div>
 
+                {/* Submit button to trigger sign-in */}
                 <div className="mb-5">
                   <input
                     type="submit"
@@ -154,23 +182,25 @@ const SignIning = ({
                 </div>
 
                 <div className="mt-6 text-center">
-  <p>
-    Forgot your password?{' '}
-    <Link to="/auth/ForgotPassword" className="text-primary">
-      Reset Password
-    </Link>
-  </p>
-  <p className="mt-2">
-    Need an account?{' '}
-     {/*<Link to="/auth/CreateUser" className="text-primary">
-      Create User
-    </Link> */}
+                    {/* Link to forgot password */}
+                  <p>
+                    Forgot your password?{' '}
+                    <Link to="/auth/ForgotPassword" className="text-primary">
+                      Reset Password
+                    </Link>
+                  </p>
+                   {/* Link to sign-up page */}
+                  <p className="mt-2">
+                    Need an account?{' '}
+                    {/*<Link to="/auth/CreateUser" className="text-primary">
+                      Create User
+                    </Link> */}
 
-    <Link to="/auth/CreateUserBQA" className="text-primary">
-      Create User
-    </Link>
-  </p>
-</div>
+                    <Link to="/auth/CreateUserBQA" className="text-primary">
+                      Create User
+                    </Link>
+                  </p>
+                </div>
               </form>
             </div>
           </div>

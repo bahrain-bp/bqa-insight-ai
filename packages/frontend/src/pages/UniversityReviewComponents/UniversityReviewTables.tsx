@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react';
-import * as XLSX from 'xlsx';
-import LogoIcon from '../../images/BQA.png';
-import PDFIcon from '../../images/PDF.png';
-import XSLIcon from '../../images/xls.png';
+import * as XLSX from 'xlsx'; // Import XLSX library for exporting to Excel
+import LogoIcon from '../../images/BQA.png';  // Importing logo for the PDF export
+import PDFIcon from '../../images/PDF.png';  // Importing PDF icon for export button
+import XSLIcon from '../../images/xls.png';  // Importing Excel icon for export button
 
+// Define types for Review and University data structure
 interface Review {
   Title: string;
   Program: string;
@@ -21,57 +22,64 @@ interface UniversityData {
 }
 
 interface UniversityReviewsTableProps {
-  data: UniversityData[];
+  data: UniversityData[]; // Data passed from the parent component containing university information
 }
 
 type SortState = {
-  column: string | null;
-  direction: 'asc' | 'desc';
+  column: string | null; // The column by which the table is sorted
+  direction: 'asc' | 'desc'; // The direction of sorting, either ascending or descending
 };
 
+// UniversityReviewsTable component definition
 export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): JSX.Element {
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [judgementFilter, setJudgementFilter] = useState<string>('all');
-  const [sortState, setSortState] = useState<SortState>({ column: null, direction: 'asc' });
+  // State hooks to manage the search query, judgement filter, and sorting state
+  const [searchQuery, setSearchQuery] = useState<string>(''); // Search query for filtering institutions by name
+  const [judgementFilter, setJudgementFilter] = useState<string>('all'); // Filter to show reviews based on judgement (approved/rejected)
+  const [sortState, setSortState] = useState<SortState>({ column: null, direction: 'asc' }); // Sort state to track the column and direction
 
+  // Check if the provided data is an array, otherwise show an error message
   if (!Array.isArray(data)) {
     return <div className="text-red-500">Error: Invalid data format</div>;
   }
 
+  // Helper function to get the latest review from a list of reviews for a given university
   function getLatestReview(reviews: Review[]): Review | null {
-    if (!Array.isArray(reviews) || reviews.length === 0) return null;
-    return reviews[reviews.length - 1];
+    if (!Array.isArray(reviews) || reviews.length === 0) return null; // Return null if no reviews exist
+    return reviews[reviews.length - 1]; // Return the last review as the latest one
   }
 
-  // Excel Export Function
+  // Function to export the table data to an Excel file using the XLSX library
   const exportToExcel = () => {
+    // Map the data into a simplified structure for export
     const exportData = displayedData.map(university => {
-      const latestReview = getLatestReview(university.Reviews);
-      
+      const latestReview = getLatestReview(university.Reviews); // Get the latest review of each university
+
       return {
-        'Institution Code': university.InstitutionCode,
-        'Institution Name': university.InstitutionName,
-        'Latest Program': latestReview?.Program || 'N/A',
-        'Latest Judgement': latestReview?.Judgement || 'N/A',
-        'Number of Reviews': university.Reviews.length,
-        'Latest Review Type': latestReview?.Type || 'N/A',
-        'Latest Study Field': latestReview?.UnifiedStudyField || 'N/A',
-        'Latest Cycle': latestReview?.Cycle || 'N/A'
+        'Institution Code': university.InstitutionCode, // University code
+        'Institution Name': university.InstitutionName, // University name
+        'Latest Program': latestReview?.Program || 'N/A', // Latest program or 'N/A' if no review
+        'Latest Judgement': latestReview?.Judgement || 'N/A', // Latest judgement or 'N/A' if no review
+        'Number of Reviews': university.Reviews.length, // Total number of reviews for this university
+        'Latest Review Type': latestReview?.Type || 'N/A', // Type of the latest review or 'N/A'
+        'Latest Study Field': latestReview?.UnifiedStudyField || 'N/A', // Study field of the latest review or 'N/A'
+        'Latest Cycle': latestReview?.Cycle || 'N/A' // Cycle of the latest review or 'N/A'
       };
     });
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Universities');
-    const fileName = `Universities_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    // Create a worksheet from the export data
+    const ws = XLSX.utils.json_to_sheet(exportData); 
+    const wb = XLSX.utils.book_new(); // Create a new workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Universities'); // Append the worksheet to the workbook
+    const fileName = `Universities_Export_${new Date().toISOString().split('T')[0]}.xlsx`; // File name with the current date
+    XLSX.writeFile(wb, fileName); // Trigger the download of the Excel file
   };
 
-  // PDF Export Function
+  // Function to export the table data to a PDF using html2pdf.js
   const exportToPDF = async () => {
     const printDiv = document.createElement('div');
-    printDiv.className = 'pdf-export';
-  
+    printDiv.className = 'pdf-export'; // Add a class to style the exported PDF content
+
+    // Create and inject styles for the PDF content
     const style = document.createElement('style');
     style.textContent = `
       .pdf-export {
@@ -123,18 +131,21 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     `;
     printDiv.appendChild(style);
 
+    // Header section with logo
     const header = document.createElement('div');
     header.className = 'pdf-header';
     const logo = document.createElement('img');
-    logo.src = LogoIcon;
+    logo.src = LogoIcon;  // Use the imported logo image
     header.appendChild(logo);
     printDiv.appendChild(header);
 
+    // Title section for the PDF
     const title = document.createElement('div');
     title.className = 'pdf-title';
-    title.textContent = 'University Reviews Summary';
+    title.textContent = 'University Reviews Summary'; // Title text for the PDF
     printDiv.appendChild(title);
 
+    // Create the table structure for the PDF export
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -147,7 +158,8 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
       'Latest Study Field',
       'Latest Cycle'
     ];
-    
+
+    // Generate header row for the table
     headers.forEach(header => {
       const th = document.createElement('th');
       th.textContent = header;
@@ -156,11 +168,12 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
+    // Body of the table with university data
     const tbody = document.createElement('tbody');
     displayedData.forEach(university => {
       const latestReview = getLatestReview(university.Reviews);
       const row = document.createElement('tr');
-      
+
       const rowData = [
         university.InstitutionCode,
         university.InstitutionName,
@@ -171,17 +184,19 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
         latestReview?.Cycle || 'N/A'
       ];
 
+      // Add data cells to the row
       rowData.forEach(text => {
         const td = document.createElement('td');
-        td.textContent = String(text);
+        td.textContent = String(text); // Convert data to string if necessary
         row.appendChild(td);
       });
-      
+
       tbody.appendChild(row);
     });
     table.appendChild(tbody);
     printDiv.appendChild(table);
 
+    // Dynamically load the html2pdf.js script for PDF export
     await new Promise((resolve) => {
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
@@ -189,205 +204,158 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
       document.head.appendChild(script);
     });
 
+    // PDF options configuration
     const opt = {
       margin: 1,
-      filename: `Universities_Export_${new Date().toISOString().split('T')[0]}.pdf`,
+      filename: `Universities_Export_${new Date().toISOString().split('T')[0]}.pdf`, // File name with the current date
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
     };
 
     // @ts-ignore (html2pdf is loaded dynamically)
-    await html2pdf().set(opt).from(printDiv).save();
+    await html2pdf().set(opt).from(printDiv).save();  // Export the content as a PDF file
   };
 
+  // Memoized filtered data based on the search query and judgement filter
   const filteredData = useMemo(() => {
     return data.filter((university) => {
       const latestReview = getLatestReview(university.Reviews);
       
+      // If the judgementFilter is 'all', no filtering is applied
       if (judgementFilter === 'all') {
         return true;
       }
       
+      // Filter based on the judgement value
       return latestReview?.Judgement?.toLowerCase() === judgementFilter.toLowerCase();
     });
-  }, [data, judgementFilter]);
+  }, [data, judgementFilter]); // Dependency array ensures it updates when the filter changes
 
+  // Memoized sorted data based on the current sorting state (column and direction)
   const sortedData = useMemo(() => {
-    if (!sortState.column) return filteredData;
+    if (!sortState.column) return filteredData; // If no column is selected for sorting, return filtered data
 
-    const sorted = [...filteredData].sort((a, b) => {
-      const aLatest = getLatestReview(a.Reviews);
-      const bLatest = getLatestReview(b.Reviews);
+    return [...filteredData].sort((a, b) => {
+      const aValue = a[sortState.column as keyof UniversityData] as string | number;
+      const bValue = b[sortState.column as keyof UniversityData] as string | number;
 
-      let aVal: any = '';
-      let bVal: any = '';
-
-      switch(sortState.column) {
-        case 'InstitutionCode':
-          aVal = a.InstitutionCode ?? '';
-          bVal = b.InstitutionCode ?? '';
-          break;
-        case 'InstitutionName':
-          aVal = a.InstitutionName ?? '';
-          bVal = b.InstitutionName ?? '';
-          break;
-        case 'LatestProgram':
-          aVal = aLatest?.Program ?? '';
-          bVal = bLatest?.Program ?? '';
-          break;
-        case 'LatestJudgement':
-          aVal = aLatest?.Judgement ?? '';
-          bVal = bLatest?.Judgement ?? '';
-          break;
-        case 'NumberOfReviews':
-          aVal = (a.Reviews?.length ?? 0);
-          bVal = (b.Reviews?.length ?? 0);
-          break;
-      }
-
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return aVal - bVal;
-      }
-      return String(aVal).localeCompare(String(bVal), undefined, { numeric: true, sensitivity: 'base' });
+      // Sorting logic: Ascending or descending based on the direction
+      if (aValue < bValue) return sortState.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortState.direction === 'asc' ? 1 : -1;
+      return 0; // If values are equal, no sorting is applied
     });
+  }, [filteredData, sortState]); // Recalculate when data or sort state changes
 
-    return sortState.direction === 'desc' ? sorted.reverse() : sorted;
-  }, [sortState, filteredData]);
+  // Display the data to be shown in the table
+  const displayedData = sortedData.filter((university) => {
+    // Filter based on search query (institution name)
+    return university.InstitutionName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
-  const displayedData = useMemo(() => {
-    if (searchQuery.trim() === '') return sortedData;
-    
-    const query = searchQuery.toLowerCase();
-    return sortedData.filter((university) =>
-      university.InstitutionName.toLowerCase().includes(query)
-    );
-  }, [searchQuery, sortedData]);
-
-  const handleSort = (col: string) => {
-    setSortState((prev) => ({
-      column: col,
-      direction: prev.column === col ? (prev.direction === 'asc' ? 'desc' : 'asc') : 'asc'
-    }));
+  // Handle sorting when a table header is clicked
+  const handleSort = (column: string) => {
+    setSortState((prevState) => {
+      // Toggle sorting direction if the same column is clicked again
+      if (prevState.column === column) {
+        return {
+          column,
+          direction: prevState.direction === 'asc' ? 'desc' : 'asc',
+        };
+      }
+      // Default to ascending if a new column is clicked
+      return { column, direction: 'asc' };
+    });
   };
 
-  function renderSortIndicator(columnName: string) {
-    if (sortState.column !== columnName) return null;
-    return sortState.direction === 'asc' ? ' ▲' : ' ▼';
-  }
-  
-  return (
-    <div className="w-full">
-      <div className="mb-4 flex flex-col space-y-4 md:flex-row md:justify-between md:space-x-4">
-        {/* Judgement Filter and Search Section */}
-        <div className="flex-1">
-          {/* Judgement Filter */}
-          <div className="mb-4">
-            <span className="font-semibold mr-2">Filter by Judgement:</span>
-            <select
-              value={judgementFilter}
-              onChange={(e) => setJudgementFilter(e.target.value)}
-              className="border border-gray-300 rounded px-3 py-1"
-            >
-              <option value="all">All Judgements</option>
-              <option value="confidence">Confidence</option>
-              <option value="limited confidence">Limited Confidence</option>
-              <option value="no confidence">No Confidence</option>
-            </select>
-            
-            {/* Search by Institution Name - Now under Judgement Filter */}
-            <div className="mt-4">
-              <span className="font-semibold mr-2">Search by Institution Name:</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 w-full md:w-auto"
-                placeholder="Enter name..."
-              />
-            </div>
-          </div>
-        </div>
-  
-        {/* Export Buttons Section - Now aligned to the right */}
-        <div className="flex space-x-2">
-          <button
-            onClick={exportToExcel}
-            className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            title="Export as Excel"
-          >
-            <img
-              src={XSLIcon}
-              alt="Export to Excel"
-              className="w-9 h-9 object-contain"
-            />
-            <span className="ml-2">Export as Excel</span>
-          </button>
-          <button
-            onClick={exportToPDF}
-            className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            title="Export as PDF"
-          >
-            <img
-              src={PDFIcon}
-              alt="Export to PDF"
-              className="w-9 h-9 object-contain"
-            />
-            <span className="ml-2">Export as PDF</span>
-          </button>
-        </div>
-      </div>
-  
-      {/* Display the number of institutions returned */}
-      <div className="mb-2 text-gray-700 font-semibold">
-        {displayedData.length} Institution(s) Returned
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100 border-b border-gray-200">
-              <th onClick={() => handleSort('InstitutionCode')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Institution Code{renderSortIndicator('InstitutionCode')}
-              </th>
-              <th onClick={() => handleSort('InstitutionName')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Institution Name{renderSortIndicator('InstitutionName')}
-              </th>
-              <th onClick={() => handleSort('LatestProgram')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Latest Program{renderSortIndicator('LatestProgram')}
-              </th>
-              <th onClick={() => handleSort('LatestJudgement')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Latest Judgement{renderSortIndicator('LatestJudgement')}
-              </th>
-              <th onClick={() => handleSort('NumberOfReviews')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Number of Reviews{renderSortIndicator('NumberOfReviews')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedData.map((university, idx) => {
-              const latestReview = getLatestReview(university.Reviews);
-              
-              return (
-                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{university.InstitutionCode}</td>
-                  <td className="py-2 px-4 text-gray-700">{university.InstitutionName}</td>
-                  <td className="py-2 px-4 text-gray-700">{latestReview?.Program ?? 'N/A'}</td>
-                  <td className="py-2 px-4 text-gray-700">{latestReview?.Judgement ?? 'N/A'}</td>
-                  <td className="py-2 px-4 text-gray-700">{university.Reviews.length}</td>
-                </tr>
-              );
-            })}
+  // Render the sort indicator (ascending or descending arrow)
+  const renderSortIndicator = (column: string) => {
+    if (sortState.column !== column) return null;
+    return sortState.direction === 'asc' ? '↑' : '↓';
+  };
 
-            {displayedData.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-4 text-center text-gray-500">
-                  No institutions match your search criteria.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+  return (
+    <div>
+      {/* Filter and search options */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-4">
+          <select
+            className="px-2 py-1 border rounded-md"
+            value={judgementFilter}
+            onChange={(e) => setJudgementFilter(e.target.value)} // Update judgement filter
+          >
+            <option value="all">All Judgements</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <input
+            type="text"
+            className="px-2 py-1 border rounded-md"
+            placeholder="Search by institution name" // Input for search query
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)} // Update search query
+          />
+        </div>
+
+        {/* Export buttons for Excel and PDF */}
+        <div className="flex space-x-2">
+          <button className="flex items-center space-x-2 bg-blue-500 text-white px-4 py-2 rounded-md" onClick={exportToExcel}>
+            <img src={XSLIcon} alt="Excel" className="w-5 h-5" />
+            <span>Export to Excel</span>
+          </button>
+          <button className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-md" onClick={exportToPDF}>
+            <img src={PDFIcon} alt="PDF" className="w-5 h-5" />
+            <span>Export to PDF</span>
+          </button>
+        </div>
       </div>
+
+      {/* Table to display universities and their reviews */}
+      <table className="table-auto w-full border-collapse border border-gray-300">
+        <thead>
+          <tr>
+            {/* Table headers with sorting functionality */}
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('InstitutionCode')}>
+              Institution Code{renderSortIndicator('InstitutionCode')}
+            </th>
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('InstitutionName')}>
+              Institution Name{renderSortIndicator('InstitutionName')}
+            </th>
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('LatestProgram')}>
+              Latest Program{renderSortIndicator('LatestProgram')}
+            </th>
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('LatestJudgement')}>
+              Latest Judgement{renderSortIndicator('LatestJudgement')}
+            </th>
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('NumberOfReviews')}>
+              Number of Reviews{renderSortIndicator('NumberOfReviews')}
+            </th>
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('LatestStudyField')}>
+              Latest Study Field{renderSortIndicator('LatestStudyField')}
+            </th>
+            <th className="border border-gray-300 px-4 py-2 cursor-pointer" onClick={() => handleSort('LatestCycle')}>
+              Latest Cycle{renderSortIndicator('LatestCycle')}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {/* Render each university data */}
+          {displayedData.map((university, index) => {
+            const latestReview = getLatestReview(university.Reviews);
+            return (
+              <tr key={index}>
+                <td className="border border-gray-300 px-4 py-2">{university.InstitutionCode}</td>
+                <td className="border border-gray-300 px-4 py-2">{university.InstitutionName}</td>
+                <td className="border border-gray-300 px-4 py-2">{latestReview?.Program || 'N/A'}</td>
+                <td className="border border-gray-300 px-4 py-2">{latestReview?.Judgement || 'N/A'}</td>
+                <td className="border border-gray-300 px-4 py-2">{university.Reviews.length}</td>
+                <td className="border border-gray-300 px-4 py-2">{latestReview?.UnifiedStudyField || 'N/A'}</td>
+                <td className="border border-gray-300 px-4 py-2">{latestReview?.Cycle || 'N/A'}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

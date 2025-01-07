@@ -255,27 +255,37 @@ export function ApiStack({stack}: StackContext) {
 
             "POST /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", 
+                    handler: "packages/functions/src/fetchfilters.handler", // Points to the Lambda function handler for the POST request to fetch filters
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
-                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
-                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
-                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
+                        TABLE_NAME: instituteMetadata.tableName, // The DynamoDB table for schools and vocational centers metadata
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  // The DynamoDB table for university program metadata
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, // The DynamoDB table for program metadata
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName, // The DynamoDB table for vocational center metadata
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable, vocationalCenterMetadataTable], 
+                    permissions: [
+                    instituteMetadata, // Permissions required to access the schools and vocational center metadata table
+                    UniversityProgramMetadataTable, // Permissions required to access the university program metadata table
+                    programMetadataTable, // Permissions required to access the program metadata table
+                    vocationalCenterMetadataTable // Permissions required to access the vocational center metadata table
+                     ]
                 },
             },
             "GET /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", 
+                    handler: "packages/functions/src/fetchfilters.handler", // Points to the same Lambda function handler for the GET request to fetch filters
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName,
-                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
-                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
-                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
+                        TABLE_NAME: instituteMetadata.tableName,// The DynamoDB table for schools and vocational centers metadata
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, // The DynamoDB table for university program metadata
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, // The DynamoDB table for program metadata
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName, // The DynamoDB table for vocational center metadata
 
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable,vocationalCenterMetadataTable], 
+                    permissions: [
+                    instituteMetadata, // Permissions required to access the schools and vocational center metadata table
+                    UniversityProgramMetadataTable, // Permissions required to access the university program metadata table
+                    programMetadataTable, // Permissions required to access the program metadata table
+                    vocationalCenterMetadataTable // Permissions required to access the vocational center metadata table
+                     ],
         
                 }
             },
