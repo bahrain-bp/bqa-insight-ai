@@ -88,9 +88,8 @@ return 'analyze';  // Default to 'analyze' if no comparison keywords are found
 
 // Function to generate a prompt based on the action and institute type
 function generatePrompt(params: PromptParams): string {
-console.log('Generating prompt with params:', JSON.stringify(params, null, 2));
-
-const { action, instituteType, instituteName, instituteNames, programme, metric, governorate } = params;
+  
+  const { action, instituteType, instituteName, instituteNames, programme, metric, governorate } = params;
 
 // Switch based on the institute type (school, university, or vocational)
 switch (instituteType) {
