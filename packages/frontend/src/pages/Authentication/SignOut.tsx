@@ -20,7 +20,6 @@ const SignOutButton = () => {
       style={{
         padding: '8px 16px', // Reduced padding
         fontSize: '14px', // Smaller font size
-        // backgroundColor: '#003366',
         color: 'white',
         border: 'none',
         borderRadius: '8px', // Slightly reduced radius

@@ -1,6 +1,5 @@
 import { SSTConfig } from "sst";
 import { FrontendStack } from "./stacks/FrontendStack";
-import { DBStack } from "./stacks/DBStack";
 import { ApiStack } from "./stacks/ApiStack";
 import { BotStack } from "./stacks/Lexstacks/BotStack";
 import { FileMetadataStack } from "./stacks/FileMetadataStack";
@@ -35,7 +34,7 @@ export default {
       app.stack(OIDCForGitHubCI)
     }
     else {
-      app.stack(DBStack)
+      app
       .stack(FileMetadataStack)
       .stack(InstituteMetadataStack)
       .stack(UniversityProgramMetadataStack)

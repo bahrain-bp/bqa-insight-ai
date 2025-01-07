@@ -12,10 +12,14 @@ ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
       <RouterRoot/>
   </React.StrictMode>,
 )
-console.log("Pool: ", import.meta.env.VITE_USER_POOL_ID)
+// Log the User Pool ID to the console (useful for debugging)
+console.log("Pool: ", import.meta.env.VITE_USER_POOL_ID);
+
+// Configure AWS Amplify to work with Cognito for authentication
 Amplify.configure({
   Auth: {
     Cognito: {
+      // Use environment variables for configuration, falling back to an empty string if undefined
       userPoolId: import.meta.env.VITE_USER_POOL_ID || "",
       userPoolClientId: import.meta.env.VITE_USER_POOL_CLIENT_ID || "",
     },

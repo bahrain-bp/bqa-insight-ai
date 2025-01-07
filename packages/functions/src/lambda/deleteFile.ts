@@ -37,7 +37,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         const txtFileKey = `TextFiles/${uniqueKey}.txt`;
         const metadataFileKey = `TextFiles/${uniqueKey.replace('.pdf', '')}.metadata.json`;
 
-        // Delete the main file from S3
+        // Delete the file from S3
         await s3.deleteObject({ Bucket: BUCKET_NAME, Key: fileKey }).promise();
         console.log(`Deleted file from S3: ${fileKey}`);
 
@@ -119,6 +119,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
           await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
           console.log(`Deleted from file metadata table: ${fileKey}`);
 
+          // check if the institute has more than 1 record only delete it from the file metadata and keep the institute
           if (instituteRecords.Items && instituteRecords.Items.length <= 1) {
             await dynamodb
               .delete({
@@ -145,7 +146,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             })
             .promise();
 
-          // Delete program metadata if exists
+          // Handle program deletion by using the universityname as a link to get the program
           const programRecords = await dynamodb
             .scan({
               TableName: PROGRAM_METADATA_TABLE_NAME,
@@ -155,7 +156,8 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
               }
             })
             .promise();
-
+          
+            // check if the program has a record in the dynamo if yes then delete it
           if (programRecords.Items && programRecords.Items.length > 0) {
             for (const program of programRecords.Items) {
               await dynamodb.delete({ 
@@ -169,7 +171,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             }
           }
 
-          // Only delete from university metadata if this is the last file
+          // if the university has more than 1 report keep it in the university table and only delete it from the file metadata table
           if (universityRecords.Items && universityRecords.Items.length <= 1) {
             await dynamodb.delete({ 
               TableName: UNIVERSITY_METADATA_TABLE_NAME, 
@@ -210,8 +212,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             console.log(`Keeping vocational center record as ${remainingFiles} files remain`);
           }
         }
-
-        // Delete from file metadata table if not already deleted via institute path
+        // Check if the instituteName is missing in the metadata, and if so, delete the item from the table
         if (!fileMetadata.Item?.instituteName) {
           await dynamodb.delete({ TableName: TABLE_NAME, Key: { fileKey } }).promise();
           console.log(`Deleted from file metadata table: ${fileKey}`);

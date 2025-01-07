@@ -2,17 +2,22 @@ import React, { useState, useEffect, useContext } from "react";
 import { LexChartSlotsContext } from "../components/RouterRoot";
 
 const Filter = () => {
+    // Core state management for filter modes and types
   const [mode, setMode] = useState<"Compare" | "Analyze" | "">("");
   const [educationType, setEducationType] = useState<"schools" | "universities" | "vocational" | "">("");
+  // UI feedback states
   const [submittedMessage, setSubmittedMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error" | null>(null);
+  const [loading, setLoading] = useState(false);
+  // Filter and response states
   const [isFilterActive, setIsFilterActive] = useState(false);
   const [bedrockResponse, setBedrockResponse] = useState<string | null>(null);
   const [latestYear, setLatestYear] = useState<string>("");
-  const [loading, setLoading] = useState(false);
 
   const { setChartSlots } = useContext(LexChartSlotsContext);
 
+
+    // Separate filter states for different education types
   const [vocationalFilters, setVocationalFilters] = useState<VocationalFilters>({
     "Vocational Center Name": [],
     "Center Location": [],
@@ -32,6 +37,8 @@ const Filter = () => {
     "Institute Name": [],
     "Report Year": [],
   });
+
+  // Interface definitions for different types of filters
   interface UniversityFilters {
     "University Name": string[];
     "Programme Name": string[];
@@ -53,7 +60,7 @@ const Filter = () => {
   }
 
   
-
+  // Selected options tracking
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>(
     Object.keys(filterOptions).reduce((acc, header) => {
       acc[header] = [];
@@ -61,6 +68,7 @@ const Filter = () => {
     }, {} as Record<string, string[]>)
   );
 
+    // Sentence generation and editing states
   const [editableSentence, setEditableSentence] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
   const [userModifiedSentence, setUserModifiedSentence] = useState(false);
@@ -68,6 +76,11 @@ const Filter = () => {
   const [lastGeneratedSentence, setLastGeneratedSentence] = useState<string>("");
 
  
+
+  /**
+   * Fetches filter options based on selected education type and current filters
+   * Updates the filter options state with new data from the API
+   */
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
@@ -111,6 +124,7 @@ const Filter = () => {
         }
     
         const data = await response.json();
+        // Update appropriate filter state based on education type
         switch(educationType) {
           case "schools":
             setFilterOptions(data.filters || {
@@ -176,6 +190,8 @@ const Filter = () => {
     }
   }, [selectedOptions, mode]);
 
+
+    // Type guard functions for filter type checking
    function isSchoolFilterKey(key: string): key is keyof SchoolFilters {
     return ["Institute Classification", "Institute Level", "Location", "Institute Name", "Report Year"].includes(key);
   }
@@ -362,7 +378,7 @@ const Filter = () => {
   const generateSentence = () => {
     const parts: string[] = [];
     if (mode) parts.push(`${mode} insights for`);
-    
+    //generating the sentence for schools type
     if (educationType === "schools") {
       if (selectedOptions["Institute Classification"]?.length > 0)
         parts.push(`classification ${selectedOptions["Institute Classification"].join(", ")}`);
@@ -374,6 +390,8 @@ const Filter = () => {
         parts.push(`institute name is ${selectedOptions["Institute Name"].join(", ")}`);
       if (selectedOptions["Report Year"]?.length > 0)
         parts.push(`report year is ${selectedOptions["Report Year"].join(", ")}`);
+
+    //generating the sentence for universities
     } else if (educationType === "universities") {
       if (selectedOptions["University Name"]?.length > 0)
         parts.push(`university name is ${selectedOptions["University Name"].join(", ")}`);
@@ -381,6 +399,8 @@ const Filter = () => {
         parts.push(`programme name is ${selectedOptions["Programme Name"].join(", ")}`);
       if (selectedOptions["Programme Judgment"]?.length > 0)
         parts.push(`programme judgment is ${selectedOptions["Programme Judgment"].join(", ")}`);
+
+      //generating the sentence for vocational
     } else if (educationType == "vocational"){
       if (selectedOptions["Vocational Center Name"]?.length > 0)
         parts.push(`Vocational Training Center name is ${selectedOptions["Vocational Center Name"].join(", ")}`);
@@ -393,27 +413,38 @@ const Filter = () => {
     return parts.length > 0 ? `Insights for: ${parts.join(", ")}.` : "";
   };
 
+
+  // Function to handle editing a sentence. If the sentence isn't editable, generate a new one and set it as editable.
   const handleSentenceEdit = () => {
     if (!editableSentence) {
-      setEditableSentence(generateSentence());
+      setEditableSentence(generateSentence()); // Generate and set a new sentence if it's not already set
     }
-    setIsEditing(true);
+    setIsEditing(true); // Set the editing state to true
   };
 
+  // Function to handle changes in the editable sentence field (textarea).
   const handleSentenceChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newSentence = e.target.value;
+    // Update the editable sentence state
     setEditableSentence(newSentence);
     setUserModifiedSentence(true);
+    // Identify the addition made by the user
     const addition = newSentence.replace(lastGeneratedSentence, "");
+    // Store the user's additions to the sentence
     setUserAdditions(addition);
   };
-
+  // Function to save the edited sentence.
   const handleSentenceSave = () => {
+    // Set the editing state to false, indicating that editing has been completed
     setIsEditing(false);
+    // Generate and set a new sentence after saving
     setLastGeneratedSentence(generateSentence());
+    // Show a success message indicating the update was successful
     showMessage("Sentence updated successfully", "success");
   };
 
+
+// Function to display messages to the user. The message can either be a success or error message.
   const showMessage = (message: string, type: "success" | "error") => {
     setSubmittedMessage(message);
     setMessageType(type);
@@ -424,14 +455,16 @@ const Filter = () => {
   };
 
 
-  
-
+// Function to handle the form submission.
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
+    // Get the current editable sentence
     const sentence = editableSentence;
 
+ // Handle "Compare" mode, where the user must select at least two entities to compare.
     if (mode === "Compare") {
       let comparisonKey;
+     // Set the comparison key based on the selected education type
       if (educationType === "schools") {
         comparisonKey = "Institute Name";
       } else if (educationType === "universities") {
@@ -440,6 +473,7 @@ const Filter = () => {
         comparisonKey = "Vocational Center Name";
       }
 
+     // Check if the user has selected at least two entities to compare
       if (!comparisonKey || !selectedOptions[comparisonKey] || selectedOptions[comparisonKey].length < 2) {
         const entityType = educationType === "schools" 
           ? "institutes" 
@@ -447,10 +481,10 @@ const Filter = () => {
             ? "universities" 
             : "vocational centers";
         showMessage(`Please select at least two ${entityType} to compare.`, "error");
-        return;
+        return; // Exit the function if the condition isn't met
       }
     }
-
+   // Define the required filters based on the selected education type
     const requiredFilters: string[] = (() => {
       switch (educationType) {
         case "schools":
@@ -464,6 +498,7 @@ const Filter = () => {
       }
     })();
 
+      // Check if any required filters are missing
     const missingFilters = requiredFilters.filter((filter) => !selectedOptions[filter] || selectedOptions[filter].length === 0);
 
     if (missingFilters.length > 0) {
@@ -473,45 +508,51 @@ const Filter = () => {
 
     if (sentence) {
       try {
+        // Set loading state to true to indicate the process is ongoing
         setLoading(true);
         
+       // Prepare submission options (merge selected options)
         let submissionOptions = { ...selectedOptions };
         
-        if (educationType === "schools" && (!selectedOptions["Report Year"]?.length) && latestYear) {
+
+        //  Report Year isn't selected set it to the latest year
+        if (educationType === "schools" || educationType === "universities" ||  educationType === "vocational"  && (!selectedOptions["Report Year"]?.length) && latestYear) {
           submissionOptions = {
             ...submissionOptions,
             "Report Year": [latestYear]
           };
         }
 
-        const prompt = {
-          userMessage: sentence,
-          educationType,
-          ...(educationType === "schools" ? {
-            classification: submissionOptions["Institute Classification"],
-            level: submissionOptions["Institute Level"],
-            location: submissionOptions["Location"],
-            instituteName: submissionOptions["Institute Name"],
-            reportYear: submissionOptions["Report Year"]
-          } : educationType === "universities" ? {
-            universityName: submissionOptions["University Name"],
-            programmeName: submissionOptions["Programme Name"],
-            programmeJudgment: submissionOptions["Programme Judgment"]
-          } : {
-            vocationalCenterName: submissionOptions["Vocational Center Name"],
-            centerLocation: submissionOptions["Center Location"],
-            reportYear: submissionOptions["Report Year"]
-          })
-        };
+       // Create the prompt object based on the education type and selected options
+       const prompt = {
+        userMessage: sentence, // Add the user's message (sentence) to the prompt
+        educationType, // Include the selected education type in the prompt
+        ...(educationType === "schools" ? {
+          classification: submissionOptions["Institute Classification"], // Add specific fields for schools
+          level: submissionOptions["Institute Level"],
+          location: submissionOptions["Location"],
+          instituteName: submissionOptions["Institute Name"],
+          reportYear: submissionOptions["Report Year"]
+        } : educationType === "universities" ? {
+          universityName: submissionOptions["University Name"], // Add specific fields for universities
+          programmeName: submissionOptions["Programme Name"],
+          programmeJudgment: submissionOptions["Programme Judgment"]
+        } : {
+          vocationalCenterName: submissionOptions["Vocational Center Name"], // Add specific fields for vocational centers
+          centerLocation: submissionOptions["Center Location"],
+          reportYear: submissionOptions["Report Year"]
+        })
+      };
 
+       // Send the prompt to the API for processing
         const response = await fetch(`${import.meta.env.VITE_API_URL}/invokeBedrockAgent`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(prompt),
+          headers: { "Content-Type": "application/json" },// Set content type to JSON
+          body: JSON.stringify(prompt), // Send the prompt as the request body
         });
-
+       // Parse the response from the API
         const body = await response.json();
-        setBedrockResponse(body.response);
+        setBedrockResponse(body.response);// Update the state with the API response
         showMessage("Data successfully received!", "success");
 
 //-------------------- chart generation connection logic Start -----------------------------------------------------------------------

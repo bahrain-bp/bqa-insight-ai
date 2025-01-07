@@ -43,17 +43,6 @@ function App() {
             </>
           }
         />
-        <Route
-          path="/chat"
-          element={
-            <>
-              <PageTitle title="InsightAI" />
-              {/* <ChatBot /> */}
-            </>
-          }
-        />
-      
-    
 
       <Route path="/auth/signin" element={<SignIning setUser={setUser} user={user} />} />
       <Route 
@@ -85,17 +74,17 @@ function App() {
           }
         />
         <Route
-  path="/auth/CreateUserBQA"
-  element={
-    <>
-      <PageTitle title="Create User | InsightAI" />
-      <CreateUserBQA 
-        setUser={(newUser) => console.log('Set User:', newUser)} 
-        user={{ email: '', name: '' }} 
-      />
-    </>
-  }
-/>
+          path="/auth/CreateUserBQA"
+          element={
+            <>
+              <PageTitle title="Create User | InsightAI" />
+              <CreateUserBQA 
+                setUser={(newUser) => console.log('Set User:', newUser)} 
+                user={{ email: '', name: '' }} 
+              />
+            </>
+          }
+        />
 
         
           <Route

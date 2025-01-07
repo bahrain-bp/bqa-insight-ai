@@ -1,12 +1,10 @@
 import {Api, StackContext, use} from "sst/constructs";
-import {DBStack} from "./DBStack";
 import {S3Stack} from "./S3Stack"; 
 import { FileMetadataStack } from "./FileMetadataStack";
 import {CacheHeaderBehavior, CachePolicy} from "aws-cdk-lib/aws-cloudfront";
 import {Duration} from "aws-cdk-lib/core";
 import { BedrockStack } from "./BedrockStack";
 import { BotStack } from "./Lexstacks/BotStack";
-import { BedrockExpressStack } from "./BedrockExpressStack";
 import { InstituteMetadataStack } from "./InstituteMetadataStack";
 import { UniversityProgramMetadataStack } from "./UniversityProgramMetadataStack";
 import { ProgramMetadataStack } from "./ProgramMetadataStack";
@@ -16,7 +14,6 @@ import { AuthStack } from "./AuthStack";
 
 
 export function ApiStack({stack}: StackContext) {
-    const {table} = use(DBStack);
     const {bucket} = use(S3Stack);
     const {cfnKnowledgeBase, cfnDataSource, cfnAgent, cfnAgentAlias} = use(BedrockStack);
     const {bot, alias} = use(BotStack);
@@ -35,12 +32,6 @@ export function ApiStack({stack}: StackContext) {
     
     // Create the HTTP API
     const api = new Api(stack, "Api", {
-        defaults: {
-            function: {
-                // Bind the table and bucket name to our API
-                bind: [table], // Make sure bucket is available to the function
-            },
-        },
         authorizers: {
             authApi: {
               type: "user_pool",
@@ -106,13 +97,6 @@ export function ApiStack({stack}: StackContext) {
                     permissions: [bucket, fileMetadataTable, instituteMetadata, programMetadataTable, UniversityProgramMetadataTable, vocationalCenterMetadataTable, "bedrock"],
                 },
             },
-            "POST /comprehend": {
-                function: {
-                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
-                    permissions: ["comprehend"],
-                    timeout: "60 seconds"
-                }
-            },
             "POST /lex/start-session": {
                 function: {
                     handler: "packages/functions/src/LexBot/startLexSession.handler",
@@ -137,76 +121,6 @@ export function ApiStack({stack}: StackContext) {
                     }
                 }
             },
-
-            "POST /startsession":{
-                function: {
-                    handler: "packages/functions/src/comprehend.sendTextToComprehend",
-                    permissions: ["comprehend"],
-                    timeout: "60 seconds"
-                }
-            },
-           
-            "POST /sync": {
-                authorizer: "authApi",
-                function: {
-                    handler: "packages/functions/src/bedrock/sync.syncKnowlegeBase",
-                    permissions: ["bedrock"],
-                    timeout: "60 seconds",
-                    environment: {
-                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
-                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
-                    }
-                }
-            },
-             // delete-sync route
-            "POST /deleteSync": {
-                authorizer: "authApi",
-                function: {
-                    handler: "packages/functions/src/bedrock/deleteSync.syncKnowlegeBase",
-                    permissions: ["bedrock"],
-                    timeout: "60 seconds",
-                    environment: {
-                        KNOWLEDGE_BASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId,
-                        DATASOURCE_BASE_ID: cfnDataSource.attrDataSourceId
-                    }
-                }
-            },
-            
-            "POST /invokeBedrock": {
-                function: {
-                    handler: "packages/functions/src/bedrock/invokeBedrockLlama.invokeBedrockLlama",
-                    permissions: ["bedrock"],
-                    timeout: "60 seconds",
-                    environment: {
-                        // AGENT_ID: cfnAgent?.attrAgentId || "",
-                        // AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                        KNOWLEDGEBASE_ID: cfnKnowledgeBase.attrKnowledgeBaseId
-                    },
-                }
-            },
-            "POST /converseBedrock": {
-                function: {
-                    handler: "packages/functions/src/LexBot/Bedrock_Lex/converseBedrock.converse",
-                    permissions: ["bedrock"],
-                    timeout: "60 seconds",
-                    // environment: {
-                    //     AGENT_ID: cfnAgent?.attrAgentId || "",
-                    //     AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                    // },
-                    runtime: "python3.11",
-                }
-            },
-            "POST /invokeExpressLambda": {
-                function: {
-                    handler: "packages/functions/src/bedrock/invokeExpressLambda.invokeExpressLambda",
-                    permissions: ["bedrock", "s3", "textract"],
-                    timeout: "60 seconds",
-                    // environment: {
-                    //     AGENT_ID : extractReportMetadataAgent.attrAgentId,
-                    //     AGENT_ALIAS_ID : becrockExtractAgentAlias.attrAgentAliasId,
-                    // }
-                }
-            },
             "POST /invokeBedrockAgent": {
                 function: {
                     handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
@@ -218,65 +132,22 @@ export function ApiStack({stack}: StackContext) {
                    }
                 }
             },
-            "GET /invokeBedrockAgent": {
-                function: {
-                    handler: "packages/functions/src/bedrock/invokeBedrock.invokeBedrockAgent",
-                    permissions: ["bedrock", "s3", "textract", "bedrock:invokeModel"],
-                    timeout: "60 seconds",
-                     environment: {
-                         AGENT_ID: cfnAgent?.attrAgentId || "",
-                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                   }
-                }
-            },
-            "POST /generateJson": {
-                function: {
-                    handler: "packages/functions/src/bedrock/generatejson.generateJson",
-                    permissions: ["bedrock", "s3", "textract"],
-                    timeout: "60 seconds",
-                     environment: {
-                         AGENT_ID: cfnAgent?.attrAgentId || "",
-                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                   }
-                }
-            },
-            "GET /generateJson": {
-                function: {
-                    handler: "packages/functions/src/bedrock/generatejson.generateJson",
-                    permissions: ["bedrock", "s3", "textract"],
-                    timeout: "60 seconds",
-                     environment: {
-                         AGENT_ID: cfnAgent?.attrAgentId || "",
-                         AGENT_ALIAS_ID: cfnAgentAlias.attrAgentAliasId,
-                   }
-                }
-            },
-            
-
-            "POST /fetchfilters": {
-                function: {
-                    handler: "packages/functions/src/fetchfilters.handler", 
-                    environment: {
-                        TABLE_NAME: instituteMetadata.tableName, //this for schools and vocational 
-                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName,  //uni 
-                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
-                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
-                    },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable, vocationalCenterMetadataTable], 
-                },
-            },
             "GET /fetchfilters": {
                 function: {
-                    handler: "packages/functions/src/fetchfilters.handler", 
+                    handler: "packages/functions/src/fetchfilters.handler", // Points to the same Lambda function handler for the GET request to fetch filters
                     environment: {
-                        TABLE_NAME: instituteMetadata.tableName,
-                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, 
-                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, 
-                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName,
+                        TABLE_NAME: instituteMetadata.tableName,// The DynamoDB table for schools and vocational centers metadata
+                        UNIVERSITY_TABLE_NAME: UniversityProgramMetadataTable.tableName, // The DynamoDB table for university program metadata
+                        PROGRAM_TABLE_NAME: programMetadataTable.tableName, // The DynamoDB table for program metadata
+                        VOCATIONAL_TABLE_NAME : vocationalCenterMetadataTable.tableName, // The DynamoDB table for vocational center metadata
 
                     },
-                    permissions: [instituteMetadata,UniversityProgramMetadataTable, programMetadataTable,vocationalCenterMetadataTable], 
-        
+                    permissions: [
+                    instituteMetadata, // Permissions required to access the schools and vocational center metadata table
+                    UniversityProgramMetadataTable, // Permissions required to access the university program metadata table
+                    programMetadataTable, // Permissions required to access the program metadata table
+                    vocationalCenterMetadataTable // Permissions required to access the vocational center metadata table
+                     ],
                 }
             },
             "GET /fetchSchoolReviews": {
@@ -298,16 +169,16 @@ export function ApiStack({stack}: StackContext) {
                 }
             },
             "GET /fetchUniversityReviews": {
-            function: {
-            handler: "packages/functions/src/api/retrieveUniversityReviews.handler",
-            environment: {
-                UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
+                function: {
+                    handler: "packages/functions/src/api/retrieveUniversityReviews.handler",
+                    environment: {
+                        UNIVERSITY_REVIEWS_TABLE_NAME: UniversityReviewsTable.tableName,
+                    },
+                    permissions: [UniversityReviewsTable], // Ensure permissions are correctly set
+                },
             },
-            permissions: [UniversityReviewsTable], // Ensure permissions are correctly set
-            },
-        },
         }
-            });
+    });
 
     // Cache policy to use with CloudFront as reverse proxy to avoid CORS issues
     const apiCachePolicy = new CachePolicy(stack, "CachePolicy", {

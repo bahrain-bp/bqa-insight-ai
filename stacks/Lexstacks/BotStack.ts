@@ -70,9 +70,13 @@ export function BotStack({stack}: StackContext) {
         description: 'Main intent for educational institute comparison and analysis',
         sampleUtterances: [
             {utterance: 'Hello BQA'},
-            {utterance: 'Hello'},  
+            {utterance: 'Hello'},
             {utterance: 'Hi'},
-            { utterance: 'Hi BQA' }
+            {utterance: 'Hi BQA'},
+            {utterance: 'Back'},
+            {utterance: 'Back to the main menu'},
+            {utterance: 'Start over'},
+            {utterance: 'Return to menu'},
         ],
         fulfillmentCodeHook: {
             enabled: true,
@@ -500,8 +504,8 @@ export function BotStack({stack}: StackContext) {
                                       value: "School"
                                    },
                                    { 
-                                      text: "Vocational training center",
-                                      value: "Vocational training center"
+                                      text: "Vocational Training Center",
+                                      value: "Vocational Training Center"
                                    },
                                 ],
                                 title: "Which type of educational institute would you like to compare?"
@@ -573,8 +577,8 @@ export function BotStack({stack}: StackContext) {
                                 title: "would you like to compare institutes or programs within universities?",
                                 buttons: [
                                     {
-                                        text: "Institutional review",
-                                        value: "Institutional review"
+                                        text: "Institutes",
+                                        value: "Institutes"
                                     },
                                     {
                                         text: "Programs",
@@ -603,7 +607,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'What are the names of universites you would like to compare?'
+                                value: 'What are the names of universites you would like to compare? Please separate them by commas.'
                             }
                         },
                     },
@@ -665,7 +669,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'What are the names of programs you would like to compare'
+                                value: 'What are the names of programs you would like to compare? Please separate them by commas.'
                             }
                         },
                     },
@@ -687,7 +691,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'What are the names of universities you would like to compare?'
+                                value: 'What are the names of universities you would like to compare? Please separate them by commas.'
                             }
                         },
                     },
@@ -830,7 +834,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'What are the names of institutes you would like to compare?'
+                                value: 'What are the names of institutes you would like to compare? Please separate them by commas.'
                             }
                         },
                     },
@@ -852,7 +856,7 @@ export function BotStack({stack}: StackContext) {
                     {
                         message: {
                             plainTextMessage: {
-                                value: 'What is the names of the Vocational training centers you want to compare?'
+                                value: 'What are the names of the vocational training centers you want to compare? Please separate them by commas.'
                             }
                         },
                     },

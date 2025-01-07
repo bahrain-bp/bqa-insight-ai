@@ -172,7 +172,7 @@ async function deleteSQSMessage(receiptHandle: string): Promise<void> {
   }
 }
 
-// Insert file metadata into DynamoDB
+//function to insert the university name in the filemetadata table
 async function insertReportMetadata(data :any, fileKey : string) {
   const params = {
       TableName: process.env.FILE_METADATA_TABLE_NAME as string,
