@@ -1,15 +1,11 @@
 # from ..bedrock.bedrock_python.invokeBedrockPython import invokeBedrockPython
 # --- Helpers that build all of the responses ---
 
-import boto3
 import json
 import os
 
-from botocore.exceptions import ClientError
 from Bedrock_Lex.invokeBedrockAgent import invoke_agent
-from Bedrock_Lex.retrieveReports import get_reports
 from Bedrock_Lex.prompts import *
-from Bedrock_Lex.invokeClaudeModel import invoke_model
 
 def create_message(message):
     return {
@@ -258,6 +254,9 @@ class Step:
         print("Nothing :(")
         raise Exception("Fulfillment failed.")
 
+    def __repr__(self) -> str:
+        return f"{self.name} for slot ({self.options_slot}) with options ({self.options}) and required slots ({self.required_slots})"
+
 def dispatch(intent_request):
 
     response = None
@@ -334,7 +333,7 @@ def dispatch(intent_request):
                     callback=lambda slots: create_school_analyze_prompt(slots['AnalyzeSchoolSlot'], slots['SchoolAspectSlot'])
                 ),
                 Step(
-                    'Vocational training center',
+                    'Vocational Training Center',
                     required_slots=(
                         'VocationalAspectSlot',
                         'AnalyzeVocationalSlot',
@@ -436,7 +435,7 @@ def dispatch(intent_request):
                     )
                 ),
                 Step(
-                    'Vocational training center',
+                    'Vocational Training Center',
                     required_slots=(
                         'CompareVocationalaspectSlot',
                         'CompareVocationalSlot',
