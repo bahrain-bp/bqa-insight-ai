@@ -1,3 +1,4 @@
+# all are here
 def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False, all_government=False, all_private=False):
     question = f"How did {institute_names} do in terms of {aspect}?"
     
