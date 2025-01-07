@@ -78,57 +78,6 @@ export function BedrockStack({ stack, app }: StackContext) {
         knowledgeBaseId: cfnKnowledgeBase.attrKnowledgeBaseId,
         name: `KnowledgeBaseSSTDataSource-${app.stage}`,
       
-        // // the properties below are optional
-        // vectorIngestionConfiguration: {
-        //   chunkingConfiguration: {
-        //     chunkingStrategy: 'chunkingStrategy',
-      
-        //     // the properties below are optional
-        //     fixedSizeChunkingConfiguration: {
-        //       maxTokens: 123,
-        //       overlapPercentage: 123,
-        //     },
-        //     hierarchicalChunkingConfiguration: {
-        //       levelConfigurations: [{
-        //         maxTokens: 123,
-        //       }],
-        //       overlapTokens: 123,
-        //     },
-        //     semanticChunkingConfiguration: {
-        //       breakpointPercentileThreshold: 123,
-        //       bufferSize: 123,
-        //       maxTokens: 123,
-        //     },
-        //   },
-        //   customTransformationConfiguration: {
-        //     intermediateStorage: {
-        //       s3Location: {
-        //         uri: 'uri',
-        //       },
-        //     },
-        //     transformations: [{
-        //       stepToApply: 'stepToApply',
-        //       transformationFunction: {
-        //         transformationLambdaConfiguration: {
-        //           lambdaArn: 'lambdaArn',
-        //         },
-        //       },
-        //     }],
-        //   },
-        //   parsingConfiguration: {
-        //     parsingStrategy: 'parsingStrategy',
-      
-        //     // the properties below are optional
-        //     bedrockFoundationModelConfiguration: {
-        //       modelArn: 'modelArn',
-      
-        //       // the properties below are optional
-        //       parsingPrompt: {
-        //         parsingPromptText: 'parsingPromptText',
-        //       },
-        //     },
-        //   },
-        // },
       });
 
       // Configure the agent
