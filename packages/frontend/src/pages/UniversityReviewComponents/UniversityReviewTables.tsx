@@ -4,6 +4,7 @@ import LogoIcon from '../../images/BQA.png';
 import PDFIcon from '../../images/PDF.png';
 import XSLIcon from '../../images/xls.png';
 
+// Define types for Review and University Data
 interface Review {
   Title: string;
   Program: string;
@@ -24,26 +25,30 @@ interface UniversityReviewsTableProps {
   data: UniversityData[];
 }
 
+// Sort state type
 type SortState = {
   column: string | null;
   direction: 'asc' | 'desc';
 };
 
 export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): JSX.Element {
+  // State hooks for search query, judgement filter, and sort state
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [judgementFilter, setJudgementFilter] = useState<string>('all');
   const [sortState, setSortState] = useState<SortState>({ column: null, direction: 'asc' });
 
+  // Display error if the data format is invalid
   if (!Array.isArray(data)) {
     return <div className="text-red-500">Error: Invalid data format</div>;
   }
 
+  // Function to get the latest review for a university
   function getLatestReview(reviews: Review[]): Review | null {
     if (!Array.isArray(reviews) || reviews.length === 0) return null;
     return reviews[reviews.length - 1];
   }
 
-  // Excel Export Function
+  // Function to export the data to Excel
   const exportToExcel = () => {
     const exportData = displayedData.map(university => {
       const latestReview = getLatestReview(university.Reviews);
@@ -67,14 +72,15 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     XLSX.writeFile(wb, fileName);
   };
 
-  // PDF Export Function
+  // Function to export the data to PDF
   const exportToPDF = async () => {
     const printDiv = document.createElement('div');
     printDiv.className = 'pdf-export';
   
+    // Create and add custom styling for the PDF export
     const style = document.createElement('style');
     style.textContent = `
-      .pdf-export {
+       .pdf-export {
         padding: 20px;
         font-family: Arial, sans-serif;
         margin-bottom: 40px;
@@ -123,6 +129,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     `;
     printDiv.appendChild(style);
 
+    // Add logo and title to the PDF export
     const header = document.createElement('div');
     header.className = 'pdf-header';
     const logo = document.createElement('img');
@@ -135,6 +142,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     title.textContent = 'University Reviews Summary';
     printDiv.appendChild(title);
 
+    // Create table for PDF export
     const table = document.createElement('table');
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -148,6 +156,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
       'Latest Cycle'
     ];
     
+    // Append header cells to the table
     headers.forEach(header => {
       const th = document.createElement('th');
       th.textContent = header;
@@ -156,6 +165,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     thead.appendChild(headerRow);
     table.appendChild(thead);
 
+    // Append data rows to the table
     const tbody = document.createElement('tbody');
     displayedData.forEach(university => {
       const latestReview = getLatestReview(university.Reviews);
@@ -182,6 +192,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     table.appendChild(tbody);
     printDiv.appendChild(table);
 
+    // Dynamically load the html2pdf.js library
     await new Promise((resolve) => {
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
@@ -189,6 +200,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
       document.head.appendChild(script);
     });
 
+    // Configure options for generating the PDF
     const opt = {
       margin: 1,
       filename: `Universities_Export_${new Date().toISOString().split('T')[0]}.pdf`,
@@ -201,6 +213,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     await html2pdf().set(opt).from(printDiv).save();
   };
 
+  // Filter data based on the judgement filter
   const filteredData = useMemo(() => {
     return data.filter((university) => {
       const latestReview = getLatestReview(university.Reviews);
@@ -213,6 +226,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     });
   }, [data, judgementFilter]);
 
+  // Sort data based on the sort state (ascending or descending)
   const sortedData = useMemo(() => {
     if (!sortState.column) return filteredData;
 
@@ -255,6 +269,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     return sortState.direction === 'desc' ? sorted.reverse() : sorted;
   }, [sortState, filteredData]);
 
+  // Filtered and sorted data ready for display
   const displayedData = useMemo(() => {
     if (searchQuery.trim() === '') return sortedData;
     
@@ -264,6 +279,7 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     );
   }, [searchQuery, sortedData]);
 
+  // Handle column sorting when clicked
   const handleSort = (col: string) => {
     setSortState((prev) => ({
       column: col,
@@ -271,13 +287,15 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     }));
   };
 
+  // Render the sorting indicator (arrow) based on the current sort direction
   function renderSortIndicator(columnName: string) {
     if (sortState.column !== columnName) return null;
     return sortState.direction === 'asc' ? ' ▲' : ' ▼';
   }
-  
+
   return (
     <div className="w-full">
+      {/* Filter and search controls */}
       <div className="mb-4 flex flex-col space-y-4 md:flex-row md:justify-between md:space-x-4">
         {/* Judgement Filter and Search Section */}
         <div className="flex-1">
@@ -294,100 +312,117 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
               <option value="limited confidence">Limited Confidence</option>
               <option value="no confidence">No Confidence</option>
             </select>
-            
-            {/* Search by Institution Name - Now under Judgement Filter */}
-            <div className="mt-4">
-              <span className="font-semibold mr-2">Search by Institution Name:</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="border border-gray-300 rounded px-3 py-1 w-full md:w-auto"
-                placeholder="Enter name..."
-              />
             </div>
+      {/* Search Input */}
+      <div className="md:w-1/2 lg:w-1/3">
+        <input
+          type="text"
+          placeholder="Search by institution name..."
+          className="w-full border border-gray-300 rounded px-3 py-2"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+    </div>
+
+    {/* Export Buttons */}
+    <div className="mt-4 md:mt-0 flex space-x-2">
+            <button
+              onClick={exportToExcel}
+              className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Export as Excel"
+            >
+              <img 
+                src={XSLIcon} 
+                alt="Export to Excel" 
+                className="w-9 h-9 object-contain"  
+              />
+              <span className="ml-2">Export as Excel</span>
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              title="Export as PDF"
+            >
+              <img 
+                src={PDFIcon} 
+                alt="Export to PDF" 
+                className="w-9 h-9 object-contain"  
+              />
+              <span className="ml-2">Export as PDF</span>
+            </button>
           </div>
         </div>
   
-        {/* Export Buttons Section - Now aligned to the right */}
-        <div className="flex space-x-2">
-          <button
-            onClick={exportToExcel}
-            className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            title="Export as Excel"
-          >
-            <img
-              src={XSLIcon}
-              alt="Export to Excel"
-              className="w-9 h-9 object-contain"
-            />
-            <span className="ml-2">Export as Excel</span>
-          </button>
-          <button
-            onClick={exportToPDF}
-            className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-            title="Export as PDF"
-          >
-            <img
-              src={PDFIcon}
-              alt="Export to PDF"
-              className="w-9 h-9 object-contain"
-            />
-            <span className="ml-2">Export as PDF</span>
-          </button>
-        </div>
-      </div>
-  
-      {/* Display the number of institutions returned */}
-      <div className="mb-2 text-gray-700 font-semibold">
-        {displayedData.length} Institution(s) Returned
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border border-gray-200">
-          <thead>
-            <tr className="bg-gray-100 border-b border-gray-200">
-              <th onClick={() => handleSort('InstitutionCode')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Institution Code{renderSortIndicator('InstitutionCode')}
-              </th>
-              <th onClick={() => handleSort('InstitutionName')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Institution Name{renderSortIndicator('InstitutionName')}
-              </th>
-              <th onClick={() => handleSort('LatestProgram')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Latest Program{renderSortIndicator('LatestProgram')}
-              </th>
-              <th onClick={() => handleSort('LatestJudgement')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Latest Judgement{renderSortIndicator('LatestJudgement')}
-              </th>
-              <th onClick={() => handleSort('NumberOfReviews')} className="py-2 px-4 text-left font-semibold text-gray-700 cursor-pointer">
-                Number of Reviews{renderSortIndicator('NumberOfReviews')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {displayedData.map((university, idx) => {
-              const latestReview = getLatestReview(university.Reviews);
-              
-              return (
-                <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-2 px-4 text-gray-700">{university.InstitutionCode}</td>
-                  <td className="py-2 px-4 text-gray-700">{university.InstitutionName}</td>
-                  <td className="py-2 px-4 text-gray-700">{latestReview?.Program ?? 'N/A'}</td>
-                  <td className="py-2 px-4 text-gray-700">{latestReview?.Judgement ?? 'N/A'}</td>
-                  <td className="py-2 px-4 text-gray-700">{university.Reviews.length}</td>
-                </tr>
-              );
-            })}
 
-            {displayedData.length === 0 && (
-              <tr>
-                <td colSpan={5} className="py-4 text-center text-gray-500">
-                  No institutions match your search criteria.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+  {/* Display Data Table */}
+  <div className="overflow-x-auto">
+    <table className="w-full table-auto border-collapse border border-gray-300 text-sm">
+      <thead>
+        <tr className="bg-gray-200 text-gray-700">
+          {/* Render Table Headers */}
+          <th
+            onClick={() => handleSort('InstitutionCode')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Institution Code{renderSortIndicator('InstitutionCode')}
+          </th>
+          <th
+            onClick={() => handleSort('InstitutionName')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Institution Name{renderSortIndicator('InstitutionName')}
+          </th>
+          <th
+            onClick={() => handleSort('LatestProgram')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Latest Program{renderSortIndicator('LatestProgram')}
+          </th>
+          <th
+            onClick={() => handleSort('LatestJudgement')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Latest Judgement{renderSortIndicator('LatestJudgement')}
+          </th>
+          <th
+            onClick={() => handleSort('NumberOfReviews')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Number of Reviews{renderSortIndicator('NumberOfReviews')}
+          </th>
+          <th
+            onClick={() => handleSort('LatestStudyField')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Latest Study Field{renderSortIndicator('LatestStudyField')}
+          </th>
+          <th
+            onClick={() => handleSort('LatestCycle')}
+            className="px-4 py-2 cursor-pointer"
+          >
+            Latest Cycle{renderSortIndicator('LatestCycle')}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {/* Display Rows Based on Filtered and Sorted Data */}
+        {displayedData.map((university, idx) => {
+          const latestReview = getLatestReview(university.Reviews);
+          return (
+            <tr key={idx} className="even:bg-gray-100">
+              <td className="border px-4 py-2">{university.InstitutionCode}</td>
+              <td className="border px-4 py-2">{university.InstitutionName}</td>
+              <td className="border px-4 py-2">{latestReview?.Program || 'N/A'}</td>
+              <td className="border px-4 py-2">{latestReview?.Judgement || 'N/A'}</td>
+              <td className="border px-4 py-2">{university.Reviews?.length || 0}</td>
+              <td className="border px-4 py-2">{latestReview?.UnifiedStudyField || 'N/A'}</td>
+              <td className="border px-4 py-2">{latestReview?.Cycle || 'N/A'}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+</div>
+); }
