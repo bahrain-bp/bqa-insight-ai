@@ -92,7 +92,7 @@ function parseReviews(reviewsAttribute: any): Review[] {
   }
 
   return reviewsAttribute.L.map((reviewItem: any) => {
-    console.log("Processing review item:", JSON.stringify(reviewItem, null, 2));
+    // console.log("Processing review item:", JSON.stringify(reviewItem, null, 2));
     
     const reviewMap = reviewItem.M || {};
     const review: Review = {
@@ -105,7 +105,7 @@ function parseReviews(reviewsAttribute: any): Review[] {
       ReportFile: reviewMap.ReportFile?.S || "",
     };
 
-    console.log("Parsed review:", JSON.stringify(review, null, 2));
+    // console.log("Parsed review:", JSON.stringify(review, null, 2));
     return review;
   });
 }
