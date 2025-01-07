@@ -355,10 +355,10 @@ def dispatch(intent_request):
                         Step(
                             'Institutional Review',
                             required_slots=(
-                                'StandardProgSlot',
+                                'StandardSlot',
                                 'AnalyzeUniversityNameSlot',
                             ),
-                            callback=lambda slots: create_uni_analyze_prompt(slots['StandardProgSlot'], slots['AnalyzeUniversityNameSlot'])
+                            callback=lambda slots: create_uni_analyze_prompt(slots['StandardSlot'], slots['AnalyzeUniversityNameSlot'])
                         ),
                     )
                 ),
@@ -376,7 +376,7 @@ def dispatch(intent_request):
                     options_slot='CompareUniversitySlot',
                     options=(
                         Step(
-                            'Institutional review',
+                            'Institutes',
                             required_slots=(
                                 'CompareUniStandardSlot',
                                 'CompareUniversityUniSlot',

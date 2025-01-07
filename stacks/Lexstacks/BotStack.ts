@@ -577,8 +577,8 @@ export function BotStack({stack}: StackContext) {
                                 title: "would you like to compare institutes or programs within universities?",
                                 buttons: [
                                     {
-                                        text: "Institutional review",
-                                        value: "Institutional review"
+                                        text: "Institutes",
+                                        value: "Institutes"
                                     },
                                     {
                                         text: "Programs",
