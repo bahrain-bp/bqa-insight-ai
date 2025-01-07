@@ -1,4 +1,3 @@
-# from ..bedrock.bedrock_python.invokeBedrockPython import invokeBedrockPython
 # --- Helpers that build all of the responses ---
 
 import json
