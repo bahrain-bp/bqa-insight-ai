@@ -326,22 +326,32 @@ export function UniversityReviewsTable({ data }: UniversityReviewsTableProps): J
     </div>
 
     {/* Export Buttons */}
-    <div className="flex space-x-2">
-      <button
-        onClick={exportToExcel}
-        className="bg-green-600 text-white px-4 py-2 rounded flex items-center space-x-2"
-      >
-        <img src={XSLIcon} alt="Excel" className="h-5 w-5" />
-        <span>Export to Excel</span>
-      </button>
-      <button
-        onClick={exportToPDF}
-        className="bg-red-600 text-white px-4 py-2 rounded flex items-center space-x-2"
-      >
-        <img src={PDFIcon} alt="PDF" className="h-5 w-5" />
-        <span>Export to PDF</span>
-      </button>
-    </div>
+      <div className="mt-4 md:mt-0 flex space-x-2">
+        <button
+          onClick={exportToExcel}
+          className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          title="Export as Excel"
+        >
+          <img 
+            src={XSLIcon} 
+            alt="Export to Excel" 
+            className="w-9 h-9 object-contain"  
+          />
+          <span className="ml-2">Export as Excel</span>
+        </button>
+        <button
+          onClick={exportToPDF}
+          className="flex items-center justify-center p-3 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          title="Export as PDF"
+        >
+          <img 
+            src={PDFIcon} 
+            alt="Export to PDF" 
+            className="w-9 h-9 object-contain"  
+          />
+          <span className="ml-2">Export as PDF</span>
+        </button>
+      </div>
   </div>
 
   {/* Display Data Table */}
