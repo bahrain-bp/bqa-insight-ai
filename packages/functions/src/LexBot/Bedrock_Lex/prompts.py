@@ -1,5 +1,5 @@
 # all prompts are here
-def create_compare_schools_prompt(institute_names, aspect="overall effectiveness", governorate=False, all_government=False, all_private=False):
+def create_compare_schools_prompt(institute_names, aspect, governorate=False, all_government=False, all_private=False):
     question = f"How did {institute_names} do in terms of {aspect}?"
     
     if governorate:
@@ -209,7 +209,7 @@ def create_school_analyze_prompt(school, schoolaspect):
     return prompt
 
 
-def create_uni_analyze_prompt(standard, university_name, program_name=""):
+def create_uni_analyze_prompt(standard, university_name):
     prompt = f"""
         Your goal is to analyze the provided educational institute report and provide insights on the University overall performance based on the different standards and judgment.
 
@@ -317,9 +317,9 @@ def create_uni_analyze_prompt(standard, university_name, program_name=""):
         Conclusion:
         The Learning Resources, ICT, and Infrastructure Standard at the University of Bahrain is well-aligned with the institution's goals to support its academic and administrative operations. Continuous improvement and strategic investment in infrastructure and digital transformation solidify its commitment to quality and effectiveness.
 
-        Input: How is the {standard} Standard in {program_name} in {university_name}?          
+        Input: How is the {standard} Standard in {university_name}?          
         Output:
-        The {standard} Standard at the {program_name} in {university_name} has been judged as ....
+        The {standard} Standard in {university_name} has been judged as ....
         Key Strengths:
 
         Title 1:
@@ -346,7 +346,7 @@ def create_uni_analyze_prompt(standard, university_name, program_name=""):
     return prompt
 
 
-def create_compare_uni_prompt(university_names, standard="Quality of Teaching and Learning"):
+def create_compare_uni_prompt(university_names, standard):
     prompt = f"""
            Your goal is to compare between the provided educational institutes reports and provide insights on the Universities' overall performance based on the different standards and judgments.
              

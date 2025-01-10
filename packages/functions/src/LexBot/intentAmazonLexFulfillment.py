@@ -350,7 +350,7 @@ def dispatch(intent_request):
                                 'StandardProgSlot',
                                 'UniNameSlot',
                             ),
-                            callback=lambda slots: create_uni_analyze_prompt(slots['StandardProgSlot'], slots['UniNameSlot'], slots['ProgramNameSlot'])
+                            callback=lambda slots: create_program_uni_analyze_prompt(slots['StandardProgSlot'], slots['ProgramNameSlot'], slots['UniNameSlot'])
                         ),
                         Step(
                             'Institutional Review',
