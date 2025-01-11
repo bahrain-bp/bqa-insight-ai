@@ -74,7 +74,7 @@ export function UniversityReviews() {
           <div className="w-full flex flex-col">
 
             {/* University Ranking Section with Toggle functionality */}
-            <ToggleSection title="University Ranking Table" ariaControls="University-reviews-ranking">
+            <ToggleSection title="University Table" ariaControls="University-reviews-ranking">
               <UniversityReviewsTable data={data} />
             </ToggleSection>
 
